@@ -19,7 +19,7 @@ target_link_libraries(jzdns ${LIBS})
 include(BoostTestHelpers.cmake)
 
 set(DEPS src/cryptography.cpp)
-add_boost_test(test/cryptography_test.cpp "${DEPS}")      
+add_boost_test(test/cryptography_test.cpp "${DEPS}")
 
 
 enable_testing()

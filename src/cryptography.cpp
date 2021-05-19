@@ -79,8 +79,8 @@ void generate_symetric_key(SecByteBlock &key, SecByteBlock &iv) {
 }
 
 std::string Cryptography::symetric_encrypt(const std::string &message, const SecByteBlock &key, const SecByteBlock &iv) {
-    ChaCha::Encryption enc;
-    enc.setKeyWithIV(key, key.size(), iv, iv.size());
+    ChaCha20::Encryption enc;
+    enc.SetKeyWithIV(key, key.size(), iv, iv.size());
 
     std::string cipher;
     cipher.resize(message.size());
@@ -90,7 +90,7 @@ std::string Cryptography::symetric_encrypt(const std::string &message, const Sec
 }
 
 std::string Cryptography::symetric_decrypt(const std::string &message, const SecByteBlock &key, const SecByteBlock &iv) {
-    ChaCha::Decryption dec;
+    ChaCha20::Decryption dec;
     dec.SetKeyWithIV(key, key.size(), iv, iv.size());
 
     std::string recover;
