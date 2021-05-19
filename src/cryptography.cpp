@@ -7,6 +7,7 @@
 #include<cryptopp/oids.h>
 #include<cryptopp/cryptlib.h>
 #include<cryptopp/rsa.h>
+#include<cryptopp/chacha.h>
 
 #include"cryptography.hpp"
 
@@ -68,11 +69,34 @@ std::string Cryptography::asymetric_decrypt(const PrivateKey &key, const std::st
     return recovered;
 }
 
-std::string Cryptography::symetric_encrypt(const std::string &message) {
+void generate_symetric_key(SecByteBlock &key, SecByteBlock &iv) {
+    key = SecByteBlock(32);
+    iv = SecByteBlock(8);
 
+    AutoSeededRandomPool rng;
+    rng.GenerateBlock(key, key.size());
+    rng.GenerateBlock(iv, iv.size());
 }
 
-std::string Cryptography::symetric_decrypt(const std::string &message) {
+std::string Cryptography::symetric_encrypt(const std::string &message, const SecByteBlock &key, const SecByteBlock &iv) {
+    ChaCha::Encryption enc;
+    enc.setKeyWithIV(key, key.size(), iv, iv.size());
 
+    std::string cipher;
+    cipher.resize(message.size());
+    enc.ProcessData((byte*)&cipher[0], (const byte*)message.data(), message.size());
+
+    return cipher;
+}
+
+std::string Cryptography::symetric_decrypt(const std::string &message, const SecByteBlock &key, const SecByteBlock &iv) {
+    ChaCha::Decryption dec;
+    dec.SetKeyWithIV(key, key.size(), iv, iv.size());
+
+    std::string recover;
+    recover.resize(message.size());
+    dec.ProcessData((byte*)&recover[0], (const byte*)message.data(), message.size());
+
+    return recover;
 }
 
