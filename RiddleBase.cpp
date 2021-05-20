@@ -54,12 +54,20 @@ int RiddleBase::updateRiddle(Riddle riddle)
     return -1;
 }
 
-int RiddleBase::loadBaseFromDisk(std::string path)
+void RiddleBase::loadBaseFromDisk(std::string path)
 {
+    std::ifstream in(path);
 
+    boost::archive::text_iarchive i_archive(in);
+
+    i_archive >> riddles;
 }
 
-int RiddleBase::saveBaseOnDisk(std::string path)
+void RiddleBase::saveBaseOnDisk(std::string path)
 {
+    std::ofstream ofs(path);
 
+    boost::archive::text_oarchive oa(ofs);
+
+    oa << riddles;
 }

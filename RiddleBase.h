@@ -5,6 +5,9 @@
 
 #include "Riddle.h"
 #include <map>
+#include <fstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 class RiddleBase {
 private:
@@ -14,8 +17,8 @@ public:
     int removeRiddle(uint64_t id);
     Riddle* getRiddle(uint64_t id);
     int updateRiddle(Riddle riddle);
-    int loadBaseFromDisk(std::string path);
-    int saveBaseOnDisk(std::string path);
+    void loadBaseFromDisk(std::string path);
+    void saveBaseOnDisk(std::string path);
 };
 
 
