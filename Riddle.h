@@ -5,7 +5,6 @@
 
 class Riddle {
 private:
-
     uint64_t id;
     std::string riddleContent;
     std::string answer;
