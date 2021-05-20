@@ -3,103 +3,92 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+#include <unistd.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
 
-#define SERVER_PORT 3006
-#define BUFFER_LENGTH 250
-
+#define PORT 4445
+#define BUFFER_SIZE 1024
+#define ADDRESS "127.0.0.1"
+#define MAX_USERS 10
 
 int main()
 {
-    int sd=-1, sdconn=-1;
-    int on=1;
-    int rc;
-    struct sockaddr_in6 serveraddr, clientaddr;
-    int addrlen=sizeof(clientaddr);
-    char str[INET6_ADDRSTRLEN];
-    char buffer[BUFFER_LENGTH];
-    int rcdsize = BUFFER_LENGTH;
 
-    do
+	int sockfd, ret;
+	 struct sockaddr_in serverAddr;
+
+	int newSocket;
+	struct sockaddr_in newAddr;
+
+	socklen_t addr_size;
+
+	char buffer[BUFFER_SIZE];
+	pid_t childpid;
+
+	for(int i = 0; i < BUFFER_SIZE; ++i)
+	{
+		buffer[i] = '\0';
+	}
+
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if(sockfd < 0){
+		printf("[-]Error in connection.\n");
+		exit(1);
+	}
+	printf("[+]Server Socket is created.\n");
+
+	memset(&serverAddr, '\0', sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(PORT);
+	serverAddr.sin_addr.s_addr = inet_addr(ADDRESS);
+
+	ret = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+	if(ret < 0){
+		printf("[-]Error in binding.\n");
+		exit(1);
+	}
+	printf("[+]Bind to port %d\n", PORT);
+
+	if(listen(sockfd, MAX_USERS) == 0){
+		printf("[+]Listening....\n");
+	}else{
+		printf("[-]Error in binding.\n");
+	}
+
+
+	while(1)
     {
-        if((sd = socket(AF_INET6, SOCK_STREAM, 0) )< 0)
-        {
-            perror("socket() failed");
-            break;
-        }
+		newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
+		if(newSocket < 0){
+			exit(1);
+		}
+		printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 
-        if((setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on))) < 0)
-        {
-            perror("setsockopt(SO_REUSEADDR) faile");
-            break;
-        }
+		if((childpid = fork()) == 0){
+			close(sockfd);
 
-        memset(&serveraddr, 0, sizeof(serveraddr));
-        serveraddr.sin6_family = AF_INET6;
-        serveraddr.sin6_port = htons(SERVER_PORT);
-        serveraddr.sin6_addr = in6addr_any;
+			while(1){
+				recv(newSocket, buffer, BUFFER_SIZE, 0);
+				if(strcmp(buffer, ":exit") == 0){
+					printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+					break;
+				}else{
+					printf("Client: %s\n", buffer);
+					send(newSocket, buffer, strlen(buffer), 0);
+					bzero(buffer, sizeof(buffer));
+				}
+			}
+		}
 
-        if( bind(sd, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) < 0)
-        {
-            perror("bind() failed)");
-            break;
-        }
+	}
 
-        if(listen(sd, 10) < 0)
-        {
-            perror("listen() failed");
-            break;
-        }
+	close(newSocket);
 
-        printf("Ready for client connect()\n");
 
-        if((sdconn = accept(sd, NULL, NULL)) < 0)
-        {
-            perror("accept() failed");
-            break;
-        }
-        else
-        {
-            getpeername(sdconn, (struct sockaddr *)&clientaddr, (socklen_t*)&addrlen);
-            if(inet_ntop(AF_INET6, &clientaddr.sin6_addr, str, sizeof(str)))
-            {
-                printf("Client address is %s\n", str);
-                printf("Client port is %d\n", ntohs(clientaddr.sin6_port));
-            }
-        }
-
-        if(setsockopt(sdconn, SOL_SOCKET, SO_RCVLOWAT, (char *)&rcdsize, sizeof(rcdsize)) < 0)
-        {
-            perror("setsockpot(SO_RCVLOWAT) failed");
-            break;
-        }
-
-        rc = recv(sdconn, buffer, sizeof(buffer), 0);
-        if(rc < 0 || rc < sizeof(buffer))
-        {
-            printf("The client closed the connection before  all of the data was sent\n");
-            break;
-        }
-
-        rc = send(sdconn, buffer, sizeof(buffer), 0);
-        if(rc < 0)
-        {
-            perror("send() failed");
-            break;
-        }
-
-        write(1, buffer, rc);
-
-    } while (0);
-
-    if(sd != -1)
-        close(sd);
-    if(sdconn != -1)
-        close(sdconn);
-    
+	return 0;
 }
