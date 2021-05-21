@@ -4,6 +4,8 @@
 
 #include<cryptopp/pubkey.h>
 #include<cryptopp/secblock.h>
+#include<cryptopp/osrng.h>
+#include<cryptopp/rsa.h>
 
 class Cryptography {
 public:
