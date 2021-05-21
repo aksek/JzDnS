@@ -63,3 +63,19 @@ bool Adapter::checkAnswer(QString answer)
 {
     return Mock::checkAnswer(answer.toStdString());
 }
+
+std::string Adapter::getServer(MainWindow window) {
+    return window.getServer().toStdString();
+}
+
+std::string Adapter::getPublicKeyPath(MainWindow window) {
+    return window.getPublicKeyPath().toStdString();
+}
+
+std::string Adapter::getPrivateKeyPath(MainWindow window) {
+    return window.getPrivateKeyPath().toStdString();
+}
+
+std::string Adapter::getNick(MainWindow window) {
+    return window.getNick().toStdString();
+}

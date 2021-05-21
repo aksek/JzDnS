@@ -19,6 +19,7 @@ public:
 
     QString getPublicKeyFileName();
     QString getPrivateKeyFileName();
+    QString getNick();
 
 private slots:
     void on_pushButtonChoosePublicKey_clicked();

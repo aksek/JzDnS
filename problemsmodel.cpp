@@ -57,8 +57,8 @@ QVariant ProblemsModel::data(const QModelIndex &index, int role) const
 bool ProblemsModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (role == Qt::EditRole) {
-         if (!checkIndex(index))
-             return false;
+//         if (!checkIndex(index))
+//             return false;
          //save value from editor to member
          if (index.column() == 0) problems[index.row()]->setName(value.toString());
          if (index.column() == 1) problems[index.row()]->setQuestion(value.toString());

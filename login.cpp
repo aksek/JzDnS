@@ -62,3 +62,7 @@ QString Login::getPrivateKeyFileName()
 {
     return privateKeyFileName;
 }
+
+QString Login::getNick() {
+    return ui->lineEditNick->displayText();
+}

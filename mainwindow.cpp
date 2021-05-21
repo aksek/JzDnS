@@ -9,6 +9,8 @@
 #include "login.h"
 #include "adapter.h"
 
+#include<iostream>
+
 void MainWindow::enableEditControls(bool enable)
 {
     ui->menuData->setEnabled(enable);
@@ -55,8 +57,6 @@ void MainWindow::on_actionChoose_server_triggered()
 
     enableEditControls(false);
 
-    QString server, publicKeyPath, privateKeyPath;
-
     ChooseServer chooseServerDialog;
     chooseServerDialog.setModal(true);
     if (chooseServerDialog.exec()) {
@@ -69,6 +69,7 @@ void MainWindow::on_actionChoose_server_triggered()
         if (loginDialog.exec()) {
             publicKeyPath = loginDialog.getPublicKeyFileName();
             privateKeyPath = loginDialog.getPrivateKeyFileName();
+            nick = loginDialog.getNick();
 
             if (Adapter::keyIsValid(publicKeyPath, privateKeyPath)) {
                 if (Adapter::isAdmin(privateKeyPath)) {
@@ -89,4 +90,20 @@ void MainWindow::on_actionChoose_server_triggered()
             }
         }
     }
+}
+
+QString MainWindow::getServer() {
+    return server;
+}
+
+QString MainWindow::getPublicKeyPath() {
+    return publicKeyPath;
+}
+
+QString MainWindow::getPrivateKeyPath() {
+    return privateKeyPath;
+}
+
+QString MainWindow::getNick() {
+    return nick;
 }

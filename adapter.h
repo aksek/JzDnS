@@ -2,6 +2,7 @@
 #define ADAPTER_H
 
 #include <QObject>
+#include "mainwindow.h"
 
 
 class Problem;
@@ -17,6 +18,11 @@ public:
     static Problem *getCurrentProblem();
     static void saveProblem(Problem *problem);
     static bool checkAnswer(QString answer);
+
+    static std::string getServer(MainWindow window);
+    static std::string getPublicKeyPath(MainWindow window);
+    static std::string getPrivateKeyPath(MainWindow window);
+    static std::string getNick(MainWindow window);
 };
 
 #endif // ADAPTER_H

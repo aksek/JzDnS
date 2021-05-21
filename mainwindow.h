@@ -20,6 +20,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    QString getServer();
+    QString getPublicKeyPath();
+    QString getPrivateKeyPath();
+    QString getNick();
 
 private slots:
     void on_action_Add_triggered();
@@ -35,6 +39,8 @@ private:
     UserWindow *userWindow;
     AdminWindow *adminWindow;
     WelcomeWindow *welcomeWindow;
+
+    QString server, publicKeyPath, privateKeyPath, nick;
 
     void enableEditControls(bool enable);
 };
