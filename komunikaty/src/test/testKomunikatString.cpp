@@ -3,16 +3,16 @@
 
 #include <iostream>
 
-BOOST_AUTO_TEST_SUITE(TestKomunikatString)
+BOOST_AUTO_TEST_SUITE(TestMessageString)
 
-BOOST_AUTO_TEST_CASE(TestKomunikatStringSerializeBezZmiany){
-	KomunikatString komunikat(RodzajKomunikatu::Problem);
+BOOST_AUTO_TEST_CASE(TestMessageStringSerializeBezZmiany){
+	MessageString komunikat(RodzajMessageu::Problem);
 	BOOST_CHECK(komunikat.serialize()=="{\"header\":{\"type\":\"Problem\",\"size\":0,\"control\":0},\"text\":{\"problem\":\"\"}}");
 
-	komunikat = KomunikatString(RodzajKomunikatu::Login);
+	komunikat = MessageString(RodzajMessageu::Login);
 	BOOST_CHECK(komunikat.serialize()=="{\"header\":{\"type\":\"Login\",\"size\":0,\"control\":0},\"text\":{\"nick\":\"\"}}");
 
-	komunikat = KomunikatString(RodzajKomunikatu::Solution);
+	komunikat = MessageString(RodzajMessageu::Solution);
 	BOOST_CHECK(komunikat.serialize()=="{\"header\":{\"type\":\"Solution\",\"size\":0,\"control\":0},\"text\":{\"solution\":\"\"}}");
 }
 

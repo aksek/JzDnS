@@ -3,10 +3,10 @@
 
 #include <iostream>
 
-BOOST_AUTO_TEST_SUITE(TestKomunikatPairIntString)
+BOOST_AUTO_TEST_SUITE(TestMessagePairIntString)
 
-BOOST_AUTO_TEST_CASE(TestKomunikatPairIntStringSerializeBezZmiany){
-	KomunikatPairIntString komunikat(RodzajKomunikatu::Edit_problem);
+BOOST_AUTO_TEST_CASE(TestMessagePairIntStringSerializeBezZmiany){
+	MessagePairIntString komunikat(RodzajMessageu::Edit_problem);
 	BOOST_CHECK(komunikat.serialize()=="{\"header\":{\"type\":\"Edit_problem\",\"size\":0,\"control\":0},\"text\":{\"id\":0,\"changed_content\":\"\"}}");
 }
 
