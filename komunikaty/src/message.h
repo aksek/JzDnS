@@ -111,7 +111,7 @@ private:
 };
 
 class Messages{
-	
+
 public:
 	Messages();
 	Message* createMessage(MessageType messageType);

@@ -1,18 +1,16 @@
 #include "boost/test/unit_test.hpp"
-#include "komunikat.h"
-
-#include <iostream>
+#include "message.h"
 
 BOOST_AUTO_TEST_SUITE(TestMessageString)
 
 BOOST_AUTO_TEST_CASE(TestMessageStringSerializeBezZmiany){
-	MessageString komunikat(RodzajMessageu::Problem);
+	MessageString komunikat(MessageType::Problem);
 	BOOST_CHECK(komunikat.serialize()=="{\"header\":{\"type\":\"Problem\",\"size\":0,\"control\":0},\"text\":{\"problem\":\"\"}}");
 
-	komunikat = MessageString(RodzajMessageu::Login);
+	komunikat = MessageString(MessageType::Login);
 	BOOST_CHECK(komunikat.serialize()=="{\"header\":{\"type\":\"Login\",\"size\":0,\"control\":0},\"text\":{\"nick\":\"\"}}");
 
-	komunikat = MessageString(RodzajMessageu::Solution);
+	komunikat = MessageString(MessageType::Solution);
 	BOOST_CHECK(komunikat.serialize()=="{\"header\":{\"type\":\"Solution\",\"size\":0,\"control\":0},\"text\":{\"solution\":\"\"}}");
 }
 

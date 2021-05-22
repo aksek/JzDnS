@@ -239,7 +239,7 @@ MessageVector::MessageVector(MessageType messageType): Message(messageType){
 std::string MessageVector::serialize(){
 	std::string contentEnum = serializeEnum();
 	size_t rozmiarString = 0;
-	for(int i=0; i<_content.size(); ++i){
+	for(unsigned int i=0; i<_content.size(); ++i){
 		rozmiarString += _content[i].first.capacity() + _content[i].second.capacity();
 	}
 	const size_t rozmiar = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(_content.size()) + _content.size()*JSON_OBJECT_SIZE(2) + rozmiarString + contentEnum.capacity();
@@ -252,7 +252,7 @@ std::string MessageVector::serialize(){
 		if(_content.size()==0){
 			JsonArray text = doc.createNestedArray("text");
 		}else {
-			for(int i=0; i<_content.size(); ++i){
+			for(unsigned int i=0; i<_content.size(); ++i){
 				doc["text"][i]["text"] = _content[i].first;
 				doc["text"][i]["answer"] = _content[i].second;
 			}
