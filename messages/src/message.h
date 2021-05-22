@@ -15,20 +15,23 @@ class Message{
 	
 public:
 	explicit Message(MessageType messageType);
+	Message(MessageType type, size_t size, int crc);
+	Message(MessageType type, DynamicJsonDocument &doc);
 	
 	virtual std::string serialize();
 	
 	std::string serializeEnum();
 	
-	void setContentSize(int contentSize);
+	void setContentSize(size_t contentSize);
 	void setChecksum(int checksum);
 	
-	int getContentSize();
+	MessageType getMessageType();
+	size_t getContentSize();
 	int getChecksum();
 	
 protected:
 	MessageType _messageType;
-	int _contentSize;
+	size_t _contentSize;
 	int _checksum;
 };
 
@@ -36,6 +39,8 @@ class MessageString: public Message{
 	
 public:
 	explicit MessageString(MessageType messageType);
+	MessageString(MessageType type, DynamicJsonDocument &doc);
+	
 	std::string serialize() override;
 	
 	void setContent(std::string content);
@@ -49,6 +54,8 @@ class MessageInt: public Message{
 
 public:
 	explicit MessageInt(MessageType messageType);
+	MessageInt(MessageType type, DynamicJsonDocument &doc);
+	
 	std::string serialize() override;
 
 	void setContent(int content);
@@ -62,6 +69,8 @@ class MessageBool: public Message{
 
 public:
 	explicit MessageBool(MessageType messageType);
+	MessageBool(MessageType type, DynamicJsonDocument &doc);
+	
 	std::string serialize() override;
 
 	void setContent(bool content);
@@ -75,6 +84,8 @@ class MessagePairStringString: public Message{
 
 public:
 	explicit MessagePairStringString(MessageType messageType);
+	MessagePairStringString(MessageType type, DynamicJsonDocument &doc);
+	
 	std::string serialize() override;
 
 	void setContent(std::pair<std::string, std::string> content);
@@ -88,6 +99,8 @@ class MessagePairIntString: public Message{
 
 public:
 	explicit MessagePairIntString(MessageType messageType);
+	MessagePairIntString(MessageType type, DynamicJsonDocument &doc);
+	
 	std::string serialize() override;
 
 	void setContent(std::pair<int, std::string> content);
@@ -101,6 +114,8 @@ class MessageVector: public Message{
 
 public:
 	explicit MessageVector(MessageType messageType);
+	MessageVector(MessageType type, DynamicJsonDocument &doc);
+	
 	std::string serialize() override;
 
 	void setContent(std::vector< std::pair<std::string, std::string> > content);
@@ -110,11 +125,17 @@ private:
 	std::vector< std::pair<std::string, std::string> > _content;
 };
 
+typedef std::variant<void*, std::string, int, std::pair<std::string, std::string>, std::pair<int, std::string>, std::vector< std::pair<std::string, std::string> > > ValueTextMessage;
+
 class Messages{
 
 public:
 	Messages();
 	Message* createMessage(MessageType messageType);
-	Message* deserialize(std::string);
+	Message* deserialize(const std::string komunikat);
 	std::string serialize(Message* komunikat);
+	ValueTextMessage getText(Message* komunikat);
+	
+private:
+	MessageType findMessageType(std::string type);
 };
