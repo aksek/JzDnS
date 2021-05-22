@@ -18,7 +18,7 @@ public:
     int addUser(User user);
     int removeUser(User user);
     User* getUser(std::string login);
-    int updateUser(User riddle);
+    int updateUser(User user);
     void loadBaseFromDisk(std::string path);
     void saveBaseOnDisk(std::string path);
 };
