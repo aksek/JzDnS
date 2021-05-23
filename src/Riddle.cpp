@@ -45,3 +45,13 @@ Riddle::Riddle()
     riddleContent = "";
     answer = "";
 }
+
+bool Riddle::operator==(const Riddle &rhs) const {
+    return id == rhs.id &&
+           riddleContent == rhs.riddleContent &&
+           answer == rhs.answer;
+}
+
+bool Riddle::operator!=(const Riddle &rhs) const {
+    return !(rhs == *this);
+}

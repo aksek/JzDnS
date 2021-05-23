@@ -24,6 +24,7 @@ public:
     int addRiddle(Riddle riddle);
     int removeRiddle(uint64_t id);
     Riddle* getRiddle(uint64_t id);
+    std::map<uint64_t, Riddle> getAllRiddles();
     int updateRiddle(Riddle riddle);
     void loadBaseFromDisk(std::string path);
     void saveBaseOnDisk(std::string path);

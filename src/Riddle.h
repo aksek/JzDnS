@@ -29,6 +29,8 @@ public:
     void setId(uint64_t id);
     void setRiddleContent(std::string riddleContent);
     void setAnswer(std::string answer);
+    bool operator==(const Riddle &rhs) const;
+    bool operator!=(const Riddle &rhs) const;
 };
 
 
