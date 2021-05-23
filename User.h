@@ -6,13 +6,13 @@
 
 #include <string>
 #include <cryptopp/rsa.h>
+#include <boost/serialization/access.hpp>
 
 class User {
 private:
     std::string login;
     CryptoPP::RSA::PublicKey publicKey;
     CryptoPP::SecByteBlock key;
-
 
 private:
     CryptoPP::SecByteBlock iv;

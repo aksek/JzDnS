@@ -38,3 +38,10 @@ void Riddle::setAnswer(std::string answer)
 {
     this->answer = answer;
 }
+
+Riddle::Riddle()
+{
+    id = 0;
+    riddleContent = "";
+    answer = "";
+}
