@@ -4,11 +4,11 @@
 #define JZDNS_USERBASE_H
 
 
-#include <map>
+#include "boost/serialization/map.hpp"
+#include <boost/serialization/utility.hpp>
 #include <cryptopp/rsa.h>
 #include "User.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+
 #include <fstream>
 
 class UserBase {
@@ -18,9 +18,9 @@ public:
     int addUser(User user);
     int removeUser(User user);
     User* getUser(std::string login);
-    int updateUser(User riddle);
-    void loadBaseFromDisk(std::string path);
-    void saveBaseOnDisk(std::string path);
+    int updateUser(User user);
+//    void loadBaseFromDisk(std::string path);
+//    void saveBaseOnDisk(std::string path);
 };
 
 
