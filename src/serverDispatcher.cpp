@@ -8,7 +8,8 @@
 Dispatcher::Dispatcher(Authorization* authorization) : authorization{authorization} {}
 
 void Dispatcher::dispatch(Message message) {
-    auto content = message.getContent();    //variant
+    Messages messages = Messages();
+    ValueTextMessage content = messages.getText(&message);    //variant
 
     switch (message.getMessageType()) {
         case MessageType::Retransmit:
