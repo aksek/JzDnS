@@ -50,21 +50,3 @@ int UserBase::updateUser(User user)
 
     return -1;
 }
-/*
-void UserBase::loadBaseFromDisk(std::string path)
-{
-    std::ifstream in(path);
-
-    boost::archive::text_iarchive i_archive(in);
-
-    i_archive >> users;
-}
-
-void UserBase::saveBaseOnDisk(std::string path)
-{
-    std::ofstream ofs(path);
-
-    boost::archive::text_oarchive oa(ofs);
-
-    oa << users;
-}*/

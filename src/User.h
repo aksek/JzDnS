@@ -7,14 +7,14 @@
 #include <string>
 #include <cryptopp/rsa.h>
 #include <boost/serialization/access.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 class User {
 private:
     std::string login;
     CryptoPP::RSA::PublicKey publicKey;
     CryptoPP::SecByteBlock key;
-
-private:
     CryptoPP::SecByteBlock iv;
 
 public:
