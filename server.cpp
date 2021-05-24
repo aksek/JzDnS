@@ -10,11 +10,43 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
-#define PORT 4445
+#define PORT 4444
 #define BUFFER_SIZE 1024
 #define ADDRESS "127.0.0.1"
 #define MAX_USERS 10
+
+struct Info
+{
+	int socket;
+	sockaddr_in address;
+};
+
+void * handle_connection(void * arguments)
+{
+	int socket = ((struct Info *)arguments)->socket;
+	sockaddr_in adres = ((struct Info *)arguments)->address;
+
+	char buffer[BUFFER_SIZE];
+	while(1)
+	{
+		recv(socket, buffer, BUFFER_SIZE, 0);
+		if(strcmp(buffer, ":exit") == 0)
+		{
+			printf("Disconnected from %s:%d\n", inet_ntoa(adres.sin_addr), ntohs(adres.sin_port));
+			break;
+		}
+		else
+		{
+			printf("Client: %s\n", buffer);
+			send(socket, buffer, strlen(buffer), 0);
+			bzero(buffer, sizeof(buffer));
+		}
+	}
+
+	return NULL;
+}
 
 int main()
 {
@@ -69,22 +101,9 @@ int main()
 		}
 		printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 
-		if((childpid = fork()) == 0){
-			close(sockfd);
-
-			while(1){
-				recv(newSocket, buffer, BUFFER_SIZE, 0);
-				if(strcmp(buffer, ":exit") == 0){
-					printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
-					break;
-				}else{
-					printf("Client: %s\n", buffer);
-					send(newSocket, buffer, strlen(buffer), 0);
-					bzero(buffer, sizeof(buffer));
-				}
-			}
-		}
-
+		pthread_t t;
+		struct Info i =  {newSocket, newAddr};
+		pthread_create(&t, NULL, handle_connection, &i);
 	}
 
 	close(newSocket);
