@@ -12,15 +12,16 @@
 
 class User {
 private:
-    std::string login;
+    std::string nickName;
     CryptoPP::RSA::PublicKey publicKey;
     CryptoPP::SecByteBlock key;
     CryptoPP::SecByteBlock iv;
 
 public:
-    User(std::string login, CryptoPP::RSA::PublicKey);
-    const std::string &getLogin() const;
-    void setLogin(const std::string &login);
+    User(std::string nickName);
+    User(std::string nickName, CryptoPP::RSA::PublicKey);
+    const std::string &getNickName() const;
+    void setNickName(const std::string &nickName);
     const CryptoPP::RSA::PublicKey &getPublicKey() const;
     void setPublicKey(const CryptoPP::RSA::PublicKey &publicKey);
     const CryptoPP::SecByteBlock &getKey() const;

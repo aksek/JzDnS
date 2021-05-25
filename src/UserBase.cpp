@@ -4,18 +4,18 @@
 
 int UserBase::addUser(User user)
 {
-    auto it = users.find(user.getLogin());
+    auto it = users.find(user.getNickName());
     if(it == users.end())
     {
-        users.insert(std::pair<std::string, User>(user.getLogin(), user));
+        users.insert(std::pair<std::string, User>(user.getNickName(), user));
         return 0;
     }
     return -1;
 }
 
-int UserBase::removeUser(User user)
+int UserBase::removeUser(std::string nickName)
 {
-    auto it = users.find(user.getLogin());
+    auto it = users.find(nickName);
 
     if(it != users.end())
     {
@@ -25,9 +25,9 @@ int UserBase::removeUser(User user)
     return -1;
 }
 
-User* UserBase::getUser(std::string login)
+User* UserBase::getUser(std::string nickName)
 {
-    auto iter = users.find(login);
+    auto iter = users.find(nickName);
 
     if(iter != std::end(users))
     {
@@ -40,7 +40,7 @@ User* UserBase::getUser(std::string login)
 
 int UserBase::updateUser(User user)
 {
-    auto iter = users.find(user.getLogin());
+    auto iter = users.find(user.getNickName());
 
     if(iter != std::end(users))
     {

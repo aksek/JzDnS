@@ -11,15 +11,11 @@
 class UserBase {
 private:
     std::map<std::string, User> users;
-    template<class Archive>
-    void serialize(Archive &ar, const unsigned int version)
-    {
-        ar & BOOST_SERIALIZATION_NVP(users);
-    }
+
 public:
     int addUser(User user);
-    int removeUser(User user);
-    User* getUser(std::string login);
+    int removeUser(std::string nickName);
+    User* getUser(std::string nickName);
     int updateUser(User user);
 };
 
