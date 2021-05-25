@@ -39,3 +39,11 @@ bool Authorization::authorize(const std::string& username, CryptoPP::RSA::Public
     }
     return authorize(user);
 }
+
+void Authorization::setCurrentUser(const User &currentUser) {
+    current_user = currentUser;
+}
+
+const User &Authorization::getCurrentUser() const {
+    return current_user;
+}

@@ -7,6 +7,14 @@
 #include "UserBase.h"
 
 class Authorization {
+    User current_user;
+public:
+    const User &getCurrentUser() const;
+
+public:
+    void setCurrentUser(const User &currentUser);
+
+private:
     UserBase* base;
     static bool authorize(User* user);
 public:

@@ -8,9 +8,10 @@
 
 class Dispatcher {
     Authorization* authorization;
+//    RiddleService* riddleService;
 
 public:
-    Dispatcher(Authorization* authorization);
+    explicit Dispatcher(Authorization* authorization/*, RiddleService* riddleService*/);
 
     void dispatch(Message message);
 };
