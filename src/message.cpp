@@ -63,7 +63,7 @@ std::pair<std::string, size_t> SerializeContent::serializeVector(std::vector< st
 	}
 	DynamicJsonDocument doc(contentSize);
 	JsonArray array = doc.to<JsonArray>();
-	for(int i=0; i<content.size(); ++i){
+	for(unsigned int i=0; i<content.size(); ++i){
 		array[i]["firstValue"] = content[i].first;
 		array[i]["secondValue"] = content[i].second;
 	}
@@ -172,7 +172,7 @@ std::vector< std::pair<std::string, std::string> > SerializeContent::deserialize
 }
 
 //class Message
-Message::Message(MessageType messageType): _messageType(messageType), _contentSize(0), _contentText(""){
+Message::Message(MessageType messageType): _messageType(messageType), _contentText(""), _contentSize(0){
 
 }
 
@@ -180,7 +180,7 @@ Message::Message(MessageType messageType, std::string contentText, size_t conten
 	
 }
 
-Message::Message(MessageType messageType, std::pair<std::string, size_t> content): _messageType(messageType), _contentSize(content.second), _contentText(content.first){
+Message::Message(MessageType messageType, std::pair<std::string, size_t> content): _messageType(messageType), _contentText(content.first), _contentSize(content.second){
 	
 }
 
@@ -190,17 +190,36 @@ Message::Message(std::string message){
 	deserializeJson(doc, message);
 	_messageType = messageTypeFromString(doc["header"]["type"].as<std::string>());
 	_contentSize = doc["header"]["size"].as<size_t>();
-	int crc = doc["header"]["control"].as<int>();
+	std::string crcMessage = doc["header"]["control"].as<std::string>();
 	_contentText = doc["content"].as<std::string>();
+
+	CryptoPP::Weak::MD5 hash;
+	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	std::string crc;
+	CryptoPP::HexEncoder encoder;
+	encoder.Attach(new CryptoPP::StringSink(crc));
+	encoder.Put(digest, sizeof(digest));
+	encoder.MessageEnd();
+
+	if(crc!=crcMessage) throw std::runtime_error("crc is not good");
 }
 
 std::string Message::serialize(){
+	CryptoPP::Weak::MD5 hash;
+	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	std::string crc;
+	CryptoPP::HexEncoder encoder;
+	encoder.Attach(new CryptoPP::StringSink(crc));
+	encoder.Put(digest, sizeof(digest));
+	encoder.MessageEnd();
 	std::string messageTypeString = messageTypeToString(_messageType);
-	const size_t messageSize = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + messageTypeString.capacity() + _contentText.capacity();
+	const size_t messageSize = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + messageTypeString.capacity() + _contentText.capacity() + crc.capacity();
 	DynamicJsonDocument doc(messageSize);
 	doc["header"]["type"] = messageTypeString;
 	doc["header"]["size"] = _contentSize;
-	doc["header"]["control"] = 0;
+	doc["header"]["control"] = crc;
 	doc["content"] = _contentText;
 	
 	std::string serializedMessage = "";

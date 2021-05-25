@@ -1,11 +1,17 @@
 #pragma once
 
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
+
 #include "ArduinoJson-v6.18.0.h"
+#include <cryptopp/md5.h>
+#include <cryptopp/hex.h>
 
 #include <string>
 #include <vector>
 #include <variant>
 #include <utility>
+
+#include <iostream>
 
 enum class MessageType{
 	Problem, Correct, Round_over, Retransmit, Login, Solution, Problems, New_problem, Delete_problem, Edit_problem

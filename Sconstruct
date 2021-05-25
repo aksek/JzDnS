@@ -29,7 +29,7 @@ elif platform.system() == "Linux":
 #        env.Program( 'test', [Glob("./build/*.cpp")])
 #    else:
 #        env.Program( 'test', [Glob("./build/*.cpp"), Glob("./build/test/*.cpp")])
-    env.Program( 'test', [Glob("./build/*.cpp"), Glob("./build/test/*.cpp")], LIBS = ['boost_unit_test_framework'])
+    env.Program( 'test', [Glob("./build/*.cpp"), Glob("./build/test/*.cpp")], LIBS = ['boost_unit_test_framework', 'cryptopp'])
 
 else:
     print("Nieodpowiedni system!")
