@@ -28,6 +28,7 @@ public:
     int updateRiddle(Riddle riddle);
     void loadBaseFromDisk(std::string path);
     void saveBaseOnDisk(std::string path);
+    int getRiddlesAmount();
 };
 
 
