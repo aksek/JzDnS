@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../messages/src/ArduinoJson-v6.18.0.h"
+#include "ArduinoJson-v6.18.0.h"
 
 #include <string>
 #include <vector>
@@ -11,131 +11,51 @@ enum class MessageType{
 	Problem, Correct, Round_over, Retransmit, Login, Solution, Problems, New_problem, Delete_problem, Edit_problem
 };
 
+typedef std::variant<void*, std::string, int, bool, std::pair<std::string, std::string>, std::pair<int, std::string>, std::vector< std::pair<std::string, std::string> > > ValueContent;
+
+//klasa odpowiedzialna za serializację content
+class SerializeContent{
+
+public:
+	SerializeContent() = default;
+	std::pair<std::string, size_t> serializeString(std::string content); //size_t rozmiar wpisywany do nagłówka
+	std::pair<std::string, size_t> serializeInt(int content);
+	std::pair<std::string, size_t> serializeBool(bool content);
+	std::pair<std::string, size_t> serializePairStringString(std::pair<std::string, std::string> content);
+	std::pair<std::string, size_t> serializePairIntString(std::pair<int, std::string> content);
+	std::pair<std::string, size_t> serializeVector(std::vector< std::pair<std::string, std::string> > content);
+	ValueContent deserialize(MessageType messageType, std::string contentText, size_t contentSize); //size_t rozmiar z nagłówka
+	ValueContent deserialize(MessageType messageType, std::pair<std::string, size_t> content);
+
+private:
+	std::string deserializeString(std::string contentText, size_t contentSize);
+	int deserializeInt(std::string contentText, size_t contentSize);
+	bool deserializeBool(std::string contentText, size_t contentSize);
+	std::pair<std::string, std::string> deserializePairStringString(std::string contentText, size_t contentSize);
+	std::pair<int, std::string> deserializePairIntString(std::string contentText, size_t contentSize);
+	std::vector< std::pair<std::string, std::string> > deserializeVector(std::string contentText, size_t contentSize);
+};
+
+//klasa odpowiedzialna za komunikaty i ich serializację
 class Message{
 	
 public:
-	explicit Message(MessageType messageType);
-	Message(MessageType type, size_t size, int crc);
-	Message(MessageType type, DynamicJsonDocument &doc);
-	
-	virtual std::string serialize();
-	
-	std::string serializeEnum();
-	
-	void setContentSize(size_t contentSize);
-	void setChecksum(int checksum);
+	Message(MessageType messageType);
+	Message(MessageType messageType, std::string contentText, size_t contentSize);
+	Message(MessageType messageType, std::pair<std::string, size_t> content);
+	Message(std::string message);
+	std::string serialize();
 	
 	MessageType getMessageType();
 	size_t getContentSize();
-	int getChecksum();
+	std::string getContentText();
+	std::pair<std::string, size_t> getContent();
 	
-protected:
+private:
 	MessageType _messageType;
+	std::string _contentText;
 	size_t _contentSize;
-	int _checksum;
-};
-
-class MessageString: public Message{
 	
-public:
-	explicit MessageString(MessageType messageType);
-	MessageString(MessageType type, DynamicJsonDocument &doc);
-	
-	std::string serialize() override;
-	
-	void setContent(std::string content);
-	std::string getContent();
-
-private:
-	std::string _content;
-};
-
-class MessageInt: public Message{
-
-public:
-	explicit MessageInt(MessageType messageType);
-	MessageInt(MessageType type, DynamicJsonDocument &doc);
-	
-	std::string serialize() override;
-
-	void setContent(int content);
-	int getContent();
-
-private:
-	int _content;
-};
-
-class MessageBool: public Message{
-
-public:
-	explicit MessageBool(MessageType messageType);
-	MessageBool(MessageType type, DynamicJsonDocument &doc);
-	
-	std::string serialize() override;
-
-	void setContent(bool content);
-	bool getContent();
-
-private:
-	bool _content;
-};
-
-class MessagePairStringString: public Message{
-
-public:
-	explicit MessagePairStringString(MessageType messageType);
-	MessagePairStringString(MessageType type, DynamicJsonDocument &doc);
-	
-	std::string serialize() override;
-
-	void setContent(std::pair<std::string, std::string> content);
-	std::pair<std::string, std::string> getContent();
-
-private:
-	std::pair<std::string, std::string> _content;
-};
-
-class MessagePairIntString: public Message{
-
-public:
-	explicit MessagePairIntString(MessageType messageType);
-	MessagePairIntString(MessageType type, DynamicJsonDocument &doc);
-	
-	std::string serialize() override;
-
-	void setContent(std::pair<int, std::string> content);
-	std::pair<int, std::string> getContent();
-
-private:
-	std::pair<int, std::string> _content;
-};
-
-class MessageVector: public Message{
-
-public:
-	explicit MessageVector(MessageType messageType);
-	MessageVector(MessageType type, DynamicJsonDocument &doc);
-	
-	std::string serialize() override;
-
-	void setContent(std::vector< std::pair<std::string, std::string> > content);
-	std::vector< std::pair<std::string, std::string> > getContent();
-
-private:
-	std::vector< std::pair<std::string, std::string> > _content;
-};
-
-typedef std::variant<void*, std::string, int, std::pair<std::string, std::string>, std::pair<int, std::string>, std::vector< std::pair<std::string, std::string> > > ValueTextMessage;
-
-class Messages{
-
-public:
-	Messages();
-	Message* createMessage(MessageType messageType);
-	Message* deserialize(const std::string komunikat);
-	std::string serialize(Message* komunikat);
-	ValueTextMessage getText(Message* komunikat);
-	
-private:
-	MessageType findMessageType(std::string type);
+	static std::string messageTypeToString(MessageType messageType);
+	static MessageType messageTypeFromString(std::string messageType);
 };
