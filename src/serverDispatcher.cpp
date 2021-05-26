@@ -19,6 +19,7 @@ void Dispatcher::dispatch(Message message) {
 
     switch (type) {
         case MessageType::Retransmit:
+            handleRetransmit(content);
             break;
         case MessageType::Login:
             handleLogin(content);
@@ -42,7 +43,9 @@ void Dispatcher::dispatch(Message message) {
 }
 
 void Dispatcher::handleRetransmit(ValueContent content) {
-
+    if (lastMessage != nullptr) {
+        //TODO send last message
+    }
 }
 
 void Dispatcher::handleLogin(ValueContent content) {
