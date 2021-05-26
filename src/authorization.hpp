@@ -6,21 +6,21 @@
 #include "User.h"
 #include "UserBase.h"
 
+typedef std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> Symmetric_key_pair;
+
+
 class Authorization {
-    User current_user;
-public:
-    const User &getCurrentUser() const;
-
-public:
-    void setCurrentUser(const User &currentUser);
-
 private:
+    User* current_user;
+
     UserBase* base;
-    static bool authorize(User* user);
+    Symmetric_key_pair authorize(User* user);
+
 public:
     explicit Authorization(UserBase* user_base);
-    bool authorize(std::string username);
-    bool authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
+    Symmetric_key_pair authorize(std::string username);
+    Symmetric_key_pair authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
 
+    [[nodiscard]] const User* getCurrentUser() const;
 };
 
