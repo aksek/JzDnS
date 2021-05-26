@@ -5,63 +5,79 @@
 #include "serverDispatcher.hpp"
 
 
-Dispatcher::Dispatcher(Authorization* authorization/*, RiddleService riddleService*/)
-    : authorization{authorization}/*, riddleService{riddleService}*/ {}
+Dispatcher::Dispatcher(Authorization* authorization, RiddleService* riddleService, SerializeContent* serializeContent)
+    : authorization{authorization},
+      riddleService{riddleService},
+      serializer{serializeContent} {}
 
 void Dispatcher::dispatch(Message message) {
-//    authorization->setCurrentUser(message.getUser());
+        MessageType type = message.getMessageType();
+        ValueContent content = serializer->deserialize(type, message.getContent());
 
-    Messages messages = Messages();
-    ValueTextMessage content = messages.getText(&message);    //variant
+//        authorization->setCurrentUser(message.getUser());
 
-    switch (message.getMessageType()) {
+
+    switch (type) {
         case MessageType::Retransmit:
             break;
         case MessageType::Login:
-            if (std::holds_alternative<std::string>(content)) {
-                std::string username = std::get<std::string>(content);
-                authorization->authorize(username);
-            }
-//            } else if (std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
-//                auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
-//                authorization->authorize(username_key.first(), username_key.second());
-//            }
+            handleLogin(content);
             break;
         case MessageType::Solution:
-            if (std::holds_alternative<std::string>(content)) {
-                std::string answer = std::get<std::string>(content);
-                size_t size = 207;
-                DynamicJsonDocument doc(size);
-                doc["header"]["type"] = "Correct";
-                doc["header"]["size"] = size;
-                doc["header"]["control"] = 0;
-                if (riddleService.checkAnswer(answer)) {
-                    doc["text"]["correct"] = true;
-                } else {
-                    doc["text"]["correct"] = false;
-                }
-                MessageBool response(MessageType::Correct, doc);
-
-                // TODO send response
-            }
+            handleSolution(content);
             break;
         case MessageType::New_problem:
+            handleNewProblem(content);
             break;
         case MessageType::Delete_problem:
+            handleDeleteProblem(content);
             break;
         case MessageType::Edit_problem:
-            break;
-        case MessageType::Problem:
-            break;
-        case MessageType::Correct:
-            break;
-        case MessageType::Round_over:
-            break;
-        case MessageType::Problems:
+            handleEditProblem(content);
             break;
         default:
             break;
 
     }
+}
+
+void Dispatcher::handleRetransmit(ValueContent content) {
+
+}
+
+void Dispatcher::handleLogin(ValueContent content) {
+    if (std::holds_alternative<std::string>(content)) {
+        std::string username = std::get<std::string>(content);
+        Symmetric_key_pair key_pair = authorization->authorize(username);
+    }
+//            } else if (std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
+//                auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
+//                authorization->authorize(username_key.first(), username_key.second());
+//            }
+    // TODO send symmetric key
+}
+
+void Dispatcher::handleSolution(ValueContent content) {
+    if (std::holds_alternative<std::string>(content)) {
+        std::string answer = std::get<std::string>(content);
+
+        bool correct = riddleService->checkAnswer(answer);
+        std::pair<std::string, size_t> responseContent = serializer->serializeBool(correct);
+
+        Message response(MessageType::Correct, responseContent);
+        // TODO send response
+    }
+}
+
+void Dispatcher::handleNewProblem(ValueContent content) {
+
+}
+
+void Dispatcher::handleDeleteProblem(ValueContent content) {
+
+}
+
+void Dispatcher::handleEditProblem(ValueContent content) {
+
 }
 

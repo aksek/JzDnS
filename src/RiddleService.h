@@ -22,6 +22,8 @@ public:
     Riddle getNextRiddle();
     Riddle getLastRiddle();
     void restartRiddleDraw();
+
+    bool checkAnswer(std::string answer);
 };
 
 
