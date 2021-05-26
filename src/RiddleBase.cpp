@@ -72,6 +72,11 @@ void RiddleBase::saveBaseOnDisk(std::string path)
     oa << riddles;
 }
 
+int RiddleBase::getRiddlesAmount()
+{
+    return riddles.size();
+}
+
 std::map<uint64_t, Riddle> RiddleBase::getAllRiddles()
 {
     return riddles;

@@ -2,6 +2,7 @@
 #define BOOST_TEST_MODULE riddle_db_test
 #include <boost/test/included/unit_test.hpp>
 #include "../src/RiddleBase.h"
+#include <cstdio>
 
 using namespace boost::unit_test;
 
@@ -66,19 +67,19 @@ BOOST_AUTO_TEST_CASE(get_existing_riddle_test)
 
 BOOST_AUTO_TEST_CASE(serialisation_test)
 {
+    std::string cosik = "cosik";
     RiddleBase rb = RiddleBase();
-    Riddle r1 = Riddle(1, "cosik", "cosik");
-    Riddle r2 = Riddle(2, "cosik", "cosik42");
+    Riddle r1 = Riddle(1, cosik, "cosik");
+    Riddle r2 = Riddle(2, cosik, "cosik42");
 
     BOOST_CHECK(rb.addRiddle(r1) == 0);
     BOOST_CHECK(rb.addRiddle(r2) == 0);
 
-    rb.saveBaseOnDisk("cosik");
+    rb.saveBaseOnDisk(cosik);
     RiddleBase rb2 = RiddleBase();
-    rb2.loadBaseFromDisk("cosik");
+    rb2.loadBaseFromDisk(cosik);
     BOOST_CHECK(rb2.getRiddle(1)->operator==(r1));
     BOOST_CHECK(rb2.getRiddle(2)->operator==(r2));
+
+    remove(cosik.c_str());
 }
-//proba pobrania nieistniejacej zagadki
-//proba pobrania istniejacej zagadki
-//serializacja

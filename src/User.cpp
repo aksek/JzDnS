@@ -2,17 +2,22 @@
 
 #include "User.h"
 
-User::User(std::string login, CryptoPP::RSA::PublicKey publicKey){
-    User::login = login;
+User::User(std::string nickName)
+{
+    this->nickName = nickName;
+}
+
+User::User(std::string nickName, CryptoPP::RSA::PublicKey publicKey){
+    User::nickName = nickName;
     User::publicKey = publicKey;
 }
 
-const std::string &User::getLogin() const {
-    return login;
+const std::string &User::getNickName() const {
+    return nickName;
 }
 
-void User::setLogin(const std::string &login) {
-    User::login = login;
+void User::setNickName(const std::string &nickName) {
+    User::nickName = nickName;
 }
 
 const CryptoPP::RSA::PublicKey &User::getPublicKey() const {

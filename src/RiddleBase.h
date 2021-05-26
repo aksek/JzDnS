@@ -8,7 +8,7 @@
 #include <fstream>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
-//#include <boost/serialization/utility.hpp>
+#include <boost/serialization/utility.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 
@@ -28,6 +28,7 @@ public:
     int updateRiddle(Riddle riddle);
     void loadBaseFromDisk(std::string path);
     void saveBaseOnDisk(std::string path);
+    int getRiddlesAmount();
 };
 
 
