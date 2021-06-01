@@ -17,6 +17,24 @@ private:
     CryptoPP::SecByteBlock key;
     CryptoPP::SecByteBlock iv;
     UserType type;
+
+    friend class boost::serialization::access;
+    template<class Archive>
+    void save(Archive & ar) const
+    {
+        ar & nickName;
+        ar & type;
+        CryptoPP::SavePublicKey("/keys/" + nickName, publicKey);
+    }
+
+    template<class Archive>
+    void load(Archive & ar)
+    {
+        ar & nickName;
+        ar & type;
+        CryptoPP::LoadPublicKey("/keys/" + nickName,  publicKey);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
     enum UserType {ADMIN, NORMAL};
     User(std::string nickName, UserType type);
