@@ -46,7 +46,27 @@ void User::setIv(const CryptoPP::SecByteBlock &iv) {
     User::iv = iv;
 }
 
-const UserType User::getUserType() const
+const User::UserType User::getUserType() const
 {
     return type;
 }
+
+bool User::operator==(const User &rhs) const {
+    std::string temp;
+    CryptoPP::StringSink ss(temp);
+    publicKey.Save(ss);
+
+    std::string temp2;
+    CryptoPP::StringSink ss2(temp2);
+    rhs.publicKey.Save(ss2);
+
+    return nickName == rhs.nickName &&
+           temp == temp2 &&
+           type == rhs.type;
+}
+
+bool User::operator!=(const User &rhs) const {
+    return !(rhs == *this);
+}
+
+User::User() {}

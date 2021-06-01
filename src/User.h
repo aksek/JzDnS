@@ -6,11 +6,11 @@
 
 #include <string>
 #include <cryptopp/rsa.h>
-#include <boost/serialization/access.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/split_member.hpp>
 
 class User {
+public:
+    enum UserType {ADMIN, NORMAL};
 private:
     std::string nickName;
     CryptoPP::RSA::PublicKey publicKey;
@@ -20,23 +20,30 @@ private:
 
     friend class boost::serialization::access;
     template<class Archive>
-    void save(Archive & ar) const
+    void save(Archive & ar, const unsigned int version) const
     {
         ar & nickName;
         ar & type;
-        CryptoPP::SavePublicKey("/keys/" + nickName, publicKey);
+        std::string temp;
+        CryptoPP::StringSink ss(temp);
+        publicKey.Save(ss);
+        ar & temp;
     }
 
     template<class Archive>
-    void load(Archive & ar)
+    void load(Archive & ar, const unsigned int version)
     {
         ar & nickName;
         ar & type;
-        CryptoPP::LoadPublicKey("/keys/" + nickName,  publicKey);
+        std::string temp;
+        ar & temp;
+        CryptoPP::StringSource ss(temp, true);
+        publicKey.Load(ss);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
-    enum UserType {ADMIN, NORMAL};
+    User();
+
     User(std::string nickName, UserType type);
     User(std::string nickName, UserType type, CryptoPP::RSA::PublicKey);
     const std::string &getNickName() const;
@@ -47,7 +54,9 @@ public:
     void setKey(const CryptoPP::SecByteBlock &key);
     const CryptoPP::SecByteBlock &getIv() const;
     void setIv(const CryptoPP::SecByteBlock &iv);
-    const UsertType getUserType() const;
+    const UserType getUserType() const;
+    bool operator==(const User &rhs) const;
+    bool operator!=(const User &rhs) const;
 };
 
 
