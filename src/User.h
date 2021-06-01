@@ -16,10 +16,11 @@ private:
     CryptoPP::RSA::PublicKey publicKey;
     CryptoPP::SecByteBlock key;
     CryptoPP::SecByteBlock iv;
-
+    UserType type;
 public:
-    User(std::string nickName);
-    User(std::string nickName, CryptoPP::RSA::PublicKey);
+    enum UserType {ADMIN, NORMAL};
+    User(std::string nickName, UserType type);
+    User(std::string nickName, UserType type, CryptoPP::RSA::PublicKey);
     const std::string &getNickName() const;
     void setNickName(const std::string &nickName);
     const CryptoPP::RSA::PublicKey &getPublicKey() const;
@@ -28,6 +29,7 @@ public:
     void setKey(const CryptoPP::SecByteBlock &key);
     const CryptoPP::SecByteBlock &getIv() const;
     void setIv(const CryptoPP::SecByteBlock &iv);
+    const UsertType getUserType() const;
 };
 
 
