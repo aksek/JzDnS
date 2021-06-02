@@ -5,18 +5,29 @@
 
 
 #include "User.h"
-
+#include "boost/serialization/map.hpp"
 #include <fstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
 
 class UserBase {
 private:
     std::map<std::string, User> users;
-
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        ar & BOOST_SERIALIZATION_NVP(users);
+    }
 public:
     int addUser(User user);
     int removeUser(std::string nickName);
     User* getUser(std::string nickName);
     int updateUser(User user);
+    void saveBaseOnDisk(std::string basicString);
+    void loadBaseFromDisk(std::string path);
 };
 
 
