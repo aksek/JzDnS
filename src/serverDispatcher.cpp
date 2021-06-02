@@ -60,6 +60,7 @@ Message Dispatcher::handleRegister(ValueContent content) {
         auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
         Symmetric_key_pair key_pair = authorization->authorize(username_key.first, username_key.second);
         auto responseContent = serializer->serializeKey(key_pair);
+
         return Message(MessageType::Key, responseContent);
     } else return Message(MessageType::Retransmit);
 }
@@ -80,13 +81,17 @@ Message Dispatcher::handleSolution(ValueContent content) {
 }
 
 Message Dispatcher::handleNewProblem(ValueContent content) {
+    if (authorization->getCurrentUser()->getUserType() != User::UserType::ADMIN) {
+        return Message(MessageType::Retransmit);
+    }
+
     if (std::holds_alternative<std::pair<std::string, std::string> >(content)) {
         auto problem_solution = std::get<std::pair<std::string, std::string> >(content);
 
-        Riddle riddle(problem_solution.first, problem_solution.second);
-        int id = riddle.getId();
+        Riddle riddle(0, problem_solution.first, problem_solution.second);
 
-        if (adminService->addNewRiddle(riddle) != 0) {
+        int id = adminService->addNewRiddle(riddle);
+        if (id == -1) {
             return Message(MessageType::Retransmit);
         }
 
@@ -97,6 +102,9 @@ Message Dispatcher::handleNewProblem(ValueContent content) {
 }
 
 Message Dispatcher::handleDeleteProblem(ValueContent content) {
+    if (authorization->getCurrentUser()->getUserType() != User::UserType::ADMIN) {
+        return Message(MessageType::Retransmit);
+    }
     if (std::holds_alternative<int>(content)) {
 
         int id = std::get<int>(content);
@@ -110,6 +118,9 @@ Message Dispatcher::handleDeleteProblem(ValueContent content) {
 }
 
 Message Dispatcher::handleEditProblem(ValueContent content) {
+    if (authorization->getCurrentUser()->getUserType() != User::UserType::ADMIN) {
+        return Message(MessageType::Retransmit);
+    }
     if (std::holds_alternative<std::pair<int, std::string> >(content)) {
 
         auto id_problem = std::get<std::pair<int, std::string> > (content);
@@ -125,6 +136,9 @@ Message Dispatcher::handleEditProblem(ValueContent content) {
 }
 
 Message Dispatcher::handleEditSolution(ValueContent content) {
+    if (authorization->getCurrentUser()->getUserType() != User::UserType::ADMIN) {
+        return Message(MessageType::Retransmit);
+    }
     if (std::holds_alternative<std::pair<int, std::string> >(content)) {
 
         auto id_solution = std::get<std::pair<int, std::string> > (content);
