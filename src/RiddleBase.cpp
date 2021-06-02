@@ -1,6 +1,4 @@
-//
-// Created by patryk on 19.05.2021.
-//
+//Autor: Patryk Karbownik
 
 #include "RiddleBase.h"
 int RiddleBase::addRiddle(Riddle riddle)
@@ -80,4 +78,10 @@ int RiddleBase::getRiddlesAmount()
 std::map<uint64_t, Riddle> RiddleBase::getAllRiddles()
 {
     return riddles;
+}
+
+void RiddleBase::replaceRiddles(std::map<uint64_t, Riddle> riddles)
+{
+    this->riddles = riddles;
+
 }
