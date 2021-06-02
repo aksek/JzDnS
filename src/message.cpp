@@ -124,6 +124,10 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::string 
 		return deserializeInt(contentText, contentSize);
 	case MessageType::Edit_problem:
 		return deserializePairIntString(contentText, contentSize);
+	case MessageType::Edit_solution:
+		return deserializePairIntString(contentText, contentSize);
+	case MessageType::OK:
+		return deserializeInt(contentText, contentSize);
 	case MessageType::Register:
 		return deserializePublicKey(contentText, contentSize);
 	case MessageType::Key:
@@ -155,6 +159,10 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::pair<st
 		return deserializeInt(content.first, content.second);
 	case MessageType::Edit_problem:
 		return deserializePairIntString(content.first, content.second);
+	case MessageType::Edit_solution:
+		return deserializePairIntString(content.first, content.second);
+	case MessageType::OK:
+		return deserializeInt(content.first, content.second);
 	case MessageType::Register:
 		return deserializePublicKey(content.first, content.second);
 	case MessageType::Key:
@@ -319,6 +327,10 @@ std::string Message::messageTypeToString(MessageType messageType){
 		return "Delete_problem";
 	case MessageType::Edit_problem:
 		return "Edit_problem";
+	case MessageType::Edit_solution:
+		return "Edit_solution";
+	case MessageType::OK:
+		return "OK";
 	case MessageType::Register:
 		return "Register";
 	case MessageType::Key:
@@ -349,6 +361,10 @@ MessageType Message::messageTypeFromString(std::string messageType){
 		return MessageType::Delete_problem;
 	else if(messageType == "Edit_problem")
 		return MessageType::Edit_problem;
+	else if(messageType == "Edit_solution")
+		return MessageType::Edit_solution;
+	else if(messageType == "OK")
+		return MessageType::OK;
 	else if(messageType == "Register")
 		return MessageType::Register;
 	else if(messageType == "Key")
