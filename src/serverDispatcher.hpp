@@ -6,25 +6,29 @@
 #include "message.h"
 #include "authorization.hpp"
 #include "RiddleService.h"
+#include "AdminService.h"
 
 class Dispatcher {
     Message* lastMessage;
 
     Authorization* authorization;
     RiddleService* riddleService;
+    AdminService* adminService;
     SerializeContent* serializer;
 
-    void handleRetransmit(ValueContent content);
-    void handleLogin(ValueContent content);
-    void handleSolution(ValueContent content);
-    void handleNewProblem(ValueContent content);
-    void handleDeleteProblem(ValueContent content);
-    void handleEditProblem(ValueContent content);
+    Message handleRetransmit(ValueContent content);
+    Message handleLogin(ValueContent content);
+    Message handleRegister(ValueContent content);
+    Message handleSolution(ValueContent content);
+    Message handleNewProblem(ValueContent content);
+    Message handleDeleteProblem(ValueContent content);
+    Message handleEditProblem(ValueContent content);
+    Message handleEditSolution(ValueContent content);
 
 public:
-    explicit Dispatcher(Authorization* authorization, RiddleService* riddleService, SerializeContent* serializeContent);
+    explicit Dispatcher(Authorization* authorization, RiddleService* riddleService, AdminService* adminService, SerializeContent* serializeContent);
 
-    void dispatch(Message message);
+    Message dispatch(Message message);
 };
 
 

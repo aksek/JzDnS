@@ -36,7 +36,7 @@ Symmetric_key_pair Authorization::authorize(const std::string& username, CryptoP
     User *user = base->getUser(username);
 
     if (user == nullptr) {
-        base->addUser(User(username, std::move(public_key)));
+        base->addUser(User(username, User::UserType::NORMAL, std::move(public_key)));
     }
     return authorize(user);
 }

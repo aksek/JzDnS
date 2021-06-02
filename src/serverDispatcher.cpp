@@ -5,82 +5,137 @@
 #include "serverDispatcher.hpp"
 
 
-Dispatcher::Dispatcher(Authorization* authorization, RiddleService* riddleService, SerializeContent* serializeContent)
+Dispatcher::Dispatcher(Authorization* authorization, RiddleService* riddleService, AdminService* adminService, SerializeContent* serializeContent)
     : authorization{authorization},
       riddleService{riddleService},
+      adminService{adminService},
       serializer{serializeContent} {}
 
-void Dispatcher::dispatch(Message message) {
-        MessageType type = message.getMessageType();
-        ValueContent content = serializer->deserialize(type, message.getContent());
-
-//        authorization->setCurrentUser(message.getUser());
-
+Message Dispatcher::dispatch(Message message) {
+    MessageType type = message.getMessageType();
+    ValueContent content = serializer->deserialize(type, message.getContent());
 
     switch (type) {
         case MessageType::Retransmit:
-            handleRetransmit(content);
-            break;
+            return handleRetransmit(content);
+        case MessageType::Register:
+            return handleRegister(content);
         case MessageType::Login:
-            handleLogin(content);
-            break;
+            return handleLogin(content);
         case MessageType::Solution:
-            handleSolution(content);
-            break;
+            return handleSolution(content);
         case MessageType::New_problem:
-            handleNewProblem(content);
-            break;
+            return handleNewProblem(content);
         case MessageType::Delete_problem:
-            handleDeleteProblem(content);
-            break;
+            return handleDeleteProblem(content);
         case MessageType::Edit_problem:
-            handleEditProblem(content);
-            break;
+            return handleEditProblem(content);
+        case MessageType::Edit_solution:
+            return handleEditSolution(content);
         default:
-            break;
+            return Message(MessageType::Retransmit);
 
     }
 }
 
-void Dispatcher::handleRetransmit(ValueContent content) {
+Message Dispatcher::handleRetransmit(ValueContent content) {
     if (lastMessage != nullptr) {
-        //TODO send last message
-    }
+        return *lastMessage;
+    } else return Message(MessageType::Retransmit);
 }
 
-void Dispatcher::handleLogin(ValueContent content) {
+Message Dispatcher::handleLogin(ValueContent content) {
     if (std::holds_alternative<std::string>(content)) {
         std::string username = std::get<std::string>(content);
         Symmetric_key_pair key_pair = authorization->authorize(username);
-    }
-//            } else if (std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
-//                auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
-//                authorization->authorize(username_key.first(), username_key.second());
-//            }
-    // TODO send symmetric key
+        auto responseContent = serializer->serializeKey(key_pair);
+        return Message(MessageType::Key, responseContent);
+
+    } else return Message(MessageType::Retransmit);
 }
 
-void Dispatcher::handleSolution(ValueContent content) {
+
+Message Dispatcher::handleRegister(ValueContent content) {
+    if (std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
+        auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
+        Symmetric_key_pair key_pair = authorization->authorize(username_key.first, username_key.second);
+        auto responseContent = serializer->serializeKey(key_pair);
+        return Message(MessageType::Key, responseContent);
+    } else return Message(MessageType::Retransmit);
+}
+
+Message Dispatcher::handleSolution(ValueContent content) {
     if (std::holds_alternative<std::string>(content)) {
         std::string answer = std::get<std::string>(content);
 
-        bool correct = riddleService->checkAnswer(answer);
-        std::pair<std::string, size_t> responseContent = serializer->serializeBool(correct);
+        Riddle riddle = riddleService->getLastRiddle();
+        std::string correct_answer = riddle.getAnswer();
 
-        Message response(MessageType::Correct, responseContent);
-        // TODO send response
-    }
+        bool correct = (answer == correct_answer);
+        auto responseContent = serializer->serializeBool(correct);
+
+        return Message(MessageType::Correct, responseContent);
+
+    } else return Message(MessageType::Retransmit);
 }
 
-void Dispatcher::handleNewProblem(ValueContent content) {
+Message Dispatcher::handleNewProblem(ValueContent content) {
+    if (std::holds_alternative<std::pair<std::string, std::string> >(content)) {
+        auto problem_solution = std::get<std::pair<std::string, std::string> >(content);
 
+        Riddle riddle(problem_solution.first, problem_solution.second);
+        int id = riddle.getId();
+
+        if (adminService->addNewRiddle(riddle) != 0) {
+            return Message(MessageType::Retransmit);
+        }
+
+        auto responseContent = serializer->serializeInt(id);
+        return Message(MessageType::OK, responseContent);
+
+    } else return Message(MessageType::Retransmit);
 }
 
-void Dispatcher::handleDeleteProblem(ValueContent content) {
+Message Dispatcher::handleDeleteProblem(ValueContent content) {
+    if (std::holds_alternative<int>(content)) {
 
+        int id = std::get<int>(content);
+
+        if (adminService->deleteRiddle(id) != 0) {
+            return Message(MessageType::Retransmit);
+        }
+
+        return Message(MessageType::OK);
+    } else return Message(MessageType::Retransmit);
 }
 
-void Dispatcher::handleEditProblem(ValueContent content) {
+Message Dispatcher::handleEditProblem(ValueContent content) {
+    if (std::holds_alternative<std::pair<int, std::string> >(content)) {
 
+        auto id_problem = std::get<std::pair<int, std::string> > (content);
+
+        Riddle riddle = adminService.getRiddle(id_problem.first);
+        riddle.setRiddleContent(id_problem.second);
+        if (adminService->updateRiddle(riddle) != 0) {
+            return Message(MessageType::Retransmit);
+        }
+
+        return Message(MessageType::OK);
+    } else return Message(MessageType::Retransmit);
+}
+
+Message Dispatcher::handleEditSolution(ValueContent content) {
+    if (std::holds_alternative<std::pair<int, std::string> >(content)) {
+
+        auto id_solution = std::get<std::pair<int, std::string> > (content);
+
+        Riddle riddle = adminService.getRiddle(id_solution.first);
+        riddle.setAnswer(id_solution.second);
+        if (adminService->updateRiddle(riddle) != 0) {
+            return Message(MessageType::Retransmit);
+        }
+
+        return Message(MessageType::OK);
+    } else return Message(MessageType::Retransmit);
 }
 

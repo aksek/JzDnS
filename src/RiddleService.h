@@ -23,7 +23,6 @@ public:
     Riddle getLastRiddle();
     void restartRiddleDraw();
 
-    bool checkAnswer(std::string answer);
 };
 
 
