@@ -31,3 +31,7 @@ void AdminService::replaceRiddlesInBase(std::map<uint64_t, Riddle> riddles)
 {
     riddleBase->replaceRiddles(riddles);
 }
+
+Riddle AdminService::getRiddle(uint64_t riddleId) {
+    return *(riddleBase->getRiddle(riddleId));
+}

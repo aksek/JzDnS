@@ -55,3 +55,9 @@ bool Riddle::operator==(const Riddle &rhs) const {
 bool Riddle::operator!=(const Riddle &rhs) const {
     return !(rhs == *this);
 }
+
+Riddle::Riddle(const Riddle &r) {
+    this->id = r.id;
+    this->riddleContent = r.riddleContent;
+    this->answer = r.answer;
+}

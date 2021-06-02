@@ -16,6 +16,7 @@ public:
     int addNewRiddle(Riddle riddle);
     int updateRiddle(Riddle riddle);
     int deleteRiddle(uint64_t riddleId);
+    Riddle getRiddle(uint64_t riddleId);
 };
 
 
