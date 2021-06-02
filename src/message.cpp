@@ -63,7 +63,7 @@ std::pair<std::string, size_t> SerializeContent::serializeVector(std::vector< st
 	}
 	DynamicJsonDocument doc(contentSize);
 	JsonArray array = doc.to<JsonArray>();
-	for(int i=0; i<content.size(); ++i){
+	for(unsigned int i=0; i<content.size(); ++i){
 		array[i]["firstValue"] = content[i].first;
 		array[i]["secondValue"] = content[i].second;
 	}
@@ -71,6 +71,35 @@ std::pair<std::string, size_t> SerializeContent::serializeVector(std::vector< st
 	std::string serializedContent = "";
 	serializeJson(doc, serializedContent);
 	return std::pair<std::string, size_t>(serializedContent, contentSize + 23*content.size());
+}
+
+std::pair<std::string, size_t> SerializeContent::serializePublicKey(std::pair<std::string, CryptoPP::RSA::PublicKey> content){
+	std::string spki;
+	CryptoPP::StringSink ss(spki);
+	content.second.Save(ss);
+
+	size_t contentSize = JSON_OBJECT_SIZE(2) + content.first.capacity() + spki.capacity();
+	DynamicJsonDocument doc(contentSize);
+	doc["firstValue"] = content.first;
+	doc["secondValue"] = spki;
+
+	std::string serializedContent = "";
+	serializeJson(doc, serializedContent);
+	return std::pair<std::string, size_t>(serializedContent, contentSize + 23);
+}
+
+std::pair<std::string, size_t> SerializeContent::serializeKey(std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> content){
+	std::string str1(reinterpret_cast<const char*>(&(content.first)), content.first.size());
+	std::string str2(reinterpret_cast<const char*>(&(content.second)), content.second.size());
+
+	size_t contentSize = JSON_OBJECT_SIZE(2) + str1.capacity() + str2.capacity();
+	DynamicJsonDocument doc(contentSize);
+	doc["firstValue"] = str1;
+	doc["secondValue"] = str2;
+
+	std::string serializedContent = "";
+	serializeJson(doc, serializedContent);
+	return std::pair<std::string, size_t>(serializedContent, contentSize + 23);
 }
 
 ValueContent SerializeContent::deserialize(MessageType messageType, std::string contentText, size_t contentSize){
@@ -95,6 +124,10 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::string 
 		return deserializeInt(contentText, contentSize);
 	case MessageType::Edit_problem:
 		return deserializePairIntString(contentText, contentSize);
+	case MessageType::Register:
+		return deserializePublicKey(contentText, contentSize);
+	case MessageType::Key:
+		return deserializeKey(contentText, contentSize);
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -122,6 +155,10 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::pair<st
 		return deserializeInt(content.first, content.second);
 	case MessageType::Edit_problem:
 		return deserializePairIntString(content.first, content.second);
+	case MessageType::Register:
+		return deserializePublicKey(content.first, content.second);
+	case MessageType::Key:
+		return deserializeKey(content.first, content.second);
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -150,9 +187,6 @@ bool SerializeContent::deserializeBool(std::string contentText, size_t contentSi
 std::pair<std::string, std::string> SerializeContent::deserializePairStringString(std::string contentText, size_t contentSize){
 	DynamicJsonDocument doc(contentSize);
 	deserializeJson(doc, contentText);
-	std::pair<std::string, std::string> result;
-	result.first = doc["firstValue"].as<std::string>();
-	result.second = doc["secondValue"].as<std::string>();
 	return std::pair<std::string, std::string>(doc["firstValue"].as<std::string>(), doc["secondValue"].as<std::string>());
 }
 
@@ -171,8 +205,28 @@ std::vector< std::pair<std::string, std::string> > SerializeContent::deserialize
 	return result;
 }
 
+std::pair<std::string, CryptoPP::RSA::PublicKey> SerializeContent::deserializePublicKey(std::string contentText, size_t contentSize){
+	DynamicJsonDocument doc(contentSize);
+	deserializeJson(doc, contentText);
+	std::string spki = doc["secondValue"].as<std::string>();
+	CryptoPP::StringSource ss(spki, true);
+	CryptoPP::RSA::PublicKey publicKey;
+	publicKey.Load(ss);
+	return std::pair<std::string, CryptoPP::RSA::PublicKey>(doc["firstValue"].as<std::string>(), publicKey);
+}
+
+std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> SerializeContent::deserializeKey(std::string contentText, size_t contentSize){
+	DynamicJsonDocument doc(contentSize);
+	deserializeJson(doc, contentText);
+	std::string str1 = doc["firstValue"].as<std::string>();
+	std::string str2 = doc["secondValue"].as<std::string>();
+	CryptoPP::SecByteBlock key1(reinterpret_cast<const byte*>(&str1[0]), str1.size());
+	CryptoPP::SecByteBlock key2(reinterpret_cast<const byte*>(&str2[0]), str2.size());
+	return std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>(key1, key2);
+}
+
 //class Message
-Message::Message(MessageType messageType): _messageType(messageType), _contentSize(0), _contentText(""){
+Message::Message(MessageType messageType): _messageType(messageType), _contentText(""), _contentSize(0){
 
 }
 
@@ -180,7 +234,7 @@ Message::Message(MessageType messageType, std::string contentText, size_t conten
 	
 }
 
-Message::Message(MessageType messageType, std::pair<std::string, size_t> content): _messageType(messageType), _contentSize(content.second), _contentText(content.first){
+Message::Message(MessageType messageType, std::pair<std::string, size_t> content): _messageType(messageType), _contentText(content.first), _contentSize(content.second){
 	
 }
 
@@ -190,17 +244,36 @@ Message::Message(std::string message){
 	deserializeJson(doc, message);
 	_messageType = messageTypeFromString(doc["header"]["type"].as<std::string>());
 	_contentSize = doc["header"]["size"].as<size_t>();
-	int crc = doc["header"]["control"].as<int>();
+	std::string crcMessage = doc["header"]["control"].as<std::string>();
 	_contentText = doc["content"].as<std::string>();
+
+	CryptoPP::Weak::MD5 hash;
+	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	std::string crc;
+	CryptoPP::HexEncoder encoder;
+	encoder.Attach(new CryptoPP::StringSink(crc));
+	encoder.Put(digest, sizeof(digest));
+	encoder.MessageEnd();
+
+	if(crc!=crcMessage) throw std::runtime_error("crc is not good");
 }
 
 std::string Message::serialize(){
+	CryptoPP::Weak::MD5 hash;
+	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	std::string crc;
+	CryptoPP::HexEncoder encoder;
+	encoder.Attach(new CryptoPP::StringSink(crc));
+	encoder.Put(digest, sizeof(digest));
+	encoder.MessageEnd();
 	std::string messageTypeString = messageTypeToString(_messageType);
-	const size_t messageSize = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + messageTypeString.capacity() + _contentText.capacity();
+	const size_t messageSize = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + messageTypeString.capacity() + _contentText.capacity() + crc.capacity();
 	DynamicJsonDocument doc(messageSize);
 	doc["header"]["type"] = messageTypeString;
 	doc["header"]["size"] = _contentSize;
-	doc["header"]["control"] = 0;
+	doc["header"]["control"] = crc;
 	doc["content"] = _contentText;
 	
 	std::string serializedMessage = "";
@@ -246,6 +319,10 @@ std::string Message::messageTypeToString(MessageType messageType){
 		return "Delete_problem";
 	case MessageType::Edit_problem:
 		return "Edit_problem";
+	case MessageType::Register:
+		return "Register";
+	case MessageType::Key:
+		return "Key";
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -272,5 +349,9 @@ MessageType Message::messageTypeFromString(std::string messageType){
 		return MessageType::Delete_problem;
 	else if(messageType == "Edit_problem")
 		return MessageType::Edit_problem;
+	else if(messageType == "Register")
+		return MessageType::Register;
+	else if(messageType == "Key")
+		return MessageType::Key;
 	else throw std::runtime_error("messageType not exist");
 }
