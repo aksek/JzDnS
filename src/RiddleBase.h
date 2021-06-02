@@ -21,7 +21,7 @@ private:
         ar & BOOST_SERIALIZATION_NVP(riddles);
     }
 public:
-    int addRiddle(Riddle riddle);
+    uint64_t addRiddle(Riddle riddle);
     int removeRiddle(uint64_t id);
     Riddle* getRiddle(uint64_t id);
     std::map<uint64_t, Riddle> getAllRiddles();

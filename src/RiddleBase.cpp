@@ -1,15 +1,13 @@
 //Autor: Patryk Karbownik
 
 #include "RiddleBase.h"
-int RiddleBase::addRiddle(Riddle riddle)
+uint64_t  RiddleBase::addRiddle(Riddle riddle)
 {
-    auto it = riddles.find(riddle.getId());
-    if(it == riddles.end())
-    {
-        riddles.insert(std::pair<uint64_t, Riddle>(riddle.getId(), riddle));
-        return 0;
-    }
-    return -1;
+    auto it = riddles.rbegin();
+    uint64_t id = riddles.rbegin()->first + 1;
+    riddle.setId(id);
+    riddles.insert(std::pair<uint64_t, Riddle>(id, riddle));
+    return id;
 }
 
 int RiddleBase::removeRiddle(uint64_t id)
