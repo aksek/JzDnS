@@ -18,7 +18,9 @@ Symmetric_key_pair Authorization::authorize(User *user) {
 
     current_user = user;
 
-    // TODO set the user's symmetric key
+    user->setKey(key);
+    user->setIv(iv);
+
     return std::make_pair(key, iv);
 }
 
