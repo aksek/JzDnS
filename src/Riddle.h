@@ -22,6 +22,7 @@ private:
     }
 public:
     Riddle();
+    Riddle(const Riddle &r);
     Riddle(uint64_t id, std::string riddleContent, std::string answer);
     uint64_t getId();
     std::string getRiddleContent();
