@@ -24,6 +24,7 @@ add_executable(jzdns
         src/message.h src/message.cpp
         src/RiddleService.h src/RiddleService.cpp
         src/AdminService.h src/AdminService.cpp
+        src/BlockingQueue.hpp src/BlockingQueue.cpp
         )
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp")
