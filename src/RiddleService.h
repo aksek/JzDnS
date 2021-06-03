@@ -22,6 +22,7 @@ public:
     Riddle getNextRiddle();
     Riddle getLastRiddle();
     void restartRiddleDraw();
+
 };
 
 
