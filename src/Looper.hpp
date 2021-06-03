@@ -1,12 +1,13 @@
 //
 // Created by aniela on 6/3/21.
 //
-#include<thread>
-#include<atomic>
+#include <thread>
+#include <atomic>
 #include <memory>
 #include <functional>
 #include <stdexcept>
 #include <mutex>
+#include <map>
 #include "BlockingQueue.hpp"
 #include "message.h"
 #include "authorization.hpp"
@@ -15,6 +16,8 @@
 
 #pragma once
 
+class Authorization;
+
 class Looper {
 
 private:
@@ -22,6 +25,7 @@ private:
     std::atomic_bool mRunning;
     std::atomic_bool mAbortRequested{};
 
+    std::map<std::string, BlockingQueue<Message> >* userQueues;
     BlockingQueue<Message> mMessages;
 
     Authorization* authorization;
@@ -41,7 +45,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Looper(Authorization* authorization, RiddleService* riddleService, AdminService* adminService);
+    Looper(std::map<std::string, BlockingQueue<Message> >* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService);
     ~Looper();
 
     bool run();

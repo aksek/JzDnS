@@ -56,7 +56,7 @@ void Authorization::handleLogin(ValueContent content) {
         return;
     }
     std::string username = std::get<std::string>(content);
-
+    // TODO specify user
     if (authorize(username)) {
         looper->getDispatcher()->post(Message(MessageType::Login_OK));
 
@@ -71,6 +71,7 @@ void Authorization::handleRegister(ValueContent content) {
         return;
     }
     auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
+    //TODO specify user
     if (authorize(username_key.first, username_key.second)) {
         looper->getDispatcher()->post(Message(MessageType::Login_OK));
 

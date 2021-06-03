@@ -18,7 +18,9 @@ void Looper::runFunc() {
             case MessageType::Round_over:
             case MessageType::Problems:
             case MessageType::OK:
-            case MessageType::Key:
+            case MessageType::Login_OK:
+            case MessageType::Login_error:
+                userQueues[next.getUser()].push(std::move(next));
                 break;
             case MessageType::Login:
             case MessageType::Register:
@@ -41,7 +43,7 @@ void Looper::runFunc() {
     mRunning.store(false);
 }
 
-Looper::Looper(Authorization* authorization, RiddleService* riddleService, AdminService* adminService)
+Looper::Looper(std::map<std::string, BlockingQueue<Message> >* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
@@ -49,6 +51,7 @@ Looper::Looper(Authorization* authorization, RiddleService* riddleService, Admin
 , authorization(authorization)
 , riddleService(riddleService)
 , adminService(adminService)
+, userQueues(userQueues)
 {
     authorization->run();
     // TODO run the rest
