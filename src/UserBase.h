@@ -12,10 +12,11 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
-
+#include <mutex>
 class UserBase {
 private:
     std::map<std::string, User> users;
+    std::mutex m;
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
     {
