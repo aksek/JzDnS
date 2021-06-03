@@ -1,11 +1,6 @@
 //
-// Created by aniela on 5/22/21.
+// Created by aniela on 6/3/21.
 //
-#pragma once
-
-#include "User.h"
-#include "UserBase.h"
-#include "message.h"
 #include<thread>
 #include<atomic>
 #include <memory>
@@ -13,8 +8,15 @@
 #include <stdexcept>
 #include <mutex>
 #include "BlockingQueue.hpp"
+#include "message.h"
+#include "authorization.hpp"
+#include "RiddleService.h"
+#include "AdminService.h"
 
-class Authorization {
+#pragma once
+
+class Looper {
+
 private:
     std::thread mThread;
     std::atomic_bool mRunning;
@@ -22,34 +24,35 @@ private:
 
     BlockingQueue<Message> mMessages;
 
-    UserBase* base;
-    SerializeContent* serializer;
+    Authorization *authorization;
+    RiddleService *riddleService;
+    AdminService *adminService;
 
     void runFunc();
     bool post(Message &&aMessage);
 
 public:
     class Dispatcher {
-        friend class Authorization;
+        friend class Looper;
     private:
-        Authorization &mAssignedAuthorization;
-        explicit Dispatcher(Authorization &aAuthorization);
+        Looper &mAssignedLooper;
+        explicit Dispatcher(Looper &aLooper);
     public:
         bool post(Message &&aMessage);
     };
 
-    Authorization(UserBase *user_base, SerializeContent *serializer);
-    ~Authorization();
-
-    CryptoPP::RSA::PublicKey authorize(std::string username);
-    CryptoPP::RSA::PublicKey authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
+    Looper(Authorization* authorization, RiddleService* riddleService, AdminService* adminService);
+    ~Looper();
 
     bool run();
     bool running() const;
     void stop();
     void abortAndJoin();
+
     std::shared_ptr<Dispatcher> getDispatcher();
 private:
     std::shared_ptr<Dispatcher> mDispatcher;
 };
+
+
 

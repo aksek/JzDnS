@@ -228,8 +228,8 @@ std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> SerializeContent::dese
 	deserializeJson(doc, contentText);
 	std::string str1 = doc["firstValue"].as<std::string>();
 	std::string str2 = doc["secondValue"].as<std::string>();
-	CryptoPP::SecByteBlock key1(reinterpret_cast<const byte*>(&str1[0]), str1.size());
-	CryptoPP::SecByteBlock key2(reinterpret_cast<const byte*>(&str2[0]), str2.size());
+	CryptoPP::SecByteBlock key1(reinterpret_cast<const CryptoPP::byte*>(&str1[0]), str1.size());
+	CryptoPP::SecByteBlock key2(reinterpret_cast<const CryptoPP::byte*>(&str2[0]), str2.size());
 	return std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>(key1, key2);
 }
 
@@ -256,8 +256,8 @@ Message::Message(std::string message){
 	_contentText = doc["content"].as<std::string>();
 
 	CryptoPP::Weak::MD5 hash;
-	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
-	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const CryptoPP::byte*)_contentText.c_str(), _contentText.length());
 	std::string crc;
 	CryptoPP::HexEncoder encoder;
 	encoder.Attach(new CryptoPP::StringSink(crc));
@@ -269,8 +269,8 @@ Message::Message(std::string message){
 
 std::string Message::serialize(){
 	CryptoPP::Weak::MD5 hash;
-	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
-	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const CryptoPP::byte*)_contentText.c_str(), _contentText.length());
 	std::string crc;
 	CryptoPP::HexEncoder encoder;
 	encoder.Attach(new CryptoPP::StringSink(crc));
