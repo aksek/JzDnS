@@ -24,9 +24,9 @@ private:
 
     BlockingQueue<Message> mMessages;
 
-    Authorization *authorization;
-    RiddleService *riddleService;
-    AdminService *adminService;
+    Authorization* authorization;
+    RiddleService* riddleService;
+    AdminService* adminService;
 
     void runFunc();
     bool post(Message &&aMessage);

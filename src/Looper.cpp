@@ -50,14 +50,13 @@ Looper::Looper(Authorization* authorization, RiddleService* riddleService, Admin
 , riddleService(riddleService)
 , adminService(adminService)
 {
-    authorization.run();
+    authorization->run();
     // TODO run the rest
 }
 
 Looper::~Looper() {
-    delete authorization;
-    delete riddleService;
-    delete adminService;
+    authorization->stop();
+    // TODO stop the rest
     abortAndJoin();
 }
 
