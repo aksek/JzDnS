@@ -5,10 +5,10 @@
 #include "serverDispatcher.hpp"
 
 
-Dispatcher::Dispatcher(Authorization* authorization, RiddleService* riddleService, AdminService* adminService, SerializeContent* serializeContent)
-    : authorization{authorization},
-      riddleService{riddleService},
-      adminService{adminService},
+Dispatcher::Dispatcher(MessageQueue* authorization, MessageQueue* riddleService, MessageQueue* adminService, SerializeContent* serializeContent)
+    : authorizationQueue{authorization},
+      riddleServiceQueue{riddleService},
+      adminServiceQueue{adminService},
       serializer{serializeContent} {}
 
 Message Dispatcher::dispatch(Message message) {

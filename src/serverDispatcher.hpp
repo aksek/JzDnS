@@ -7,13 +7,16 @@
 #include "authorization.hpp"
 #include "RiddleService.h"
 #include "AdminService.h"
+#include "BlockingQueue.hpp"
+
+typedef BlockingQueue<Message> MessageQueue;
 
 class Dispatcher {
     Message* lastMessage;
 
-    Authorization* authorization;
-    RiddleService* riddleService;
-    AdminService* adminService;
+    MessageQueue *authorizationQueue;
+    MessageQueue *riddleServiceQueue;
+    MessageQueue *adminServiceQueue;
     SerializeContent* serializer;
 
     Message handleRetransmit(ValueContent content);
@@ -26,7 +29,7 @@ class Dispatcher {
     Message handleEditSolution(ValueContent content);
 
 public:
-    explicit Dispatcher(Authorization* authorization, RiddleService* riddleService, AdminService* adminService, SerializeContent* serializeContent);
+    explicit Dispatcher(MessageQueue* authorization, MessageQueue* riddleService, MessageQueue* adminService, SerializeContent* serializeContent);
 
     Message dispatch(Message message);
 };
