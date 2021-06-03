@@ -10,37 +10,25 @@
 
 Authorization::Authorization(UserBase *user_base) : base{user_base} {}
 
-Symmetric_key_pair Authorization::authorize(User *user) {
-    const CryptoPP::RSA::PublicKey& user_public_key = user->getPublicKey();
-
-    CryptoPP::SecByteBlock key, iv;
-    Cryptography::generate_symmetric_key(key, iv);
-
-    current_user = user;
-
-    user->setKey(key);
-    user->setIv(iv);
-
-    return std::make_pair(key, iv);
-}
-
-Symmetric_key_pair Authorization::authorize(std::string username) {
+CryptoPP::RSA::PublicKey Authorization::authorize(std::string username) {
     User *user = base->getUser(std::move(username));
 
     if (user == nullptr) {
-        return std::make_pair(CryptoPP::SecByteBlock(), CryptoPP::SecByteBlock());
+        return CryptoPP::RSA::PublicKey();
     }
 
-    return authorize(user);
+    return user->getPublicKey();
 }
 
-Symmetric_key_pair Authorization::authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key) {
+CryptoPP::RSA::PublicKey Authorization::authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key) {
     User *user = base->getUser(username);
 
     if (user == nullptr) {
-        base->addUser(User(username, User::UserType::NORMAL, std::move(public_key)));
+        if (base->addUser(User(username, User::UserType::NORMAL, public_key)) == 0) {
+            return public_key;
+        } else return CryptoPP::RSA::PublicKey();
     }
-    return authorize(user);
+    return user->getPublicKey();
 }
 
 const User* Authorization::getCurrentUser() const {

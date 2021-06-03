@@ -14,12 +14,11 @@ private:
     User* current_user;
 
     UserBase* base;
-    Symmetric_key_pair authorize(User* user);
 
 public:
     explicit Authorization(UserBase* user_base);
-    Symmetric_key_pair authorize(std::string username);
-    Symmetric_key_pair authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
+    CryptoPP::RSA::PublicKey authorize(std::string username);
+    CryptoPP::RSA::PublicKey authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
 
     [[nodiscard]] const User* getCurrentUser() const;
 };
