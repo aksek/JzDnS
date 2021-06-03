@@ -228,29 +228,30 @@ std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> SerializeContent::dese
 	deserializeJson(doc, contentText);
 	std::string str1 = doc["firstValue"].as<std::string>();
 	std::string str2 = doc["secondValue"].as<std::string>();
-	CryptoPP::SecByteBlock key1(reinterpret_cast<const byte*>(&str1[0]), str1.size());
-	CryptoPP::SecByteBlock key2(reinterpret_cast<const byte*>(&str2[0]), str2.size());
+	CryptoPP::SecByteBlock key1(reinterpret_cast<const unsigned char*>(&str1[0]), str1.size());
+	CryptoPP::SecByteBlock key2(reinterpret_cast<const unsigned char*>(&str2[0]), str2.size());
 	return std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>(key1, key2);
 }
 
 //class Message
-Message::Message(MessageType messageType): _messageType(messageType), _contentText(""), _contentSize(0){
+Message::Message(MessageType messageType, std::string userID): _messageType(messageType), _userID(userID), _contentText(""), _contentSize(0){
 
 }
 
-Message::Message(MessageType messageType, std::string contentText, size_t contentSize): _messageType(messageType), _contentText(contentText), _contentSize(contentSize){
+Message::Message(MessageType messageType, std::string userID, std::string contentText, size_t contentSize): _messageType(messageType), _userID(userID), _contentText(contentText), _contentSize(contentSize){
 	
 }
 
-Message::Message(MessageType messageType, std::pair<std::string, size_t> content): _messageType(messageType), _contentText(content.first), _contentSize(content.second){
+Message::Message(MessageType messageType, std::string userID, std::pair<std::string, size_t> content): _messageType(messageType), _userID(userID), _contentText(content.first), _contentSize(content.second){
 	
 }
 
 Message::Message(std::string message){
-	const size_t size = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + message.capacity();
+	const size_t size = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + message.capacity();
 	DynamicJsonDocument doc(size);
 	deserializeJson(doc, message);
 	_messageType = messageTypeFromString(doc["header"]["type"].as<std::string>());
+	_userID = doc["header"]["user"].as<std::string>();
 	_contentSize = doc["header"]["size"].as<size_t>();
 	std::string crcMessage = doc["header"]["control"].as<std::string>();
 	_contentText = doc["content"].as<std::string>();
@@ -277,9 +278,10 @@ std::string Message::serialize(){
 	encoder.Put(digest, sizeof(digest));
 	encoder.MessageEnd();
 	std::string messageTypeString = messageTypeToString(_messageType);
-	const size_t messageSize = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + messageTypeString.capacity() + _contentText.capacity() + crc.capacity();
+	const size_t messageSize = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + messageTypeString.capacity() + _userID.capacity() + _contentText.capacity() + crc.capacity();
 	DynamicJsonDocument doc(messageSize);
 	doc["header"]["type"] = messageTypeString;
+	doc["header"]["user"] = _userID;
 	doc["header"]["size"] = _contentSize;
 	doc["header"]["control"] = crc;
 	doc["content"] = _contentText;
@@ -291,6 +293,10 @@ std::string Message::serialize(){
 	
 MessageType Message::getMessageType(){
 	return _messageType;
+}
+
+std::string Message::getUserID(){
+	return _userID;
 }
 
 size_t Message::getContentSize(){
