@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <stdexcept>
 
+typedef unsigned char byte;
+
 //class SerializeContent
 std::pair<std::string, size_t> SerializeContent::serializeString(std::string content){
 	size_t contentSize = JSON_OBJECT_SIZE(1) + content.capacity();
@@ -269,8 +271,8 @@ Message::Message(std::string message){
 	_contentText = doc["content"].as<std::string>();
 
 	CryptoPP::Weak::MD5 hash;
-	CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
-	hash.CalculateDigest(digest, (const CryptoPP::byte*)_contentText.c_str(), _contentText.length());
+	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
 	std::string crc;
 	CryptoPP::HexEncoder encoder;
 	encoder.Attach(new CryptoPP::StringSink(crc));
@@ -282,8 +284,8 @@ Message::Message(std::string message){
 
 std::string Message::serialize(){
 	CryptoPP::Weak::MD5 hash;
-	CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
-	hash.CalculateDigest(digest, (const CryptoPP::byte*)_contentText.c_str(), _contentText.length());
+	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
 	std::string crc;
 	CryptoPP::HexEncoder encoder;
 	encoder.Attach(new CryptoPP::StringSink(crc));

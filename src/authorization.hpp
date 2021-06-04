@@ -58,5 +58,7 @@ public:
     std::shared_ptr<Dispatcher> getDispatcher();
 private:
     std::shared_ptr<Dispatcher> mDispatcher;
+
+    void sendResponse(std::string &user);
 };
 

@@ -1,18 +1,17 @@
 #include <iostream>
 #include "BlockingQueue.hpp"
 #include "Looper.hpp"
+#include "cryptography.hpp"
 
 int main()
 {
-    std::cout << "Hello world!";
     Riddle riddle(0, "why", "because");
 
     QueueMap userQueues;
     BlockingQueue<Message> queue;
-    userQueues.add_user("a", &queue);
+    userQueues.add_user("b", &queue);
     UserBase userBase;
-//    CryptoPP::RSA::PublicKey key();
-    userBase.addUser(User("a", User::UserType::NORMAL));
+
     Authorization authorization(&userBase);
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
@@ -20,14 +19,29 @@ int main()
     AdminService adminService(&riddleBase);
 
     Looper looper(&userQueues, &authorization, &riddleService, &adminService);
-    looper.run();
-    Message message(MessageType::Login, "a");
+    Message message(MessageType::Login, "b");
 
     SerializeContent serializer;
-    auto content = serializer.serializeString("a");
-    looper.getDispatcher()->post(Message(MessageType::Login, "a", content));
-    Message result = userQueues.pop("a");
-    std::cout << "user id of the returned message: " <<  result.getUserID() << std::endl;
+
+    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::RSA::PrivateKey private_key;
+    CryptoPP::RSA::PublicKey public_key;
+
+    Cryptography::generate_public_private_key(public_key, private_key, rng);
+
+    auto content = serializer.serializePublicKey(std::make_pair("b", public_key));
+
+
+//    BOOST_TEST_CHECKPOINT( "Looper initiated");
+    looper.run();
+//    BOOST_TEST_CHECKPOINT( "Looper running");
+
+    looper.getDispatcher()->post(Message(MessageType::Register, "b", content));
+
+    Message result = userQueues.pop("b");
+
+//    BOOST_CHECK(result.getMessageType() == MessageType::Login_OK);
+
     looper.stop();
     return 0;
 }

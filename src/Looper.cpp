@@ -11,7 +11,7 @@ void Looper::runFunc() {
         Message next(MessageType::OK, "");
 
         if (!mMessages.tryWaitAndPop(next, 2000)) {
-            mRunning.store(false);
+//            mRunning.store(false);
             continue;
         }
 
@@ -21,8 +21,6 @@ void Looper::runFunc() {
             case MessageType::Correct:
             case MessageType::Problems:
             case MessageType::OK:
-            case MessageType::Login_OK:
-            case MessageType::Login_error:
                 userQueues->post_to(next.getUserID(), next);
                 break;
             case MessageType::Round_over:
@@ -38,8 +36,7 @@ void Looper::runFunc() {
                 break;
             case MessageType::New_problem:
             case MessageType::Delete_problem:
-            case MessageType::Edit_problem:
-            case MessageType::Edit_solution:
+            case MessageType::Update:
             case MessageType::Get_all_problems:
 //                adminService->getDispatcher()->post(std::move(next));
                 break;

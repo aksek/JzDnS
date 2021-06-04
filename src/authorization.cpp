@@ -55,12 +55,21 @@ void Authorization::handleLogin(ValueContent content, std::string user) {
         return;
     }
     std::string username = std::get<std::string>(content);
-    if (authorize(username)) {
-        looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
+    sendResponse(user);
+}
 
-    } else {
-        looper->getDispatcher()->post(Message(MessageType::Login_error, user));
+void Authorization::sendResponse(std::string &user) {
+    int user_type_code = 0;
+    User::UserType user_type = base->getUser(user)->getUserType();
+    if (authorize(user)) {
+        if (user_type == User::ADMIN) {
+            user_type_code = 2;
+        } else {
+            user_type_code = 1;
+        }
     }
+    auto result = serializer->serializeBool(user_type_code);
+    looper->getDispatcher()->post(Message(MessageType::OK, user, result));
 }
 
 void Authorization::handleRegister(ValueContent content, std::string user) {
@@ -69,13 +78,8 @@ void Authorization::handleRegister(ValueContent content, std::string user) {
         return;
     }
     auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
-    //TODO specify user
-    if (authorize(username_key.first, username_key.second)) {
-        looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
 
-    } else {
-        looper->getDispatcher()->post(Message(MessageType::Login_error, user));
-    }
+    sendResponse(user);
 }
 
 
@@ -86,7 +90,7 @@ void Authorization::runFunc() {
         Message next(MessageType::OK, "");
 
         if (!mMessages.tryWaitAndPop(next, 2000)) {
-            mRunning.store(false);
+//            mRunning.store(false);
             continue;
         }
 

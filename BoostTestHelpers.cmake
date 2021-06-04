@@ -4,7 +4,7 @@ function(add_boost_test SOURCE_FILE_NAME IMPLEMENTATION)
 
     add_executable(${TEST_EXECUTABLE_NAME} ${SOURCE_FILE_NAME} ${IMPLEMENTATION})
     target_link_libraries(${TEST_EXECUTABLE_NAME}
-            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} -lboost_serialization cryptopp)
 
     file(READ "${SOURCE_FILE_NAME}" SOURCE_FILE_CONTENTS)
     string(REGEX MATCHALL "BOOST_AUTO_TEST_CASE\\( *([A-Za-z_0-9]+) *\\)"
