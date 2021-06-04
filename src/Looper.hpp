@@ -13,6 +13,7 @@
 #include "authorization.hpp"
 #include "RiddleService.h"
 #include "AdminService.h"
+#include "QueueMap.hpp"
 
 #pragma once
 
@@ -25,7 +26,7 @@ private:
     std::atomic_bool mRunning;
     std::atomic_bool mAbortRequested{};
 
-    std::map<std::string, BlockingQueue<Message> >* userQueues;
+    QueueMap* userQueues;
     BlockingQueue<Message> mMessages;
 
     Authorization* authorization;
@@ -45,7 +46,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Looper(std::map<std::string, BlockingQueue<Message> >* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService);
+    Looper(QueueMap* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService);
     ~Looper();
 
     bool run();

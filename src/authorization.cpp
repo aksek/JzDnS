@@ -50,33 +50,33 @@ CryptoPP::RSA::PublicKey Authorization::getKey(std::string username) {
     return user->getPublicKey();
 }
 
-void Authorization::handleLogin(ValueContent content) {
+void Authorization::handleLogin(ValueContent content, std::string user) {
     if (!std::holds_alternative<std::string>(content)) {
-        looper->getDispatcher()->post(Message(MessageType::Retransmit));
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
         return;
     }
     std::string username = std::get<std::string>(content);
     // TODO specify user
     if (authorize(username)) {
-        looper->getDispatcher()->post(Message(MessageType::Login_OK));
+        looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
 
     } else {
-        looper->getDispatcher()->post(Message(MessageType::Login_error));
+        looper->getDispatcher()->post(Message(MessageType::Login_error, user));
     }
 }
 
-void Authorization::handleRegister(ValueContent content) {
+void Authorization::handleRegister(ValueContent content, std::string user) {
     if (!std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
-        looper->getDispatcher()->post(Message(MessageType::Retransmit));
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
         return;
     }
     auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
     //TODO specify user
     if (authorize(username_key.first, username_key.second)) {
-        looper->getDispatcher()->post(Message(MessageType::Login_OK));
+        looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
 
     } else {
-        looper->getDispatcher()->post(Message(MessageType::Login_error));
+        looper->getDispatcher()->post(Message(MessageType::Login_error, user));
     }
 }
 
@@ -85,7 +85,7 @@ void Authorization::runFunc() {
     mRunning.store(true);
 
     while(false == mAbortRequested.load()) {
-        Message next(MessageType::OK);
+        Message next(MessageType::OK, "");
         mMessages.waitAndPop(next);
 
         MessageType type = next.getMessageType();
@@ -93,9 +93,9 @@ void Authorization::runFunc() {
 
         switch(type) {
             case MessageType::Login:
-                handleLogin(content);
+                handleLogin(content, next.getUserID());
             case MessageType::Register:
-                handleRegister(content);
+                handleRegister(content, next.getUserID());
             default:
                 break;
         }

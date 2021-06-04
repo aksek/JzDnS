@@ -8,7 +8,7 @@ void Looper::runFunc() {
     mRunning.store(true);
 
     while(false == mAbortRequested.load()) {
-        Message next(MessageType::OK);
+        Message next(MessageType::OK, "");
         mMessages.waitAndPop(next);
 
         switch(next.getMessageType()) {
@@ -19,10 +19,10 @@ void Looper::runFunc() {
             case MessageType::OK:
             case MessageType::Login_OK:
             case MessageType::Login_error:
-                userQueues[next.getUser()].push(std::move(next));
+                userQueues->post_to(next.getUserID(), next);
                 break;
             case MessageType::Round_over:
-                // TODO send to everyone
+                userQueues->post_except(next.getUserID(), next);
                 break;
             case MessageType::Login:
             case MessageType::Register:
@@ -47,7 +47,7 @@ void Looper::runFunc() {
     mRunning.store(false);
 }
 
-Looper::Looper(std::map<std::string, BlockingQueue<Message> >* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService)
+Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)

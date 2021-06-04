@@ -34,8 +34,8 @@ private:
     bool authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
     CryptoPP::RSA::PublicKey getKey(std::string username);
 
-    void handleLogin(ValueContent content);
-    void handleRegister(ValueContent content);
+    void handleLogin(ValueContent content, std::string user);
+    void handleRegister(ValueContent content, std::string user);
 public:
     class Dispatcher {
         friend class Authorization;

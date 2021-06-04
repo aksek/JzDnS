@@ -25,7 +25,7 @@ add_executable(jzdns
         src/RiddleService.h src/RiddleService.cpp
         src/AdminService.h src/AdminService.cpp
         src/BlockingQueue.hpp src/BlockingQueue.cpp
-        src/Looper.cpp src/Looper.hpp)
+        src/Looper.cpp src/Looper.hpp src/QueueMap.cpp src/QueueMap.hpp)
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
