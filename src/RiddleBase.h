@@ -11,19 +11,23 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
+#include <mutex>
 
 class RiddleBase {
 private:
     std::map<uint64_t, Riddle> riddles;
+    std::mutex m;
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
     {
         ar & BOOST_SERIALIZATION_NVP(riddles);
     }
 public:
+    RiddleBase();
+
     uint64_t addRiddle(Riddle riddle);
     int removeRiddle(uint64_t id);
-    Riddle* getRiddle(uint64_t id);
+    Riddle getRiddle(uint64_t id);
     std::map<uint64_t, Riddle> getAllRiddles();
     int updateRiddle(Riddle riddle);
     void replaceRiddles(std::map<uint64_t, Riddle> riddles);
