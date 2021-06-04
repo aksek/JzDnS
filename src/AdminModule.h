@@ -41,7 +41,8 @@ public:
         bool post(Message &&message);
     };
 
-    AdminModule(RiddleBase* riddleBase, Looper* looper);
+    AdminModule(RiddleBase* riddleBase);
+    void setLooper(Looper* looper);
     ~AdminModule();
 
     bool run();
@@ -49,6 +50,7 @@ public:
     void stop();
     void abortAndJoin();
     std::shared_ptr<Dispatcher> getDispatcher();
+
 private:
     std::shared_ptr<Dispatcher> mDispatcher;
 };

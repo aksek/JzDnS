@@ -22,12 +22,11 @@ bool AdminModule::post(Message &&aMessage)
     return true;
 }
 
-AdminModule::AdminModule(RiddleBase* riddleBase, Looper* looper) :
+AdminModule::AdminModule(RiddleBase* riddleBase) :
 mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this))),
 mRunning(false),
 mAbortRequested(false),
 messagesQueue(),
-looper(looper),
 adminService(riddleBase),
 serializer()
 {}
@@ -169,4 +168,9 @@ AdminModule::Dispatcher::Dispatcher(AdminModule &adminModule) : adminModule(admi
 bool AdminModule::Dispatcher::post(Message &&message)
 {
     return adminModule.post(std::move(message));
+}
+
+void AdminModule::setLooper(Looper *looper)
+{
+    this->looper = looper;
 }
