@@ -4,20 +4,43 @@
 
 #include "authorization.hpp"
 #include "cryptography.hpp"
+#include "Looper.hpp"
 
 #include <utility>
 
 
-Authorization::Authorization(UserBase *user_base, SerializeContent *serializer)
+Authorization::Authorization(UserBase *user_base, Looper* looper)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
 , mMessages()
+, looper(looper)
 , base(user_base)
-, serializer(serializer)
+, serializer()
 {}
 
-CryptoPP::RSA::PublicKey Authorization::authorize(std::string username) {
+bool Authorization::authorize(std::string username) {
+    User *user = base->getUser(std::move(username));
+
+    if (user == nullptr) {
+        return false;
+    }
+
+    return true;
+}
+
+bool Authorization::authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key) {
+    User *user = base->getUser(username);
+
+    if (user == nullptr) {
+        if (base->addUser(User(username, User::UserType::NORMAL, public_key)) == 0) {
+            return true;
+        } else return false;
+    }
+    return true;
+}
+
+CryptoPP::RSA::PublicKey Authorization::getKey(std::string username) {
     User *user = base->getUser(std::move(username));
 
     if (user == nullptr) {
@@ -27,30 +50,52 @@ CryptoPP::RSA::PublicKey Authorization::authorize(std::string username) {
     return user->getPublicKey();
 }
 
-CryptoPP::RSA::PublicKey Authorization::authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key) {
-    User *user = base->getUser(username);
-
-    if (user == nullptr) {
-        if (base->addUser(User(username, User::UserType::NORMAL, public_key)) == 0) {
-            return public_key;
-        } else return CryptoPP::RSA::PublicKey();
+void Authorization::handleLogin(ValueContent content, std::string user) {
+    if (!std::holds_alternative<std::string>(content)) {
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
+        return;
     }
-    return user->getPublicKey();
+    std::string username = std::get<std::string>(content);
+    // TODO specify user
+    if (authorize(username)) {
+        looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
+
+    } else {
+        looper->getDispatcher()->post(Message(MessageType::Login_error, user));
+    }
 }
+
+void Authorization::handleRegister(ValueContent content, std::string user) {
+    if (!std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
+        return;
+    }
+    auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
+    //TODO specify user
+    if (authorize(username_key.first, username_key.second)) {
+        looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
+
+    } else {
+        looper->getDispatcher()->post(Message(MessageType::Login_error, user));
+    }
+}
+
 
 void Authorization::runFunc() {
     mRunning.store(true);
 
     while(false == mAbortRequested.load()) {
-        Message next(MessageType::OK);
+        Message next(MessageType::OK, "");
         mMessages.waitAndPop(next);
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());
-//TODO fill this in v
+
         switch(type) {
             case MessageType::Login:
+                handleLogin(content, next.getUserID());
             case MessageType::Register:
+                handleRegister(content, next.getUserID());
             default:
                 break;
         }
@@ -105,6 +150,7 @@ void Authorization::abortAndJoin() {
 std::shared_ptr<Authorization::Dispatcher> Authorization::getDispatcher() {
     return mDispatcher;
 }
+
 
 Authorization::Dispatcher::Dispatcher(Authorization &aAuthorization) : mAssignedAuthorization(aAuthorization) {}
 

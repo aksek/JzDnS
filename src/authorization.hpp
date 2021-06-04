@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <mutex>
 #include "BlockingQueue.hpp"
+#include "Looper.hpp"
 
 class Authorization {
 private:
@@ -21,6 +22,7 @@ private:
     std::atomic_bool mAbortRequested{};
 
     BlockingQueue<Message> mMessages;
+    Looper* looper;
 
     UserBase* base;
     SerializeContent* serializer;
@@ -28,6 +30,12 @@ private:
     void runFunc();
     bool post(Message &&aMessage);
 
+    bool authorize(std::string username);
+    bool authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
+    CryptoPP::RSA::PublicKey getKey(std::string username);
+
+    void handleLogin(ValueContent content, std::string user);
+    void handleRegister(ValueContent content, std::string user);
 public:
     class Dispatcher {
         friend class Authorization;
@@ -38,11 +46,9 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Authorization(UserBase *user_base, SerializeContent *serializer);
+    Authorization(UserBase *user_base, Looper* looper);
     ~Authorization();
 
-    CryptoPP::RSA::PublicKey authorize(std::string username);
-    CryptoPP::RSA::PublicKey authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
 
     bool run();
     bool running() const;

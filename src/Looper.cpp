@@ -8,29 +8,35 @@ void Looper::runFunc() {
     mRunning.store(true);
 
     while(false == mAbortRequested.load()) {
-        Message next(MessageType::OK);
+        Message next(MessageType::OK, "");
         mMessages.waitAndPop(next);
 
         switch(next.getMessageType()) {
             case MessageType::Retransmit:
             case MessageType::Problem:
             case MessageType::Correct:
-            case MessageType::Round_over:
             case MessageType::Problems:
             case MessageType::OK:
-            case MessageType::Key:
+            case MessageType::Login_OK:
+            case MessageType::Login_error:
+                userQueues->post_to(next.getUserID(), next);
+                break;
+            case MessageType::Round_over:
+                userQueues->post_except(next.getUserID(), next);
                 break;
             case MessageType::Login:
             case MessageType::Register:
                 authorization->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Solution:
+            case MessageType::Get_current_problem:
                 riddleService->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Edit_problem:
             case MessageType::Edit_solution:
+            case MessageType::Get_all_problems:
                 adminService->getDispatcher()->post(std::move(next));
                 break;
             default:
@@ -41,7 +47,7 @@ void Looper::runFunc() {
     mRunning.store(false);
 }
 
-Looper::Looper(Authorization* authorization, RiddleService* riddleService, AdminService* adminService)
+Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
@@ -49,15 +55,15 @@ Looper::Looper(Authorization* authorization, RiddleService* riddleService, Admin
 , authorization(authorization)
 , riddleService(riddleService)
 , adminService(adminService)
+, userQueues(userQueues)
 {
-    authorization.run();
+    authorization->run();
     // TODO run the rest
 }
 
 Looper::~Looper() {
-    delete authorization;
-    delete riddleService;
-    delete adminService;
+    authorization->stop();
+    // TODO stop the rest
     abortAndJoin();
 }
 

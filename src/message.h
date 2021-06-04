@@ -53,19 +53,21 @@ private:
 class Message{
 	
 public:
-	Message(MessageType messageType);
-	Message(MessageType messageType, std::string contentText, size_t contentSize);
-	Message(MessageType messageType, std::pair<std::string, size_t> content);
+	Message(MessageType messageType, std::string userID);
+	Message(MessageType messageType, std::string userID, std::string contentText, size_t contentSize);
+	Message(MessageType messageType, std::string userID, std::pair<std::string, size_t> content);
 	Message(std::string message);
 	std::string serialize();
 	
 	MessageType getMessageType();
+	std::string getUserID();
 	size_t getContentSize();
 	std::string getContentText();
 	std::pair<std::string, size_t> getContent();
 	
 private:
 	MessageType _messageType;
+	std::string _userID;
 	std::string _contentText;
 	size_t _contentSize;
 	
