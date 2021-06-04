@@ -9,7 +9,7 @@
 
 class Riddle {
 private:
-    uint64_t id;
+    int id;
     std::string riddleContent;
     std::string answer;
     friend class boost::serialization::access;
@@ -23,11 +23,11 @@ private:
 public:
     Riddle();
     Riddle(const Riddle &r);
-    Riddle(uint64_t id, std::string riddleContent, std::string answer);
-    uint64_t getId();
+    Riddle(int id, std::string riddleContent, std::string answer);
+    int getId();
     std::string getRiddleContent();
     std::string getAnswer();
-    void setId(uint64_t id);
+    void setId(int id);
     void setRiddleContent(std::string riddleContent);
     void setAnswer(std::string answer);
     bool operator==(const Riddle &rhs) const;

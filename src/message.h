@@ -12,32 +12,15 @@
 #include <vector>
 #include <variant>
 #include <utility>
+#include <tuple>
 
 #include <iostream>
 
-
-
 enum class MessageType{
-	Problem,
-	Correct,
-	Round_over,
-	Retransmit,
-	Login,
-	Solution,
-	Problems,
-	New_problem,
-	Delete_problem,
-	Edit_problem,
-	Edit_solution,
-	OK,
-	Register,
-	Login_OK,
-	Login_error,
-	Get_current_problem,
-	Get_all_problems
+	Problem, Correct, Round_over, Retransmit, Login, Solution, Problems, New_problem, Delete_problem, Edit_problem, Edit_solution, Update, OK, Register, Key
 };
 
-typedef std::variant<void*, std::string, int, bool, std::pair<std::string, std::string>, std::pair<int, std::string>, std::vector< std::pair<std::string, std::string> >, std::pair<std::string, CryptoPP::RSA::PublicKey>, std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> > ValueContent;
+typedef std::variant<void*, std::string, int, bool, std::pair<std::string, std::string>, std::pair<int, std::string>, std::tuple<int, std::string, std::string>, std::vector< std::tuple<int, std::string, std::string> >, std::pair<std::string, CryptoPP::RSA::PublicKey>, std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> > ValueContent;
 
 //klasa odpowiedzialna za serializację content
 class SerializeContent{
@@ -49,7 +32,8 @@ public:
 	std::pair<std::string, size_t> serializeBool(bool content);
 	std::pair<std::string, size_t> serializePairStringString(std::pair<std::string, std::string> content);
 	std::pair<std::string, size_t> serializePairIntString(std::pair<int, std::string> content);
-	std::pair<std::string, size_t> serializeVector(std::vector< std::pair<std::string, std::string> > content);
+	std::pair<std::string, size_t> serializeTuple(std::tuple<int, std::string, std::string> content);
+	std::pair<std::string, size_t> serializeVector(std::vector< std::tuple<int, std::string, std::string> > content);
 	std::pair<std::string, size_t> serializePublicKey(std::pair<std::string, CryptoPP::RSA::PublicKey> content);
 	std::pair<std::string, size_t> serializeKey(std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> content);
 
@@ -62,7 +46,8 @@ private:
 	bool deserializeBool(std::string contentText, size_t contentSize);
 	std::pair<std::string, std::string> deserializePairStringString(std::string contentText, size_t contentSize);
 	std::pair<int, std::string> deserializePairIntString(std::string contentText, size_t contentSize);
-	std::vector< std::pair<std::string, std::string> > deserializeVector(std::string contentText, size_t contentSize);
+	std::tuple<int, std::string, std::string> deserializeTuple(std::string contentText, size_t contentSize);
+	std::vector< std::tuple<int, std::string, std::string> > deserializeVector(std::string contentText, size_t contentSize);
 	std::pair<std::string, CryptoPP::RSA::PublicKey> deserializePublicKey(std::string contentText, size_t contentSize);
 	std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> deserializeKey(std::string contentText, size_t contentSize);
 };

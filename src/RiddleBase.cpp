@@ -1,7 +1,7 @@
 //Autor: Patryk Karbownik
 
 #include "RiddleBase.h"
-uint64_t  RiddleBase::addRiddle(Riddle riddle)
+int  RiddleBase::addRiddle(Riddle riddle)
 {
     m.lock();
     auto it = riddles.rbegin();
@@ -12,7 +12,7 @@ uint64_t  RiddleBase::addRiddle(Riddle riddle)
     return id;
 }
 
-int RiddleBase::removeRiddle(uint64_t id)
+int RiddleBase::removeRiddle(int id)
 {
     m.lock();
     auto it = riddles.find(id);
@@ -27,7 +27,7 @@ int RiddleBase::removeRiddle(uint64_t id)
     return -1;
 }
 
-Riddle RiddleBase::getRiddle(uint64_t id)
+Riddle RiddleBase::getRiddle(int id)
 {
     Riddle r;
     m.lock();
@@ -90,15 +90,15 @@ int RiddleBase::getRiddlesAmount()
     return s;
 }
 
-std::map<uint64_t, Riddle> RiddleBase::getAllRiddles()
+std::map<int, Riddle> RiddleBase::getAllRiddles()
 {
     m.lock();
-    std::map<uint64_t, Riddle> r = riddles;
+    std::map<int, Riddle> r = riddles;
     m.unlock();
     return r;
 }
 
-void RiddleBase::replaceRiddles(std::map<uint64_t, Riddle> riddles)
+void RiddleBase::replaceRiddles(std::map<int, Riddle> riddles)
 {
     m.lock();
     this->riddles = riddles;

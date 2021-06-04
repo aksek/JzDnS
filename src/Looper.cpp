@@ -32,13 +32,13 @@ void Looper::runFunc() {
                 break;
             case MessageType::Solution:
             case MessageType::Get_current_problem:
-//                riddleService->getDispatcher()->post(std::move(next));
+                riddleModule->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Update:
             case MessageType::Get_all_problems:
-//                adminService->getDispatcher()->post(std::move(next));
+                adminModule->getDispatcher()->post(std::move(next));
                 break;
             default:
                 break;
@@ -48,24 +48,28 @@ void Looper::runFunc() {
     mRunning.store(false);
 }
 
-Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService)
+Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
 , mMessages()
 , authorization(authorization)
-, riddleService(riddleService)
-, adminService(adminService)
+, riddleModule(riddleModule)
+, adminModule(adminModule)
 , userQueues(userQueues)
 {
     authorization->setLooper(this);
     authorization->run();
-    // TODO run the rest
+    adminModule->setLooper(this);
+    adminModule->run();
+    riddleModule->setLooper(this);
+    riddleModule->run();
 }
 
 Looper::~Looper() {
     authorization->stop();
-    // TODO stop the rest
+    adminModule->stop();
+    riddleModule->stop();
     abortAndJoin();
 }
 

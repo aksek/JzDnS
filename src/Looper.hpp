@@ -16,6 +16,8 @@
 #include "RiddleService.h"
 #include "AdminService.h"
 #include "QueueMap.hpp"
+#include "RiddleModule.h"
+#include "AdminModule.h"
 
 
 class Authorization;
@@ -31,8 +33,8 @@ private:
     BlockingQueue<Message> mMessages;
 
     Authorization* authorization;
-    RiddleService* riddleService;
-    AdminService* adminService;
+    RiddleModule* riddleModule;
+    AdminModule* adminModule;
 
     void runFunc();
     bool post(Message &&aMessage);
@@ -47,7 +49,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Looper(QueueMap* userQueues, Authorization* authorization, RiddleService* riddleService, AdminService* adminService);
+    Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule);
     ~Looper();
 
     bool run();

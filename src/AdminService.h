@@ -11,12 +11,12 @@ private:
     RiddleBase* riddleBase;
 public:
     AdminService(RiddleBase* riddleBase);
-    std::map<uint64_t, Riddle> getAllRiddlesFromBase();
-    void replaceRiddlesInBase(std::map<uint64_t, Riddle> riddles);
+    std::map<int, Riddle> getAllRiddlesFromBase();
+    void replaceRiddlesInBase(std::map<int, Riddle> riddles);
     int addNewRiddle(Riddle riddle);
     int updateRiddle(Riddle riddle);
-    int deleteRiddle(uint64_t riddleId);
-    Riddle getRiddle(uint64_t riddleId);
+    int deleteRiddle(int riddleId);
+    Riddle getRiddle(int riddleId);
 };
 
 

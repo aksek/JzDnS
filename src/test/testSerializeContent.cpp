@@ -42,15 +42,15 @@ BOOST_AUTO_TEST_CASE(TestSerializeContentSerializePairIntString){
 
 BOOST_AUTO_TEST_CASE(TestSerializeContentSerializeVector){
 	SerializeContent serialize;
-	std::vector<std::pair<std::string, std::string> > wartosc;
+	std::vector<std::tuple<int, std::string, std::string> > wartosc;
 	BOOST_CHECK(serialize.serializeVector(wartosc).first=="[]");
 	BOOST_CHECK(serialize.serializeVector(wartosc).second==0);
-	wartosc.push_back(std::pair<std::string, std::string>("napis1", "napis2"));
-	BOOST_CHECK(serialize.serializeVector(wartosc).first=="[{\"firstValue\":\"napis1\",\"secondValue\":\"napis2\"}]");
-	BOOST_CHECK(serialize.serializeVector(wartosc).second==149);
-	wartosc.push_back(std::pair<std::string, std::string>("napis3", "napis4"));
-	BOOST_CHECK(serialize.serializeVector(wartosc).first=="[{\"firstValue\":\"napis1\",\"secondValue\":\"napis2\"},{\"firstValue\":\"napis3\",\"secondValue\":\"napis4\"}]");
-	BOOST_CHECK(serialize.serializeVector(wartosc).second==298);
+	wartosc.push_back(std::tuple<int, std::string, std::string>(1, "napis1", "napis2"));
+	BOOST_CHECK(serialize.serializeVector(wartosc).first=="[{\"firstValue\":1,\"secondValue\":\"napis1\",\"thirdValue\":\"napis2\"}]");
+	BOOST_CHECK(serialize.serializeVector(wartosc).second==192);
+	wartosc.push_back(std::tuple<int, std::string, std::string>(2, "napis3", "napis4"));
+	BOOST_CHECK(serialize.serializeVector(wartosc).first=="[{\"firstValue\":1,\"secondValue\":\"napis1\",\"thirdValue\":\"napis2\"},{\"firstValue\":2,\"secondValue\":\"napis3\",\"thirdValue\":\"napis4\"}]");
+	BOOST_CHECK(serialize.serializeVector(wartosc).second==384);
 }
 
 BOOST_AUTO_TEST_CASE(TestSerializeContentDeserializeNull){
@@ -105,22 +105,25 @@ BOOST_AUTO_TEST_CASE(TestSerializeContentDeserializeVector){
 	SerializeContent serialize;
 	std::string message = "[]";
 	size_t size = 0;
-	std::vector<std::pair<std::string, std::string> > wektor = std::get<std::vector<std::pair<std::string, std::string> > >(serialize.deserialize(MessageType::Problems, message, size));
+	std::vector<std::tuple<int, std::string, std::string> > wektor = std::get<std::vector<std::tuple<int, std::string, std::string> > >(serialize.deserialize(MessageType::Problems, message, size));
 	BOOST_CHECK(wektor.size()==0);
-	message = "[{\"firstValue\":\"napis1\",\"secondValue\":\"napis2\"}]";
-	size = 149;
-	wektor = std::get<std::vector<std::pair<std::string, std::string> > >(serialize.deserialize(MessageType::Problems, message, size));
+	message = "[{\"firstValue\":1,\"secondValue\":\"napis1\",\"thirdValue\":\"napis2\"}]";
+	size = 192;
+	wektor = std::get<std::vector<std::tuple<int, std::string, std::string> > >(serialize.deserialize(MessageType::Problems, message, size));
 	BOOST_CHECK(wektor.size()==1);
-	BOOST_CHECK(wektor[0].first=="napis1");
-	BOOST_CHECK(wektor[0].second=="napis2");
-	message = "[{\"firstValue\":\"napis1\",\"secondValue\":\"napis2\"},{\"firstValue\":\"napis3\",\"secondValue\":\"napis4\"}]";
-	size = 298;
-	wektor = std::get<std::vector<std::pair<std::string, std::string> > >(serialize.deserialize(MessageType::Problems, message, size));
+	BOOST_CHECK(std::get<0>(wektor[0])==1);
+	BOOST_CHECK(std::get<1>(wektor[0])=="napis1");
+	BOOST_CHECK(std::get<2>(wektor[0])=="napis2");
+	message = "[{\"firstValue\":1,\"secondValue\":\"napis1\",\"thirdValue\":\"napis2\"},{\"firstValue\":2,\"secondValue\":\"napis3\",\"thirdValue\":\"napis4\"}]";
+	size = 384;
+	wektor = std::get<std::vector<std::tuple<int, std::string, std::string> > >(serialize.deserialize(MessageType::Problems, message, size));
 	BOOST_CHECK(wektor.size()==2);
-	BOOST_CHECK(wektor[0].first=="napis1");
-	BOOST_CHECK(wektor[0].second=="napis2");
-	BOOST_CHECK(wektor[1].first=="napis3");
-	BOOST_CHECK(wektor[1].second=="napis4");
+	BOOST_CHECK(std::get<0>(wektor[0])==1);
+	BOOST_CHECK(std::get<1>(wektor[0])=="napis1");
+	BOOST_CHECK(std::get<2>(wektor[0])=="napis2");
+	BOOST_CHECK(std::get<0>(wektor[1])==2);
+	BOOST_CHECK(std::get<1>(wektor[1])=="napis3");
+	BOOST_CHECK(std::get<2>(wektor[1])=="napis4");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
