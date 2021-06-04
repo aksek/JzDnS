@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 
 project(JzDnS)
-include_directories(/home/aniela/software/cryptopp/)
+#include_directories(/home/aniela/software/cryptopp/)
 #include_directories(boost/archive)
 #include_directories(boost/serialization)
 
@@ -31,7 +31,7 @@ add_executable(jzdns
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp -lboost_serialization -lboost_system -pthread ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
-target_link_libraries(jzdns -lboost_serialization cryptopp)
+target_link_libraries(jzdns -lboost_serialization cryptopp -pthread)
 #target_link_libraries(jzdns Boost::archive)
 
 include(BoostTestHelpers.cmake)

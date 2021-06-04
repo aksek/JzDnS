@@ -84,13 +84,12 @@ void Authorization::runFunc() {
 
     while(false == mAbortRequested.load()) {
         Message next(MessageType::OK, "");
-//        mMessages.waitAndPop(next);
-        if (!mMessages.tryWaitAndPop(next, 10000)) {
+
+        if (!mMessages.tryWaitAndPop(next, 2000)) {
             mRunning.store(false);
             continue;
         }
 
-//        if (mAbortRequested.load()) return;
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());

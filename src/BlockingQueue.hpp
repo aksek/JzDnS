@@ -58,7 +58,10 @@ public:
         while (queue.empty())
         {
             signal.wait_for(lock, std::chrono::milliseconds(_milli));
-            return false;
+            if (queue.empty()) {
+                return false;
+            }
+
         }
 
         _value = queue.front();

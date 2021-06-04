@@ -9,8 +9,8 @@ void Looper::runFunc() {
 
     while(false == mAbortRequested.load()) {
         Message next(MessageType::OK, "");
-//        mMessages.waitAndPop(next);
-        if (!mMessages.tryWaitAndPop(next, 10000)) {
+
+        if (!mMessages.tryWaitAndPop(next, 2000)) {
             mRunning.store(false);
             continue;
         }

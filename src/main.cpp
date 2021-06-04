@@ -27,7 +27,7 @@ int main()
     auto content = serializer.serializeString("a");
     looper.getDispatcher()->post(Message(MessageType::Login, "a", content));
     Message result = userQueues.pop("a");
+    std::cout << "user id of the returned message: " <<  result.getUserID() << std::endl;
     looper.stop();
-    std::cout << std::get<std::string>(serializer.deserialize(MessageType::Login_OK, result.getContent())) << std::endl;
     return 0;
 }
