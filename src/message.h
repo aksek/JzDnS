@@ -16,7 +16,23 @@
 #include <iostream>
 
 enum class MessageType{
-	Problem, Correct, Round_over, Retransmit, Login, Solution, Problems, New_problem, Delete_problem, Edit_problem, Edit_solution, OK, Register, Key
+	Problem,
+	Correct,
+	Round_over,
+	Retransmit,
+	Login,
+	Solution,
+	Problems,
+	New_problem,
+	Delete_problem,
+	Edit_problem,
+	Edit_solution,
+	OK,
+	Register,
+	Login_OK,
+	Login_error,
+	Get_current_problem,
+	Get_all_problems
 };
 
 typedef std::variant<void*, std::string, int, bool, std::pair<std::string, std::string>, std::pair<int, std::string>, std::vector< std::pair<std::string, std::string> >, std::pair<std::string, CryptoPP::RSA::PublicKey>, std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock> > ValueContent;

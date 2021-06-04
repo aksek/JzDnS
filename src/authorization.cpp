@@ -9,12 +9,11 @@
 #include <utility>
 
 
-Authorization::Authorization(UserBase *user_base, Looper* looper)
+Authorization::Authorization(UserBase *user_base)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
 , mMessages()
-, looper(looper)
 , base(user_base)
 , serializer()
 {}
@@ -56,7 +55,6 @@ void Authorization::handleLogin(ValueContent content, std::string user) {
         return;
     }
     std::string username = std::get<std::string>(content);
-    // TODO specify user
     if (authorize(username)) {
         looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
 
@@ -86,7 +84,13 @@ void Authorization::runFunc() {
 
     while(false == mAbortRequested.load()) {
         Message next(MessageType::OK, "");
-        mMessages.waitAndPop(next);
+//        mMessages.waitAndPop(next);
+        if (!mMessages.tryWaitAndPop(next, 10000)) {
+            mRunning.store(false);
+            continue;
+        }
+
+//        if (mAbortRequested.load()) return;
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());
@@ -149,6 +153,10 @@ void Authorization::abortAndJoin() {
 
 std::shared_ptr<Authorization::Dispatcher> Authorization::getDispatcher() {
     return mDispatcher;
+}
+
+void Authorization::setLooper(Looper *aLooper) {
+    looper = aLooper;
 }
 
 

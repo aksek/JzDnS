@@ -6,6 +6,7 @@
 #include<queue>
 #include<mutex>
 #include<condition_variable>
+#include <atomic>
 
 template<typename T>
 class BlockingQueue {
@@ -16,14 +17,53 @@ private:
     std::condition_variable signal;
 
 public:
-    void push(T const& _data);
+    void push(T const& _data){
+        {
+            std::lock_guard<std::mutex> lock(guard);
+            queue.push(_data);
+        }
+        signal.notify_one();
+    }
 
-    bool empty() const;
+    bool empty() const{
+        std::lock_guard<std::mutex> lock(guard);
+        return queue.empty();
+    }
 
-    bool tryPop(T& _value);
+    bool tryPop(T& _value){
+        std::lock_guard<std::mutex> lock(guard);
+        if (queue.empty())
+        {
+            return false;
+        }
 
-    void waitAndPop(T& _value);
+        _value = queue.front();
+        queue.pop();
+        return true;
+    }
 
-    bool tryWaitAndPop(T& _value, int _milli);
+    void waitAndPop(T& _value){
+        std::unique_lock<std::mutex> lock(guard);
+        while (queue.empty())
+        {
+            signal.wait(lock);
+        }
+
+        _value = queue.front();
+        queue.pop();
+    }
+
+    bool tryWaitAndPop(T& _value, int _milli){
+        std::unique_lock<std::mutex> lock(guard);
+        while (queue.empty())
+        {
+            signal.wait_for(lock, std::chrono::milliseconds(_milli));
+            return false;
+        }
+
+        _value = queue.front();
+        queue.pop();
+        return true;
+    }
 };
 
