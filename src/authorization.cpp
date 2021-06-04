@@ -9,12 +9,11 @@
 #include <utility>
 
 
-Authorization::Authorization(UserBase *user_base, Looper* looper)
+Authorization::Authorization(UserBase *user_base)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
 , mMessages()
-, looper(looper)
 , base(user_base)
 , serializer()
 {}
@@ -149,6 +148,10 @@ void Authorization::abortAndJoin() {
 
 std::shared_ptr<Authorization::Dispatcher> Authorization::getDispatcher() {
     return mDispatcher;
+}
+
+void Authorization::setLooper(Looper *aLooper) {
+    looper = aLooper;
 }
 
 

@@ -47,10 +47,10 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Authorization(UserBase *user_base, Looper* looper);
+    Authorization(UserBase *user_base;
     ~Authorization();
 
-
+    void setLooper(Looper* looper);
     bool run();
     bool running() const;
     void stop();

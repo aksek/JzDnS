@@ -57,6 +57,7 @@ Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleService
 , adminService(adminService)
 , userQueues(userQueues)
 {
+    authorization->setLooper(this);
     authorization->run();
     // TODO run the rest
 }
