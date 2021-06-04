@@ -13,7 +13,8 @@
 #include <stdexcept>
 #include <mutex>
 #include "BlockingQueue.hpp"
-#include "Looper.hpp"
+
+class Looper;
 
 class Authorization {
 private:

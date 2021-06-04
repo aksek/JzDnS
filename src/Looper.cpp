@@ -30,14 +30,14 @@ void Looper::runFunc() {
                 break;
             case MessageType::Solution:
             case MessageType::Get_current_problem:
-                riddleService->getDispatcher()->post(std::move(next));
+//                riddleService->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Edit_problem:
             case MessageType::Edit_solution:
             case MessageType::Get_all_problems:
-                adminService->getDispatcher()->post(std::move(next));
+//                adminService->getDispatcher()->post(std::move(next));
                 break;
             default:
                 break;

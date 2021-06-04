@@ -130,8 +130,14 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::string 
 		return deserializeInt(contentText, contentSize);
 	case MessageType::Register:
 		return deserializePublicKey(contentText, contentSize);
-	case MessageType::Key:
-		return deserializeKey(contentText, contentSize);
+	case MessageType::Login_OK:
+		return nullptr;
+	case MessageType::Login_error:
+        return nullptr;
+    case MessageType::Get_current_problem:
+         return nullptr;
+    case MessageType::Get_all_problems:
+         return nullptr;
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -165,8 +171,14 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::pair<st
 		return deserializeInt(content.first, content.second);
 	case MessageType::Register:
 		return deserializePublicKey(content.first, content.second);
-	case MessageType::Key:
-		return deserializeKey(content.first, content.second);
+    case MessageType::Login_OK:
+         return nullptr;
+    case MessageType::Login_error:
+        return nullptr;
+    case MessageType::Get_current_problem:
+        return nullptr;
+    case MessageType::Get_all_problems:
+        return nullptr;
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -257,8 +269,8 @@ Message::Message(std::string message){
 	_contentText = doc["content"].as<std::string>();
 
 	CryptoPP::Weak::MD5 hash;
-	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
-	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const CryptoPP::byte*)_contentText.c_str(), _contentText.length());
 	std::string crc;
 	CryptoPP::HexEncoder encoder;
 	encoder.Attach(new CryptoPP::StringSink(crc));
@@ -270,8 +282,8 @@ Message::Message(std::string message){
 
 std::string Message::serialize(){
 	CryptoPP::Weak::MD5 hash;
-	byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
-	hash.CalculateDigest(digest, (const byte*)_contentText.c_str(), _contentText.length());
+	CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+	hash.CalculateDigest(digest, (const CryptoPP::byte*)_contentText.c_str(), _contentText.length());
 	std::string crc;
 	CryptoPP::HexEncoder encoder;
 	encoder.Attach(new CryptoPP::StringSink(crc));
@@ -339,8 +351,14 @@ std::string Message::messageTypeToString(MessageType messageType){
 		return "OK";
 	case MessageType::Register:
 		return "Register";
-	case MessageType::Key:
-		return "Key";
+    case MessageType::Login_OK:
+        return "Login_OK";
+    case MessageType::Login_error:
+        return "Login_error";
+    case MessageType::Get_current_problem:
+        return "Get_current_problem";
+    case MessageType::Get_all_problems:
+        return "Get_all_problems";
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -373,7 +391,13 @@ MessageType Message::messageTypeFromString(std::string messageType){
 		return MessageType::OK;
 	else if(messageType == "Register")
 		return MessageType::Register;
-	else if(messageType == "Key")
-		return MessageType::Key;
+	else if(messageType == "Login_OK")
+		return MessageType::Login_OK;
+    else if(messageType == "Login_error")
+        return MessageType::Login_error;
+    else if(messageType == "Get_current_problem")
+        return MessageType::Get_current_problem;
+    else if(messageType == "Get_all_problems")
+        return MessageType::Get_all_problems;
 	else throw std::runtime_error("messageType not exist");
 }
