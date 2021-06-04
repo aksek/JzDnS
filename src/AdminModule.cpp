@@ -46,43 +46,82 @@ void AdminModule::runFunc()
 
         switch (type) {
             case MessageType::Problems:
+                handleGetAllRiddles(next.getUserID());
                 break;
             case MessageType::New_problem:
-                //sprawdz czy jest dobrego typu
-                //utworz zagadke
-                //przekaz do handlera
-                //zrob to samo
+                handleAddNewRiddle(content, next.getUserID());
                 break;
             case MessageType::Delete_problem:
+                handleRemoveRiddle(content, next.getUserID());
                 break;
-            case MessageType::Edit_problem:
-                break;
-            case MessageType::Edit_solution:
+            case MessageType::Update:
+                handleUpdateRiddle(content, next.getUserID());
                 break;
 
         }
     }
 }
 
-void AdminModule::handleAddNewRiddle()
+void AdminModule::handleAddNewRiddle(ValueContent content, std::string user)
 {
-    int addNewRiddle(Riddle riddle);
+    if(!std::holds_alternative<std::tuple<int, std::string, std::string>>(content))
+    {
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
+        return;
+    }
+
+    auto riddleTuple = std::get<std::tuple<int, std::string, std::string>>(content);
+    Riddle riddle( std::get<0>(riddleTuple), std::get<1>(riddleTuple), std::get<2>(riddleTuple));
+
+    int result = adminService.addNewRiddle(riddle);
+
+    looper->getDispatcher()->post(Message(MessageType::OK, user, serializer->serializeInt(result)));
+
 }
 
-void AdminModule::handleRemoveRiddle()
+void AdminModule::handleRemoveRiddle(ValueContent content, std::string user)
 {
+    if(!std::holds_alternative<int>(content))
+    {
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
+        return;
+    }
+
+    int result = adminService.deleteRiddle(std::get<int>(content));
+
+    looper->getDispatcher()->post(Message(MessageType::OK, user, serializer->serializeInt((result == 0 ? 1 : 0))));
 
 }
 
-void AdminModule::handleUpdateRiddle()
+void AdminModule::handleUpdateRiddle(ValueContent content, std::string user)
 {
+    if(!std::holds_alternative<std::tuple<int, std::string, std::string>>(content))
+    {
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
+        return;
+    }
 
+    auto riddleTuple = std::get<std::tuple<int, std::string, std::string>>(content);
+    Riddle riddle( std::get<0>(riddleTuple), std::get<1>(riddleTuple), std::get<2>(riddleTuple));
+
+    int result = adminService.updateRiddle(riddle);
+
+    looper->getDispatcher()->post(Message(MessageType::OK, user, serializer->serializeInt((result == 0 ? 1 : 0))));
 }
 
-void AdminModule::handleGetAllRiddles()
+void AdminModule::handleGetAllRiddles(std::string user)
 {
+    std::map<int, Riddle> riddles = adminService.getAllRiddlesFromBase();
+    std::vector<std::tuple<int, std::string, std::string>> riddlesTuples;
 
+    for(auto it = riddles.begin(); it != riddles.end(); ++it)
+    {
+        riddlesTuples.emplace_back(it->second.getId(), it->second.getRiddleContent(), it->second.getAnswer());
+    }
+
+    looper->getDispatcher()->post(Message(MessageType::Problems, user, serializer->serializeVector(riddlesTuples)));
 }
+
 AdminModule::~AdminModule()
 {
     abortAndJoin();

@@ -10,6 +10,7 @@
 #include <atomic>
 #include "BlockingQueue.hpp"
 #include "Looper.hpp"
+#include <map>
 
 class AdminModule {
 private:
@@ -23,10 +24,10 @@ private:
     SerializeContent* serializer;
     Looper* looper;
 
-    void handleAddNewRiddle();
-    void handleRemoveRiddle();
-    void handleUpdateRiddle();
-    void handleGetAllRiddles();
+    void handleAddNewRiddle(ValueContent content, std::string user);
+    void handleRemoveRiddle(ValueContent content, std::string user);
+    void handleUpdateRiddle(ValueContent content, std::string user);
+    void handleGetAllRiddles(std::string user);
 
     void runFunc();
     bool post(Message &&aMessage);

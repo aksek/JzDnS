@@ -2,14 +2,14 @@
 
 #include "Riddle.h"
 
-Riddle::Riddle(uint64_t id, std::string riddleContent, std::string answer)
+Riddle::Riddle(int id, std::string riddleContent, std::string answer)
 {
     this->id = id;
     this->riddleContent = riddleContent;
     this->answer = answer;
 }
 
-uint64_t Riddle::getId()
+int Riddle::getId()
 {
     return this->id;
 }
@@ -24,7 +24,7 @@ std::string Riddle::getAnswer()
     return this->answer;
 }
 
-void Riddle::setId(uint64_t id)
+void Riddle::setId(int id)
 {
     this->id = id;
 }

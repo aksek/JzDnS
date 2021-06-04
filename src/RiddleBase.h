@@ -15,7 +15,7 @@
 
 class RiddleBase {
 private:
-    std::map<uint64_t, Riddle> riddles;
+    std::map<int, Riddle> riddles;
     std::mutex m;
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
@@ -25,12 +25,12 @@ private:
 public:
     RiddleBase();
 
-    uint64_t addRiddle(Riddle riddle);
-    int removeRiddle(uint64_t id);
-    Riddle getRiddle(uint64_t id);
-    std::map<uint64_t, Riddle> getAllRiddles();
+    int addRiddle(Riddle riddle);
+    int removeRiddle(int id);
+    Riddle getRiddle(int id);
+    std::map<int, Riddle> getAllRiddles();
     int updateRiddle(Riddle riddle);
-    void replaceRiddles(std::map<uint64_t, Riddle> riddles);
+    void replaceRiddles(std::map<int, Riddle> riddles);
     void loadBaseFromDisk(std::string path);
     void saveBaseOnDisk(std::string path);
     int getRiddlesAmount();

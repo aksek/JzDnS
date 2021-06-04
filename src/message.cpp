@@ -56,21 +56,34 @@ std::pair<std::string, size_t> SerializeContent::serializePairIntString(std::pai
 	return std::pair<std::string, size_t>(serializedContent, contentSize + 23);
 }
 
-std::pair<std::string, size_t> SerializeContent::serializeVector(std::vector< std::pair<std::string, std::string> > content){
-	size_t contentSize = JSON_ARRAY_SIZE(content.size()) + content.size()*JSON_OBJECT_SIZE(2);
+std::pair<std::string, size_t> SerializeContent::serializeTuple(std::tuple<int, std::string, std::string> content){
+	size_t contentSize = JSON_OBJECT_SIZE(3) + std::get<1>(content).capacity() + std::get<2>(content).capacity();
+	DynamicJsonDocument doc(contentSize);
+	doc["firstValue"] = std::get<0>(content);
+	doc["secondValue"] = std::get<1>(content);
+	doc["thirdValue"] = std::get<2>(content);
+
+	std::string serializedContent = "";
+	serializeJson(doc, serializedContent);
+	return std::pair<std::string, size_t>(serializedContent, contentSize + 34);
+}
+
+std::pair<std::string, size_t> SerializeContent::serializeVector(std::vector< std::tuple<int, std::string, std::string> > content){
+	size_t contentSize = JSON_ARRAY_SIZE(content.size()) + content.size()*JSON_OBJECT_SIZE(3);
 	for(auto i=content.begin(); i!=content.end(); ++i){
-		contentSize += i->first.capacity() + i->second.capacity();
+		contentSize += std::get<1>(*i).capacity() + std::get<2>(*i).capacity();
 	}
 	DynamicJsonDocument doc(contentSize);
 	JsonArray array = doc.to<JsonArray>();
 	for(unsigned int i=0; i<content.size(); ++i){
-		array[i]["firstValue"] = content[i].first;
-		array[i]["secondValue"] = content[i].second;
+		array[i]["firstValue"] = std::get<0>(content[i]);
+		array[i]["secondValue"] = std::get<1>(content[i]);
+		array[i]["thirdValue"] = std::get<2>(content[i]);
 	}
 
 	std::string serializedContent = "";
 	serializeJson(doc, serializedContent);
-	return std::pair<std::string, size_t>(serializedContent, contentSize + 23*content.size());
+	return std::pair<std::string, size_t>(serializedContent, contentSize + 34*content.size());
 }
 
 std::pair<std::string, size_t> SerializeContent::serializePublicKey(std::pair<std::string, CryptoPP::RSA::PublicKey> content){
@@ -126,18 +139,14 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::string 
 		return deserializePairIntString(contentText, contentSize);
 	case MessageType::Edit_solution:
 		return deserializePairIntString(contentText, contentSize);
+	case MessageType::Update:
+		return deserializeTuple(contentText, contentSize);
 	case MessageType::OK:
 		return deserializeInt(contentText, contentSize);
 	case MessageType::Register:
 		return deserializePublicKey(contentText, contentSize);
-	case MessageType::Login_OK:
-		return nullptr;
-	case MessageType::Login_error:
-        return nullptr;
-    case MessageType::Get_current_problem:
-         return nullptr;
-    case MessageType::Get_all_problems:
-         return nullptr;
+	case MessageType::Key:
+		return deserializeKey(contentText, contentSize);
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -167,18 +176,14 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::pair<st
 		return deserializePairIntString(content.first, content.second);
 	case MessageType::Edit_solution:
 		return deserializePairIntString(content.first, content.second);
+	case MessageType::Update:
+		return deserializeTuple(content.first, content.second);
 	case MessageType::OK:
 		return deserializeInt(content.first, content.second);
 	case MessageType::Register:
 		return deserializePublicKey(content.first, content.second);
-    case MessageType::Login_OK:
-         return nullptr;
-    case MessageType::Login_error:
-        return nullptr;
-    case MessageType::Get_current_problem:
-        return nullptr;
-    case MessageType::Get_all_problems:
-        return nullptr;
+	case MessageType::Key:
+		return deserializeKey(content.first, content.second);
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -216,12 +221,18 @@ std::pair<int, std::string> SerializeContent::deserializePairIntString(std::stri
 	return std::pair<int, std::string>(doc["firstValue"].as<int>(), doc["secondValue"].as<std::string>());
 }
 
-std::vector< std::pair<std::string, std::string> > SerializeContent::deserializeVector(std::string contentText, size_t contentSize){
-	std::vector< std::pair<std::string, std::string> > result;
+std::tuple<int, std::string, std::string> SerializeContent::deserializeTuple(std::string contentText, size_t contentSize){
+	DynamicJsonDocument doc(contentSize);
+	deserializeJson(doc, contentText);
+	return std::tuple<int, std::string, std::string>(doc["firstValue"].as<int>(), doc["secondValue"].as<std::string>(), doc["thirdValue"].as<std::string>());
+}
+
+std::vector< std::tuple<int, std::string, std::string> > SerializeContent::deserializeVector(std::string contentText, size_t contentSize){
+	std::vector< std::tuple<int, std::string, std::string> > result;
 	DynamicJsonDocument doc(contentSize);
 	deserializeJson(doc, contentText);
 	for(JsonObject i: doc.as<JsonArray>())
-		result.push_back(std::pair<std::string, std::string>(i["firstValue"].as<std::string>(), i["secondValue"].as<std::string>()));
+		result.push_back(std::tuple<int, std::string, std::string>(i["firstValue"].as<int>(), i["secondValue"].as<std::string>(), i["thirdValue"].as<std::string>()));
 	return result;
 }
 
@@ -347,18 +358,14 @@ std::string Message::messageTypeToString(MessageType messageType){
 		return "Edit_problem";
 	case MessageType::Edit_solution:
 		return "Edit_solution";
+	case MessageType::Update:
+		return "Update";
 	case MessageType::OK:
 		return "OK";
 	case MessageType::Register:
 		return "Register";
-    case MessageType::Login_OK:
-        return "Login_OK";
-    case MessageType::Login_error:
-        return "Login_error";
-    case MessageType::Get_current_problem:
-        return "Get_current_problem";
-    case MessageType::Get_all_problems:
-        return "Get_all_problems";
+	case MessageType::Key:
+		return "Key";
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -387,17 +394,13 @@ MessageType Message::messageTypeFromString(std::string messageType){
 		return MessageType::Edit_problem;
 	else if(messageType == "Edit_solution")
 		return MessageType::Edit_solution;
+	else if(messageType == "Update")
+		return MessageType::Update;
 	else if(messageType == "OK")
 		return MessageType::OK;
 	else if(messageType == "Register")
 		return MessageType::Register;
-	else if(messageType == "Login_OK")
-		return MessageType::Login_OK;
-    else if(messageType == "Login_error")
-        return MessageType::Login_error;
-    else if(messageType == "Get_current_problem")
-        return MessageType::Get_current_problem;
-    else if(messageType == "Get_all_problems")
-        return MessageType::Get_all_problems;
+	else if(messageType == "Key")
+		return MessageType::Key;
 	else throw std::runtime_error("messageType not exist");
 }
