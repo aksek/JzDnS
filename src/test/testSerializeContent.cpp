@@ -53,6 +53,29 @@ BOOST_AUTO_TEST_CASE(TestSerializeContentSerializeVector){
 	BOOST_CHECK(serialize.serializeVector(wartosc).second==384);
 }
 
+BOOST_AUTO_TEST_CASE(TestSerializeContentSerializePublicKey){
+CryptoPP::AutoSeededRandomPool rng;
+CryptoPP::RSA::PrivateKey private_key;
+CryptoPP::RSA::PublicKey public_key;
+CryptoPP::InvertibleRSAFunction params;
+params.GenerateRandomWithKeySize(rng, 3072);
+public_key = CryptoPP::RSA::PublicKey(params);
+private_key = CryptoPP::RSA::PrivateKey(params);
+
+std::string login = "login_nazwa";
+SerializeContent serialize;
+
+std::pair<std::string, CryptoPP::RSA::PublicKey> para(login, public_key);
+std::pair<std::string, size_t> zserializowany(serialize.serializePublicKey(para));
+std::string napis1 = zserializowany.first;
+
+para = serialize.deserializePublicKey(zserializowany.first, zserializowany.second);
+zserializowany = serialize.serializePublicKey(para);
+std::string napis2 = zserializowany.first;
+
+BOOST_CHECK(napis1==napis2);
+}
+
 BOOST_AUTO_TEST_CASE(TestSerializeContentDeserializeNull){
 	SerializeContent serialize;
 	std::string message = "";
