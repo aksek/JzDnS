@@ -28,3 +28,9 @@ void QueueMap::add_user(const std::string& user, BlockingQueue<Message> *queue) 
     guard.unlock();
 }
 
+Message QueueMap::pop(std::string user) {
+    Message message(MessageType::OK, "");
+    queues[user]->waitAndPop(message);
+    return message;
+}
+

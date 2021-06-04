@@ -9,7 +9,11 @@ void Looper::runFunc() {
 
     while(false == mAbortRequested.load()) {
         Message next(MessageType::OK, "");
-        mMessages.waitAndPop(next);
+//        mMessages.waitAndPop(next);
+        if (!mMessages.tryWaitAndPop(next, 10000)) {
+            mRunning.store(false);
+            continue;
+        }
 
         switch(next.getMessageType()) {
             case MessageType::Retransmit:

@@ -6,13 +6,13 @@
 #include "User.h"
 #include "UserBase.h"
 #include "message.h"
-#include<thread>
-#include<atomic>
+#include <thread>
+#include <atomic>
 #include <memory>
 #include <functional>
 #include <stdexcept>
 #include <mutex>
-#include "BlockingQueue.hpp"
+#include"BlockingQueue.hpp"
 
 class Looper;
 
@@ -47,7 +47,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Authorization(UserBase *user_base;
+    Authorization(UserBase *user_base);
     ~Authorization();
 
     void setLooper(Looper* looper);

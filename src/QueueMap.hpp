@@ -17,6 +17,7 @@ public:
     void post_to(const std::string& user, Message message);
     void post_except(const std::string& user, Message message);
     void add_user(const std::string& user, BlockingQueue<Message>* queue);
+    Message pop(std::string user);
 };
 
 

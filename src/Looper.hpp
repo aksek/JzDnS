@@ -1,6 +1,8 @@
 //
 // Created by aniela on 6/3/21.
 //
+#pragma once
+
 #include <thread>
 #include <atomic>
 #include <memory>
@@ -8,14 +10,13 @@
 #include <stdexcept>
 #include <mutex>
 #include <map>
-#include "BlockingQueue.hpp"
+//#include "BlockingQueue.hpp"
 #include "message.h"
 #include "authorization.hpp"
 #include "RiddleService.h"
 #include "AdminService.h"
 #include "QueueMap.hpp"
 
-#pragma once
 
 class Authorization;
 

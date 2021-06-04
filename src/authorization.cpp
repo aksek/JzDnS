@@ -55,7 +55,6 @@ void Authorization::handleLogin(ValueContent content, std::string user) {
         return;
     }
     std::string username = std::get<std::string>(content);
-    // TODO specify user
     if (authorize(username)) {
         looper->getDispatcher()->post(Message(MessageType::Login_OK, user));
 
@@ -85,7 +84,13 @@ void Authorization::runFunc() {
 
     while(false == mAbortRequested.load()) {
         Message next(MessageType::OK, "");
-        mMessages.waitAndPop(next);
+//        mMessages.waitAndPop(next);
+        if (!mMessages.tryWaitAndPop(next, 10000)) {
+            mRunning.store(false);
+            continue;
+        }
+
+//        if (mAbortRequested.load()) return;
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());
