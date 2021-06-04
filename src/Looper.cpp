@@ -15,24 +15,28 @@ void Looper::runFunc() {
             case MessageType::Retransmit:
             case MessageType::Problem:
             case MessageType::Correct:
-            case MessageType::Round_over:
             case MessageType::Problems:
             case MessageType::OK:
             case MessageType::Login_OK:
             case MessageType::Login_error:
                 userQueues[next.getUser()].push(std::move(next));
                 break;
+            case MessageType::Round_over:
+                // TODO send to everyone
+                break;
             case MessageType::Login:
             case MessageType::Register:
                 authorization->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Solution:
+            case MessageType::Get_current_problem:
                 riddleService->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Edit_problem:
             case MessageType::Edit_solution:
+            case MessageType::Get_all_problems:
                 adminService->getDispatcher()->post(std::move(next));
                 break;
             default:
