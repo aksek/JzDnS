@@ -22,17 +22,17 @@ void Looper::runFunc() {
             case MessageType::Login:
             case MessageType::Register:
             case MessageType::Solution:
-//            case MessageType::Get_current_problem:
+            case MessageType::Get_current_problem:
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Update:
-//            case MessageType::Get_all_problems:
+            case MessageType::Get_all_problems:
                 decrypted = Cryptography::asymmetric_decrypt(private_key, next.getContentText(), rng);
                 break;
             default:
                 break;
         }
-        Message decrypted_message(next.getMessageType(), next.getUserID(), decrypted, decrypted.size());
+        Message decrypted_message(next.getMessageType(), next.getUserID(), decrypted, next.getContentSize());
 
         switch(next.getMessageType()) {
             case MessageType::Retransmit:
@@ -50,13 +50,13 @@ void Looper::runFunc() {
                 authorization->getDispatcher()->post(std::move(decrypted_message));
                 break;
             case MessageType::Solution:
-//            case MessageType::Get_current_problem:
+            case MessageType::Get_current_problem:
                 riddleModule->getDispatcher()->post(std::move(decrypted_message));
                 break;
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Update:
-//            case MessageType::Get_all_problems:
+            case MessageType::Get_all_problems:
                 adminModule->getDispatcher()->post(std::move(decrypted_message));
                 break;
             default:
