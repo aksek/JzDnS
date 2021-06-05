@@ -15,8 +15,9 @@ Authorization::Authorization(UserBase *user_base)
 , mAbortRequested(false)
 , mMessages()
 , base(user_base)
-, serializer()
-{}
+{
+    serializer = new SerializeContent;
+}
 
 bool Authorization::authorize(std::string username) {
     User *user = base->getUser(std::move(username));

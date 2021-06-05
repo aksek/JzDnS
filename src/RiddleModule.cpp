@@ -2,6 +2,7 @@
 // Created by patryk on 04.06.2021.
 //
 
+#include "Looper.hpp"
 #include "RiddleModule.h"
 
 bool RiddleModule::post(Message &&aMessage)
@@ -73,7 +74,10 @@ void RiddleModule::runFunc()
     while (!mAbortRequested.load())
     {
         Message next(MessageType::OK, "");
-        messagesQueue.waitAndPop(next);
+//        messagesQueue.waitAndPop(next);
+        if (!messagesQueue.tryWaitAndPop(next, 2000)) {
+            continue;
+        }
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());

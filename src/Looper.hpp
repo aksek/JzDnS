@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <cryptopp/osrng.h>
 #include <thread>
 #include <atomic>
 #include <memory>
@@ -33,8 +34,12 @@ private:
     BlockingQueue<Message> mMessages;
 
     Authorization* authorization;
-    RiddleModule* riddleModule;
     AdminModule* adminModule;
+    RiddleModule* riddleModule;
+
+    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::RSA::PublicKey public_key;
+    CryptoPP::RSA::PrivateKey private_key;
 
     void runFunc();
     bool post(Message &&aMessage);

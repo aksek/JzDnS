@@ -2,18 +2,28 @@
 // Created by aniela on 6/4/21.
 //
 
+#include "cryptography.hpp"
 #include "QueueMap.hpp"
 
 void QueueMap::post_to(const std::string& user, Message message) {
-    queues[user]->push(message);
+
+    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::RSA::PublicKey user_key = authorization->getKey(user);
+    std::string encrypted = Cryptography::asymmetric_encrypt(user_key, message.getContentText(), rng);
+    Message encrypted_message(message.getMessageType(), user, encrypted, encrypted.size());
+    queues[user]->push(encrypted_message);
 }
 
 void QueueMap::post_except(const std::string& user, Message message) {
+    CryptoPP::AutoSeededRandomPool rng;
     guard.lock();
 
     for (auto user_queue : queues) {
         if (user_queue.first != user) {
-            user_queue.second->push(message);
+            CryptoPP::RSA::PublicKey user_key = authorization->getKey(user_queue.first);
+            std::string encrypted = Cryptography::asymmetric_encrypt(user_key, message.getContentText(), rng);
+            Message encrypted_message(message.getMessageType(), user_queue.first, encrypted, encrypted.size());
+            user_queue.second->push(encrypted_message);
         }
     }
 
@@ -33,4 +43,6 @@ Message QueueMap::pop(std::string user) {
     queues[user]->waitAndPop(message);
     return message;
 }
+
+QueueMap::QueueMap(Authorization *authorization1) : authorization(authorization1){}
 

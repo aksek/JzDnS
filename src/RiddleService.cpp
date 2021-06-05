@@ -1,5 +1,6 @@
 //Author: Patryk Karbownik
 
+#include "Looper.hpp"
 #include "RiddleService.h"
 
 RiddleService::RiddleService(RiddleBase* rb)

@@ -9,8 +9,10 @@
 #include <thread>
 #include <atomic>
 #include "BlockingQueue.hpp"
-#include "Looper.hpp"
+//#include "Looper.hpp"
 #include <map>
+
+class Looper;
 
 class AdminModule {
 private:

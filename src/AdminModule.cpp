@@ -2,8 +2,8 @@
 // Created by patryk on 03.06.2021.
 //
 
+#include "Looper.hpp"
 #include "AdminModule.h"
-
 
 bool AdminModule::post(Message &&aMessage)
 {
@@ -38,7 +38,10 @@ void AdminModule::runFunc()
     while (!mAbortRequested.load())
     {
         Message next(MessageType::OK, "");
-        messagesQueue.waitAndPop(next);
+        //        messagesQueue.waitAndPop(next);
+        if (!messagesQueue.tryWaitAndPop(next, 2000)) {
+            continue;
+        }
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());

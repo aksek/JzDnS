@@ -5,43 +5,22 @@
 
 int main()
 {
-    Riddle riddle(0, "why", "because");
-
-    QueueMap userQueues;
-    BlockingQueue<Message> queue;
-    userQueues.add_user("b", &queue);
-    UserBase userBase;
-
-    Authorization authorization(&userBase);
-    RiddleBase riddleBase;
-    riddleBase.addRiddle(riddle);
-    RiddleService riddleService(&riddleBase);
-    AdminService adminService(&riddleBase);
-
-    Looper looper(&userQueues, &authorization, &riddleService, &adminService);
-    Message message(MessageType::Login, "b");
-
-    SerializeContent serializer;
-
-    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::AutoSeededRandomPool rng1;
+    CryptoPP::AutoSeededRandomPool rng2;
+    CryptoPP::AutoSeededRandomPool rng3;
     CryptoPP::RSA::PrivateKey private_key;
     CryptoPP::RSA::PublicKey public_key;
 
-    Cryptography::generate_public_private_key(public_key, private_key, rng);
+    Cryptography::generate_public_private_key(public_key, private_key, rng1);
 
-    auto content = serializer.serializePublicKey(std::make_pair("b", public_key));
+    std::string message = "In a hole in the ground there lived a hobbit";
 
+    std::string encrypted = Cryptography::asymmetric_encrypt(public_key, message, rng2);
 
-//    BOOST_TEST_CHECKPOINT( "Looper initiated");
-    looper.run();
-//    BOOST_TEST_CHECKPOINT( "Looper running");
+    std::cout << encrypted << std::endl;
 
-    looper.getDispatcher()->post(Message(MessageType::Register, "b", content));
+    std::string decrypted = Cryptography::asymmetric_decrypt(private_key, encrypted, rng3);
 
-    Message result = userQueues.pop("b");
-
-//    BOOST_CHECK(result.getMessageType() == MessageType::Login_OK);
-
-    looper.stop();
+    std::cout << decrypted << std::endl;
     return 0;
 }

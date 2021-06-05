@@ -3,6 +3,7 @@
 //
 
 #include "Looper.hpp"
+#include"cryptography.hpp"
 
 void Looper::runFunc() {
     mRunning.store(true);
@@ -11,9 +12,27 @@ void Looper::runFunc() {
         Message next(MessageType::OK, "");
 
         if (!mMessages.tryWaitAndPop(next, 2000)) {
-//            mRunning.store(false);
             continue;
         }
+
+        // Depending on the direction of routing (other server modules / outside) the message requires either encryption
+        // or decryption. The decrypted version is created here, encryption is handled by the QueueMap's 'post' methods
+        std::string decrypted;
+        switch(next.getMessageType()) {
+            case MessageType::Login:
+            case MessageType::Register:
+            case MessageType::Solution:
+//            case MessageType::Get_current_problem:
+            case MessageType::New_problem:
+            case MessageType::Delete_problem:
+            case MessageType::Update:
+//            case MessageType::Get_all_problems:
+                decrypted = Cryptography::asymmetric_decrypt(private_key, next.getContentText(), rng);
+                break;
+            default:
+                break;
+        }
+        Message decrypted_message(next.getMessageType(), next.getUserID(), decrypted, decrypted.size());
 
         switch(next.getMessageType()) {
             case MessageType::Retransmit:
@@ -28,17 +47,17 @@ void Looper::runFunc() {
                 break;
             case MessageType::Login:
             case MessageType::Register:
-                authorization->getDispatcher()->post(std::move(next));
+                authorization->getDispatcher()->post(std::move(decrypted_message));
                 break;
             case MessageType::Solution:
-            case MessageType::Get_current_problem:
-                riddleModule->getDispatcher()->post(std::move(next));
+//            case MessageType::Get_current_problem:
+                riddleModule->getDispatcher()->post(std::move(decrypted_message));
                 break;
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Update:
-            case MessageType::Get_all_problems:
-                adminModule->getDispatcher()->post(std::move(next));
+//            case MessageType::Get_all_problems:
+                adminModule->getDispatcher()->post(std::move(decrypted_message));
                 break;
             default:
                 break;
@@ -58,6 +77,9 @@ Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule*
 , adminModule(adminModule)
 , userQueues(userQueues)
 {
+    Cryptography::load_private_key(private_key, "./private_key.pem");
+    Cryptography::load_public_key(public_key, "./public_key.pem");
+
     authorization->setLooper(this);
     authorization->run();
     adminModule->setLooper(this);

@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <stdexcept>
 
+typedef unsigned char byte;
+
 //class SerializeContent
 std::pair<std::string, size_t> SerializeContent::serializeString(std::string content){
 	size_t contentSize = JSON_OBJECT_SIZE(1) + content.capacity();

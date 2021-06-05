@@ -17,28 +17,43 @@ using namespace boost::unit_test;
 BOOST_AUTO_TEST_CASE(login_test) {
     Riddle riddle(0, "why", "because");
 
-    QueueMap userQueues;
-    BlockingQueue<Message> queue;
-    userQueues.add_user("a", &queue);
-    UserBase userBase;
+    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::RSA::PublicKey public_key;
+    Cryptography::load_public_key(public_key, "./public_key.pem");
 
-    userBase.addUser(User("a", User::UserType::NORMAL));
+    CryptoPP::RSA::PublicKey user_public_key;
+    CryptoPP::RSA::PrivateKey user_private_key;
+    Cryptography::generate_public_private_key(user_public_key, user_private_key, rng);
+
+
+    UserBase userBase;
+    userBase.addUser(User("a", User::UserType::NORMAL, user_public_key));
+
     Authorization authorization(&userBase);
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
-    RiddleService riddleService(&riddleBase);
-    AdminService adminService(&riddleBase);
+    RiddleModule riddleModule(&riddleBase);
+    AdminModule adminModule(&riddleBase);
 
-    Looper looper(&userQueues, &authorization, &riddleService, &adminService);
+    QueueMap userQueues(&authorization);
+    BlockingQueue<Message> queue;
+    userQueues.add_user("a", &queue);
+
+    SerializeContent serializer;
+    auto content = serializer.serializeString("a");
+
+    std::string encrypted = Cryptography::asymmetric_encrypt(public_key, content.first, rng);
+
+    auto encrypted_content = std::make_pair(encrypted, encrypted.size());
+
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
-    SerializeContent serializer;
-    auto content = serializer.serializeString("a");
-    looper.getDispatcher()->post(Message(MessageType::Login, "a", content));
+    looper.getDispatcher()->post(Message(MessageType::Login, "a", encrypted_content));
     Message result = userQueues.pop("a");
 
-    BOOST_CHECK(result.getMessageType() == MessageType::Login_OK);
+    BOOST_CHECK(result.getMessageType() == MessageType::OK);
 
     looper.stop();
 }
@@ -46,18 +61,19 @@ BOOST_AUTO_TEST_CASE(login_test) {
 BOOST_AUTO_TEST_CASE(register_test) {
     Riddle riddle(0, "why", "because");
 
-    QueueMap userQueues;
-    BlockingQueue<Message> queue;
-    userQueues.add_user("b", &queue);
     UserBase userBase;
 
     Authorization authorization(&userBase);
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
-    RiddleService riddleService(&riddleBase);
-    AdminService adminService(&riddleBase);
+    RiddleModule riddleModule(&riddleBase);
+    AdminModule adminModule(&riddleBase);
 
-    Looper looper(&userQueues, &authorization, &riddleService, &adminService);
+    QueueMap userQueues(&authorization);
+    BlockingQueue<Message> queue;
+    userQueues.add_user("b", &queue);
+
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
     Message message(MessageType::Login, "b");
 
     SerializeContent serializer;
@@ -78,7 +94,7 @@ BOOST_AUTO_TEST_CASE(register_test) {
     looper.getDispatcher()->post(Message(MessageType::Register, "b", content));
     Message result = userQueues.pop("a");
 
-    BOOST_CHECK(result.getMessageType() == MessageType::Login_OK);
+    BOOST_CHECK(result.getMessageType() == MessageType::OK);
 
     looper.stop();
 }

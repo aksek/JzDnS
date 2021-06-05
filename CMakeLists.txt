@@ -27,7 +27,9 @@ add_executable(jzdns
         src/RiddleService.h src/RiddleService.cpp
         src/AdminService.h src/AdminService.cpp
         src/Looper.cpp src/Looper.hpp
-        src/QueueMap.cpp src/QueueMap.hpp)
+        src/QueueMap.cpp src/QueueMap.hpp
+        src/AdminModule.h src/AdminModule.cpp
+        src/RiddleModule.h src/RiddleModule.cpp)
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp -lboost_serialization -lboost_system -pthread ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
@@ -41,7 +43,7 @@ add_boost_test(test/cryptography_test.cpp "${DEPS}")
 
 set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp src/User.cpp
         src/RiddleBase.cpp src/Riddle.cpp src/QueueMap.cpp src/RiddleService.cpp src/AdminService.cpp
-        src/cryptography.cpp)
+        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp)
 add_boost_test(test/looper_test.cpp "${DEPS}")
 
 
