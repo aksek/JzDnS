@@ -19,8 +19,6 @@ void Looper::runFunc() {
         // or decryption. The decrypted version is created here, encryption is handled by the QueueMap's 'post' methods
         std::string decrypted;
         switch(next.getMessageType()) {
-            case MessageType::Login:
-            case MessageType::Register:
             case MessageType::Solution:
             case MessageType::Get_current_problem:
             case MessageType::New_problem:
@@ -47,7 +45,7 @@ void Looper::runFunc() {
                 break;
             case MessageType::Login:
             case MessageType::Register:
-                authorization->getDispatcher()->post(std::move(decrypted_message));
+                authorization->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Solution:
             case MessageType::Get_current_problem:

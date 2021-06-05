@@ -42,15 +42,11 @@ BOOST_AUTO_TEST_CASE(login_test) {
     SerializeContent serializer;
     auto content = serializer.serializeString("a");
 
-    std::string encrypted = Cryptography::asymmetric_encrypt(public_key, content.first, rng);
-
-    auto encrypted_content = std::make_pair(encrypted, content.second);
-
     Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
-    looper.getDispatcher()->post(Message(MessageType::Login, "a", encrypted_content));
+    looper.getDispatcher()->post(Message(MessageType::Login, "a", content));
     Message result = userQueues.pop("a");
 
     BOOST_CHECK(result.getMessageType() == MessageType::OK);
@@ -61,7 +57,17 @@ BOOST_AUTO_TEST_CASE(login_test) {
 BOOST_AUTO_TEST_CASE(register_test) {
     Riddle riddle(0, "why", "because");
 
+    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::RSA::PublicKey public_key;
+    Cryptography::load_public_key(public_key, "./public_key.pem");
+
+    CryptoPP::RSA::PublicKey user_public_key;
+    CryptoPP::RSA::PrivateKey user_private_key;
+    Cryptography::generate_public_private_key(user_public_key, user_private_key, rng);
+
+
     UserBase userBase;
+    userBase.addUser(User("a", User::UserType::NORMAL, user_public_key));
 
     Authorization authorization(&userBase);
     RiddleBase riddleBase;
@@ -71,28 +77,18 @@ BOOST_AUTO_TEST_CASE(register_test) {
 
     QueueMap userQueues(&authorization);
     BlockingQueue<Message> queue;
-    userQueues.add_user("b", &queue);
-
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
-    Message message(MessageType::Login, "b");
+    userQueues.add_user("a", &queue);
 
     SerializeContent serializer;
-
-    CryptoPP::AutoSeededRandomPool rng;
-    CryptoPP::RSA::PrivateKey private_key;
-    CryptoPP::RSA::PublicKey public_key;
-
-    Cryptography::generate_public_private_key(public_key, private_key, rng);
-
-    auto content = serializer.serializePublicKey(std::make_pair("b", public_key));
+    auto content = serializer.serializePublicKey(std::make_pair("a", user_public_key));
 
 
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
-
-    looper.getDispatcher()->post(Message(MessageType::Register, "b", content));
-    Message result = userQueues.pop("b");
+    looper.getDispatcher()->post(Message(MessageType::Register, "a", content));
+    Message result = userQueues.pop("a");
 
     BOOST_CHECK(result.getMessageType() == MessageType::OK);
 
