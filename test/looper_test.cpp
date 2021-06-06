@@ -135,3 +135,48 @@ BOOST_AUTO_TEST_CASE(get_riddle_test) {
     BOOST_CHECK_EQUAL(decrypted, "why");
     looper.stop();
 }
+
+BOOST_AUTO_TEST_CASE(add_new_problem) {
+    Riddle riddle(0, "why", "because");
+
+    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::RSA::PublicKey public_key;
+    Cryptography::load_public_key(public_key, "./public_key.pem");
+
+    CryptoPP::RSA::PublicKey user_public_key;
+    CryptoPP::RSA::PrivateKey user_private_key;
+    Cryptography::generate_public_private_key(user_public_key, user_private_key, rng);
+
+    UserBase userBase;
+    userBase.addUser(User("a", User::UserType::ADMIN, user_public_key));
+
+    Authorization authorization(&userBase);
+    RiddleBase riddleBase;
+    riddleBase.addRiddle(riddle);
+    RiddleModule riddleModule(&riddleBase);
+    AdminModule adminModule(&riddleBase);
+
+    QueueMap userQueues(&authorization);
+    BlockingQueue<Message> queue;
+    userQueues.add_user("a", &queue);
+
+    Riddle r(1, "cosik", "cosik2");
+
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+    BOOST_TEST_CHECKPOINT( "Looper initiated");
+    looper.run();
+    BOOST_TEST_CHECKPOINT( "Looper running");
+
+    SerializeContent serializer;
+    auto content = serializer.serializePairStringString(std::pair<std::string, std::string>("cosik", "cosik2"));
+
+    looper.getDispatcher()->post(Message(MessageType::New_problem, "a", content));
+    Message result = userQueues.pop("a");
+
+    BOOST_CHECK(result.getMessageType() == MessageType::OK);
+    auto result_content = result.getContent();
+    std::string result_deserialized = std::get<std::string>(serializer.deserialize(MessageType::OK, result_content));
+    std::string decrypted = Cryptography::asymmetric_decrypt(user_private_key, result_deserialized, rng);
+    BOOST_CHECK_EQUAL(decrypted, "cosik2");
+    looper.stop();
+}
