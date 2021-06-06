@@ -47,7 +47,7 @@ void AdminModule::runFunc()
         ValueContent content = serializer->deserialize(type, next.getContent());
 
         switch (type) {
-            case MessageType::Problems:
+            case MessageType::Get_all_problems:
                 handleGetAllRiddles(next.getUserID());
                 break;
             case MessageType::New_problem:
@@ -66,14 +66,14 @@ void AdminModule::runFunc()
 
 void AdminModule::handleAddNewRiddle(ValueContent content, std::string user)
 {
-    if(!std::holds_alternative<std::tuple<int, std::string, std::string>>(content))
+    if(!std::holds_alternative<std::pair<std::string, std::string>>(content))
     {
         looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
         return;
     }
 
-    auto riddleTuple = std::get<std::tuple<int, std::string, std::string>>(content);
-    Riddle riddle( std::get<0>(riddleTuple), std::get<1>(riddleTuple), std::get<2>(riddleTuple));
+    auto riddlePair = std::get<std::pair<std::string, std::string>>(content);
+    Riddle riddle(0, riddlePair.first, riddlePair.second);
 
     int result = adminService.addNewRiddle(riddle);
 
