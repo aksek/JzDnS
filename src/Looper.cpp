@@ -47,6 +47,7 @@ void Looper::runFunc() {
                 break;
             case MessageType::Solution:
                 riddleModule->getDispatcher()->post(std::move(decrypted_message));
+                break;
             case MessageType::Get_current_problem:
                 riddleModule->getDispatcher()->post(std::move(next));
                 break;
@@ -54,6 +55,7 @@ void Looper::runFunc() {
             case MessageType::Delete_problem:
             case MessageType::Update:
                 adminModule->getDispatcher()->post(std::move(decrypted_message));
+                break;
             case MessageType::Get_all_problems:
                 adminModule->getDispatcher()->post(std::move(next));
                 break;
