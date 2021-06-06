@@ -86,7 +86,7 @@ void RiddleModule::runFunc()
             case MessageType::Solution:
                 handleGetSolution(content, next.getUserID());
                 break;
-            case MessageType::Problem:
+            case MessageType::Get_current_problem:
                 handleGetProblem(next.getUserID());
                 break;
             default:

@@ -69,7 +69,8 @@ void Authorization::sendResponse(std::string &user) {
             user_type_code = 1;
         }
     }
-    auto result = serializer->serializeBool(user_type_code);
+//    auto result = serializer->serializeInt(user_type_code);
+    auto result = serializer->serializeString("1");
     looper->getDispatcher()->post(Message(MessageType::OK, user, result));
 }
 
@@ -79,6 +80,14 @@ void Authorization::handleRegister(ValueContent content, std::string user) {
         return;
     }
     auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
+
+//    if (base->getUser(username_key.first)) {
+//        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
+//        return;
+//    } else {
+//        base->addUser(User(username_key.first, User::UserType::NORMAL));
+//    }
+    authorize(user, username_key.second);
 
     sendResponse(user);
 }
@@ -124,6 +133,7 @@ bool Authorization::post(Message &&aMessage) {
 }
 
 Authorization::~Authorization() {
+    delete serializer;
     abortAndJoin();
 }
 
