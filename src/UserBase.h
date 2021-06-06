@@ -13,6 +13,8 @@
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <mutex>
+#include "cryptography.hpp"
+
 class UserBase {
 private:
     std::map<std::string, User> users;
@@ -27,6 +29,7 @@ public:
     int removeUser(std::string nickName);
     User* getUser(std::string nickName);
     int updateUser(User user);
+    void addAdmin(std::string userName, std::string path);
     void saveBaseOnDisk(std::string basicString);
     void loadBaseFromDisk(std::string path);
 };

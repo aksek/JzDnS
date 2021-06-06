@@ -82,3 +82,12 @@ void UserBase::saveBaseOnDisk(std::string path)
     oa << users;
     m.unlock();
 }
+
+void UserBase::addAdmin(std::string userName, std::string path)
+{
+    CryptoPP::RSA::PublicKey key;
+    Cryptography::load_public_key(key, path);
+    User user(userName, User::ADMIN, key);
+
+    this->addUser(user);
+}
