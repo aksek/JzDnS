@@ -20,10 +20,8 @@ void QueueMap::post_except(const std::string& user, Message message) {
 
     for (auto user_queue : queues) {
         if (user_queue.first != user) {
-            CryptoPP::RSA::PublicKey user_key = authorization->getKey(user_queue.first);
-            std::string encrypted = Cryptography::asymmetric_encrypt(user_key, message.getContentText(), rng);
-            Message encrypted_message(message.getMessageType(), user_queue.first, encrypted, encrypted.size());
-            user_queue.second->push(encrypted_message);
+
+                user_queue.second->push(message);
         }
     }
 
@@ -39,8 +37,9 @@ void QueueMap::add_user(const std::string& user, BlockingQueue<Message> *queue) 
 }
 
 Message QueueMap::pop(std::string user) {
-    Message message(MessageType::OK, "");
+    Message message(MessageType::Login_error, "");
     queues[user]->waitAndPop(message);
+
     return message;
 }
 

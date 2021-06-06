@@ -130,9 +130,9 @@ BOOST_AUTO_TEST_CASE(get_riddle_test) {
 
     BOOST_CHECK(result.getMessageType() == MessageType::Problem);
     auto result_content = result.getContent();
-    std::string result_deserialized = std::get<std::string>(serializer.deserialize(MessageType::Problem, result_content));
-    std::string decrypted = Cryptography::asymmetric_decrypt(user_private_key, result_deserialized, rng);
-    BOOST_CHECK_EQUAL(decrypted, "why");
+    std::string decrypted = Cryptography::asymmetric_decrypt(user_private_key, result_content.first, rng);
+    std::string result_deserialized = std::get<std::string>(serializer.deserialize(MessageType::Problem, decrypted, result_content.second));
+    BOOST_CHECK_EQUAL(result_deserialized, "why");
     looper.stop();
 }
 
@@ -250,6 +250,17 @@ BOOST_AUTO_TEST_CASE(get_all_problems) {
     riddleBase.addRiddle(riddle1);
     riddleBase.addRiddle(riddle2);
     riddleBase.addRiddle(riddle3);
+
+    std::vector<std::tuple<int, std::string, std::string>> veryCleverTuple;
+
+    std::map<int, Riddle> veryFunnyMap = riddleBase.getAllRiddles();
+
+    for(auto &it : veryFunnyMap) {
+        veryCleverTuple.push_back(make_tuple(it.second.getId(), it.second.getRiddleContent(), it.second.getAnswer()));
+    }
+    SerializeContent serializer;
+
+    auto veryCleverTupleAfterNightOfCodingTIN = serializer.serializeVector(veryCleverTuple);
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
 
@@ -263,7 +274,6 @@ BOOST_AUTO_TEST_CASE(get_all_problems) {
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
 
-    SerializeContent serializer;
 
     looper.getDispatcher()->post(Message(MessageType::Get_all_problems, "a"));
     Message result = userQueues.pop("a");
