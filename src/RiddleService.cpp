@@ -43,7 +43,7 @@ void RiddleService::prepareRiddleQueue()
     for(auto it = v_riddles.begin(); it != v_riddles.end(); ++it)
         riddleQueue.push(*it);
 
-    lastRiddle = Riddle();
+    lastRiddle = getNextRiddle();
 }
 
 Riddle RiddleService::getLastRiddle()

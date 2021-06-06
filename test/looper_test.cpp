@@ -222,9 +222,10 @@ BOOST_AUTO_TEST_CASE(add_new_problem) {
 
     BOOST_CHECK(result.getMessageType() == MessageType::OK);
     auto result_content = result.getContent();
-    std::string result_deserialized = std::get<std::string>(serializer.deserialize(MessageType::OK, result_content));
-    std::string decrypted = Cryptography::asymmetric_decrypt(user_private_key, result_deserialized, rng);
-    BOOST_CHECK_EQUAL(decrypted, "1");
+    std::string decrypted = Cryptography::asymmetric_decrypt(user_private_key, result_content.first, rng);
+    result_content.first = decrypted;
+    auto result_deserialized = std::get<int>(serializer.deserialize(MessageType::OK, result_content));
+    BOOST_CHECK_EQUAL(result_deserialized, 2);
     looper.stop();
 }
 
@@ -284,7 +285,7 @@ BOOST_AUTO_TEST_CASE(get_all_problems) {
     result_content.first = decrypted;
     auto result_deserialized = std::get<std::vector<std::tuple<int, std::string, std::string>>>(serializer.deserialize(MessageType::Problems, result_content));
 
-    BOOST_CHECK_EQUAL(decrypted, "\"[{\\\"firstValue\\\":1,\\\"secondValue\\\":\\\"why\\\",\\\"thirdValue\\\":\\\"because\\\"},{\\\"firstValue\\\":2,\\\"secondValue\\\":\\\"cosik\\\",\\\"thirdValue\\\":\\\"cosik4\\\"},{\\\"firstValue\\\":3,\\\"secondValue\\\":\\\"cosik1\\\",\\\"thirdValue\\\":\\\"cosik6\\\"},{\\\"firstValue\\\":4,\\\"secondValue\\\":\\\"cosik12\\\",\\\"thirdValue\\\":\\\"cosik81\\\"}]\"");
+    BOOST_CHECK_EQUAL(veryCleverTupleAfterNightOfCodingTIN.first, result_content.first);
     looper.stop();
 }
 
