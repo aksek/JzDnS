@@ -160,20 +160,24 @@ BOOST_AUTO_TEST_CASE(solution_test) {
     QueueMap userQueues(&authorization);
     BlockingQueue<Message> queue;
     userQueues.add_user("a", &queue);
+    userQueues.add_user("b", &queue);
 
     SerializeContent serializer;
+    auto content = serializer.serializeString("because");
+    std::string encrypted = Cryptography::asymmetric_encrypt(public_key, content.first, rng);
+
 
     Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
-    looper.getDispatcher()->post(Message(MessageType::Get_current_problem, "a"));
-    Message result = userQueues.pop("a");
+    looper.getDispatcher()->post(Message(MessageType::Solution, "a", encrypted, content.second));
 
-    BOOST_CHECK(result.getMessageType() == MessageType::Problem);
-    auto result_content = result.getContent();
-    std::string result_deserialized = std::get<std::string>(serializer.deserialize(MessageType::Problem, result_content));
-    std::string decrypted = Cryptography::asymmetric_decrypt(user_private_key, result_deserialized, rng);
-    BOOST_CHECK_EQUAL(decrypted, "why");
+    Message result = userQueues.pop("a");
+    BOOST_CHECK(result.getMessageType() == MessageType::Correct);
+
+    Message side_result = userQueues.pop("b");
+    BOOST_CHECK(result.getMessageType() == MessageType::Round_over);
+
     looper.stop();
 }
