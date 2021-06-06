@@ -12,13 +12,11 @@ project(JzDnS)
 
 #find_package(Boost REQUIRED COMPONENTS archive)
 
-add_executable(jzdns
-        src/main.cpp
+add_executable(server
+        server.cpp
         src/cryptography.hpp src/cryptography.cpp
         src/BlockingQueue.hpp
-#        src/BlockingQueue.cpp
         src/authorization.hpp src/authorization.cpp
-#        src/serverDispatcher.hpp src/serverDispatcher.cpp
         src/Riddle.h src/Riddle.cpp
         src/RiddleBase.h src/RiddleBase.cpp
         src/User.h src/User.cpp
@@ -33,7 +31,7 @@ add_executable(jzdns
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp -lboost_serialization -lboost_system -pthread ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
-target_link_libraries(jzdns -lboost_serialization cryptopp -pthread)
+target_link_libraries(server -lboost_serialization cryptopp -pthread)
 #target_link_libraries(jzdns Boost::archive)
 
 include(BoostTestHelpers.cmake)
