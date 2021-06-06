@@ -8,7 +8,7 @@
 void Looper::runFunc() {
     mRunning.store(true);
 
-    while(false == mAbortRequested.load()) {
+    while(!mAbortRequested.load()) {
         Message next(MessageType::OK, "");
 
         if (!mMessages.tryWaitAndPop(next, 2000)) {
@@ -113,6 +113,10 @@ bool Looper::running() const {
 }
 
 void Looper::stop() {
+    authorization->stop();
+    adminModule->stop();
+    riddleModule->stop();
+
     abortAndJoin();
 }
 

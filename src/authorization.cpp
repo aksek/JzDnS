@@ -96,7 +96,7 @@ void Authorization::handleRegister(ValueContent content, std::string user) {
 void Authorization::runFunc() {
     mRunning.store(true);
 
-    while(false == mAbortRequested.load()) {
+    while(!mAbortRequested.load()) {
         Message next(MessageType::OK, "");
 
         if (!mMessages.tryWaitAndPop(next, 2000)) {
