@@ -27,7 +27,7 @@ add_executable(server
         src/Looper.cpp src/Looper.hpp
         src/QueueMap.cpp src/QueueMap.hpp
         src/AdminModule.h src/AdminModule.cpp
-        src/RiddleModule.h src/RiddleModule.cpp)
+        src/RiddleModule.h src/RiddleModule.cpp src/ServerModule.cpp src/ServerModule.hpp)
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp -lboost_serialization -lboost_system -pthread ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")

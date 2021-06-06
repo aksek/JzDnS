@@ -62,7 +62,7 @@ int main()
 {
 
 	int sockfd, ret;
-	 struct sockaddr_in serverAddr;
+	struct sockaddr_in serverAddr;
 
 	int newSocket;
 	struct sockaddr_in newAddr;
@@ -117,7 +117,12 @@ int main()
 	}
 
 	close(newSocket);
+    while(getchar() == 'q')
+    {
 
+    }
+
+    looper.stop();
 
 	return 0;
 }
