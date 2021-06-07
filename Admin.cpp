@@ -1,7 +1,7 @@
 #include "Admin.h"
 
 void * Admin::handle_connection(void * arguments)
-{   
+{
     int port = ((struct InfoAdmin *)arguments)->port;
     std::string address = ((struct InfoAdmin *)arguments)->address;
     int buffersize = ((struct InfoAdmin *)arguments)->bufferSize;
@@ -43,23 +43,20 @@ void * Admin::handle_connection(void * arguments)
 	while(1)
     {
         queue->lockServer();
-		printf("Client: \t");
+
         std::string result;
-        std::cout << queue->empty() << std::endl;
-        sleep(1);
+
         queue->waitAndPop(result);
-        std::cout << "Got from admin: " << result << std::endl;
-        sleep(1);
-        std::cout << queue->empty() << std::endl;
-        sleep(1);
+
         strcpy(buffer, result.c_str());
-        sleep(1);
         send(clientSocket, buffer, strlen(buffer), 0);
 
         if(strcmp(buffer, ":exit") == 0){
             close(clientSocket);
             printf("[-]Disconnected from server.\n");
-            exit(1);
+            queue->unlockAdmin();
+            queue->unlockServer();
+            break;
         }
 
         for(int i = 0; i < buffersize; ++i)
@@ -70,16 +67,12 @@ void * Admin::handle_connection(void * arguments)
         if(recv(clientSocket, buffer, buffersize, 0) < 0){
             printf("[-]Error in receiving data.\n");
         }else{
-            printf("Server: \t%s\n", buffer);
             std::string response(buffer);
             queue->push(response);
-            std::cout << "Sending to admin: " << response << std::endl;
             queue->unlockAdmin();
         }
         
 	}
-    
-
 }
 
 Admin::Admin(int l, int mbs)
@@ -175,20 +168,15 @@ void Admin::connectToServer(ServerStructure serv)
     serv.showInfo();
 
     struct InfoAdmin ia = {serv.getPort(), serv.getAddress(), maxBuffSize, &queue };
-
     connected = true;
 
     queue.lockServer();
     queue.lockAdmin();
 
-    sleep(1);
     std::string s = "hello";
 
-    std::cout << "Sending: " << s << std::endl;
-    sleep(1);
     queue.push(s);
-    std::cout << queue.empty() << std::endl;
-    sleep(1);
+
     queue.unlockServer();
 
     connetion_thread = std::thread(&Admin::handle_connection, this, &ia);
@@ -196,8 +184,6 @@ void Admin::connectToServer(ServerStructure serv)
 
     queue.lockAdmin();
     queue.waitAndPop(result);
-    std::cout << "Got from server: " << result << std::endl;
-    
 
 
    /*
@@ -228,9 +214,15 @@ void Admin::disconnectFromServer()
         return;
     }
 
+    std::string s = ":exit";
+    queue.push(s);
+    std::cout << queue.empty() << std::endl;
+    queue.unlockServer();
+
     connected = false;
 
     if(connetion_thread.joinable()) connetion_thread.join();
+
 }
 
 void Admin::addNewProblem()
@@ -249,7 +241,11 @@ void Admin::addNewProblem()
         std::pair<std::string, size_t> serializedContent = sc.serializePairStringString(p);
         Message m(MessageType::New_problem, 101, serializedContent);
         std::string toSend = m.serialize();
-        std::string receive = sendToServer(toSend);
+         queue.push(toSend);
+         queue.unlockServer();
+         queue.lockAdmin();
+        std::string receive;
+         queue.waitAndPop(receive);
         !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
         int number = deserializedMess.deserialize(content, size); !!!!!!!
         */
@@ -334,6 +330,12 @@ void Admin::selectProblemToDelete()
 {
     std::cout << std::endl << "*********** Delete problem: ***********" << std::endl;
 
+    if(!connected)
+    {
+        std::cout << "You should be connected first!" << std::endl;
+        return;
+    }
+
     if(problems.size() < 1)
     {
         std::cout << "Problem list is empty!" << std::endl;
@@ -350,19 +352,27 @@ void Admin::selectProblemToDelete()
     std::pair<std::string, size_t> serializedContent = sc.serializeInt(int n);
     Message m(MessageType::New_problem, 101, serializedContent);
     std::string toSend = m.serialize();
-    std::string receive = sendToServer(toSend);
+    queue.push(toSend);
+    queue.unlockServer();
+    queue.lockAdmin();
+    std::string receive;
+    queue.waitAndPop(receive);
     !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    check if correct
+    int number = deserializedMess.deserialize(content, size); !!!!!!!
     */
 
     problems.erase(problems.begin() + n);
-
-    return;
 }
 
 void Admin::selectProblemToEdit()
 {
     std::cout << std::endl << "*********** Edit problem: ***********" << std::endl;
+
+    if(!connected)
+    {
+        std::cout << "You should be connected first!" << std::endl;
+        return;
+    }
 
     if(problems.size() < 1)
     {
@@ -410,7 +420,6 @@ void Admin::editQuestion(int index)
     problems[index].printInfo();
     std::string newQuestion = insertQuestion();
     problems[index].setQuestion(newQuestion);
-    int indx = problems[index].getIndex();
     std::pair<int, std::string> p(problems[index].getIndex(), newQuestion);
 
     /*
@@ -418,9 +427,13 @@ void Admin::editQuestion(int index)
     std::pair<std::string, size_t> serializedContent = sc.serializePairIntString(p);
     Message m(MessageType::Edit_problem, 101, serializedContent);
     std::string toSend = m.serialize();
-    std::string receive = sendToServer(toSend);
+    queue.push(toSend);
+    queue.unlockServer();
+    queue.lockAdmin();
+    std::string receive;
+    queue.waitAndPop(receive);
     !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    check if correct !!!!
+    int number = deserializedMess.deserialize(content, size); !!!!!!!
     */
 }
 
@@ -436,9 +449,13 @@ void Admin::editAnswer(int index)
     std::pair<std::string, size_t> serializedContent = sc.serializePairIntString(p);
     Message m(MessageType::Edit_solution, 101, serializedContent);
     std::string toSend = m.serialize();
-    std::string receive = sendToServer(toSend);
+    queue.push(toSend);
+    queue.unlockServer();
+    queue.lockAdmin();
+    std::string receive;
+    queue.waitAndPop(receive);
     !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    check if correct !!!!
+    int number = deserializedMess.deserialize(content, size); !!!!!!!
     */
 }
 
@@ -456,9 +473,13 @@ void Admin::editWholeProblem(int index)
     std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
     Message m(MessageType::Edit_solution, 101, serializedContent);
     std::string toSend = m.serialize();
-    std::string receive = sendToServer(toSend);
+    queue.push(toSend);
+    queue.unlockServer();
+    queue.lockAdmin();
+    std::string receive;
+    queue.waitAndPop(receive);
     !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    check if correct !!!!
+    int number = deserializedMess.deserialize(content, size); !!!!!!!
     */
 }
 
