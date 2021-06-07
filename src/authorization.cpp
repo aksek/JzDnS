@@ -5,16 +5,18 @@
 #include "authorization.hpp"
 #include "cryptography.hpp"
 #include "Looper.hpp"
+#include "Logger.h"
 
 #include <utility>
 
 
-Authorization::Authorization(UserBase *user_base)
+Authorization::Authorization(UserBase *user_base, QueueMap* user_queues)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
 , mMessages()
 , base(user_base)
+, userQueues(user_queues)
 {
     serializer = new SerializeContent;
 }
@@ -36,6 +38,10 @@ bool Authorization::authorize(const std::string& username, CryptoPP::RSA::Public
         if (base->addUser(User(username, User::UserType::NORMAL, public_key)) == 0) {
             return true;
         } else return false;
+    }
+    if (userQueues->isInMap(username)) {
+        BlockingQueue<Message>* queue = new BlockingQueue<Message>();
+        userQueues->add_user(username, queue);
     }
     return true;
 }
@@ -95,15 +101,17 @@ void Authorization::handleRegister(ValueContent content, std::string user) {
 
 void Authorization::runFunc() {
     mRunning.store(true);
+    Logger logger("Authorization");
+    logger.write("Start");
 
     while(!mAbortRequested.load()) {
         Message next(MessageType::OK, "");
 
         if (!mMessages.tryWaitAndPop(next, 2000)) {
-//            mRunning.store(false);
+            logger.write("Timeout");
             continue;
         }
-
+        logger.write("Received" + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());
@@ -116,7 +124,10 @@ void Authorization::runFunc() {
             default:
                 break;
         }
+
     }
+    logger.write("Finish");
+    mRunning.store(false);
 }
 
 bool Authorization::post(Message &&aMessage) {

@@ -16,7 +16,8 @@ class QueueMap {
     mutable std::mutex guard;
     Authorization* authorization;
 public:
-    QueueMap(Authorization* authorization1);
+
+    void setAuthorization(Authorization *authorization);
     void post_to(const std::string& user, Message message);
     void post_except(const std::string& user, Message message);
     void add_user(const std::string& user, BlockingQueue<Message>* queue);

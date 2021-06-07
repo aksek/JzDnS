@@ -8,6 +8,7 @@
 
 #include <thread>
 #include <atomic>
+#include "AdminService.h"
 #include "BlockingQueue.hpp"
 //#include "Looper.hpp"
 #include <map>

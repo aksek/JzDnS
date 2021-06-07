@@ -4,6 +4,7 @@
 
 #include "Looper.hpp"
 #include "RiddleModule.h"
+#include "Logger.h"
 
 bool RiddleModule::post(Message &&aMessage)
 {
@@ -70,14 +71,18 @@ void RiddleModule::handleGetProblem(std::string user)
 void RiddleModule::runFunc()
 {
     mRunning.store(true);
+    Logger logger("Authorization");
+    logger.write("Start");
 
     while (!mAbortRequested.load())
     {
         Message next(MessageType::OK, "");
 //        messagesQueue.waitAndPop(next);
         if (!messagesQueue.tryWaitAndPop(next, 2000)) {
+            logger.write("Timeout");
             continue;
         }
+        logger.write("Received" + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());
@@ -93,6 +98,8 @@ void RiddleModule::runFunc()
                 break;
         }
     }
+    logger.write("Finish");
+    mRunning.store(false);
 }
 
 RiddleModule::~RiddleModule()

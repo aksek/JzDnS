@@ -29,20 +29,23 @@ BOOST_AUTO_TEST_CASE(login_test) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::NORMAL, user_public_key));
 
-    Authorization authorization(&userBase);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);BlockingQueue<Message> queue;
+    userQueues.add_user("a", &queue);
+
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
 
-    QueueMap userQueues(&authorization);
-    BlockingQueue<Message> queue;
-    userQueues.add_user("a", &queue);
+    ServerModule serverModule(&userQueues);
+
 
     SerializeContent serializer;
     auto content = serializer.serializeString("a");
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
@@ -68,21 +71,25 @@ BOOST_AUTO_TEST_CASE(register_test) {
 
     UserBase userBase;
 
-    Authorization authorization(&userBase);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
+    BlockingQueue<Message> queue;
+    userQueues.add_user("a", &queue);
+
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     RiddleModule riddleModule(&riddleBase);
+
     AdminModule adminModule(&riddleBase);
 
-    QueueMap userQueues(&authorization);
-    BlockingQueue<Message> queue;
-    userQueues.add_user("a", &queue);
+    ServerModule serverModule(&userQueues);
 
     SerializeContent serializer;
     auto content = serializer.serializePublicKey(std::make_pair("a", user_public_key));
 
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
@@ -109,19 +116,23 @@ BOOST_AUTO_TEST_CASE(get_riddle_test) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::NORMAL, user_public_key));
 
-    Authorization authorization(&userBase);
-    RiddleBase riddleBase;
-    riddleBase.addRiddle(riddle);
-    RiddleModule riddleModule(&riddleBase);
-    AdminModule adminModule(&riddleBase);
-
-    QueueMap userQueues(&authorization);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
     BlockingQueue<Message> queue;
     userQueues.add_user("a", &queue);
 
+    RiddleBase riddleBase;
+    riddleBase.addRiddle(riddle);
+    RiddleModule riddleModule(&riddleBase);
+
+    AdminModule adminModule(&riddleBase);
+
+    ServerModule serverModule(&userQueues);
+
     SerializeContent serializer;
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
@@ -151,23 +162,26 @@ BOOST_AUTO_TEST_CASE(solution_test) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::NORMAL, user_public_key));
 
-    Authorization authorization(&userBase);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
+    BlockingQueue<Message> queue;
+    userQueues.add_user("a", &queue);
+
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     RiddleModule riddleModule(&riddleBase);
+
     AdminModule adminModule(&riddleBase);
 
-    QueueMap userQueues(&authorization);
-    BlockingQueue<Message> queue;
-    userQueues.add_user("a", &queue);
-    userQueues.add_user("b", &queue);
+    ServerModule serverModule(&userQueues);
 
     SerializeContent serializer;
     auto content = serializer.serializeString("because");
     std::string encrypted = Cryptography::asymmetric_encrypt(public_key, content.first, rng);
 
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
@@ -196,19 +210,22 @@ BOOST_AUTO_TEST_CASE(add_new_problem) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::ADMIN, user_public_key));
 
-    Authorization authorization(&userBase);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
 
-    QueueMap userQueues(&authorization);
     BlockingQueue<Message> queue;
     userQueues.add_user("a", &queue);
 
+    ServerModule serverModule(&userQueues);
+
     Riddle r(1, "cosik", "cosik2");
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
@@ -245,7 +262,10 @@ BOOST_AUTO_TEST_CASE(get_all_problems) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::ADMIN, user_public_key));
 
-    Authorization authorization(&userBase);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
+
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     riddleBase.addRiddle(riddle1);
@@ -265,12 +285,13 @@ BOOST_AUTO_TEST_CASE(get_all_problems) {
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
 
-    QueueMap userQueues(&authorization);
     BlockingQueue<Message> queue;
     userQueues.add_user("a", &queue);
 
+    ServerModule serverModule(&userQueues);
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
@@ -305,7 +326,9 @@ BOOST_AUTO_TEST_CASE(delete_riddle_test) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::ADMIN, user_public_key));
 
-    Authorization authorization(&userBase);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     riddleBase.addRiddle(riddle1);
@@ -314,12 +337,12 @@ BOOST_AUTO_TEST_CASE(delete_riddle_test) {
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
 
-    QueueMap userQueues(&authorization);
     BlockingQueue<Message> queue;
     userQueues.add_user("a", &queue);
 
+    ServerModule serverModule(&userQueues);
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
@@ -357,7 +380,9 @@ BOOST_AUTO_TEST_CASE(update_riddle) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::ADMIN, user_public_key));
 
-    Authorization authorization(&userBase);
+    QueueMap userQueues;
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     riddleBase.addRiddle(riddle1);
@@ -366,12 +391,13 @@ BOOST_AUTO_TEST_CASE(update_riddle) {
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
 
-    QueueMap userQueues(&authorization);
     BlockingQueue<Message> queue;
     userQueues.add_user("a", &queue);
 
+    ServerModule serverModule(&userQueues);
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule);
+
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");

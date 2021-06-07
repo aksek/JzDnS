@@ -4,16 +4,22 @@
 
 #include "Looper.hpp"
 #include"cryptography.hpp"
+#include"Logger.h"
 
 void Looper::runFunc() {
     mRunning.store(true);
+
+    Logger logger("Looper_log");
+    logger.write("Start");
 
     while(!mAbortRequested.load()) {
         Message next(MessageType::OK, "");
 
         if (!mMessages.tryWaitAndPop(next, 2000)) {
+            logger.write("Timeout");
             continue;
         }
+        logger.write("Received" + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
 
         // Depending on the direction of routing (other server modules / outside) the message requires either encryption
         // or decryption. The decrypted version is created here, encryption is handled by the QueueMap's 'post' methods
@@ -64,11 +70,11 @@ void Looper::runFunc() {
                 break;
         }
     }
-
+    logger.write("Finish");
     mRunning.store(false);
 }
 
-Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule)
+Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule, ServerModule* serverModule)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
@@ -76,6 +82,7 @@ Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule*
 , authorization(authorization)
 , riddleModule(riddleModule)
 , adminModule(adminModule)
+, serverModule(serverModule)
 , userQueues(userQueues)
 {
     Cryptography::load_private_key(private_key, "./private_key.pem");
@@ -87,12 +94,15 @@ Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule*
     adminModule->run();
     riddleModule->setLooper(this);
     riddleModule->run();
+    serverModule->setLooper(this);
+    serverModule->run();
 }
 
 Looper::~Looper() {
     authorization->stop();
     adminModule->stop();
     riddleModule->stop();
+    serverModule->stop();
     abortAndJoin();
 }
 
@@ -117,6 +127,7 @@ void Looper::stop() {
     authorization->stop();
     adminModule->stop();
     riddleModule->stop();
+    serverModule->stop();
 
     abortAndJoin();
 }

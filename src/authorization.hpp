@@ -12,8 +12,9 @@
 #include <functional>
 #include <stdexcept>
 #include <mutex>
-#include"BlockingQueue.hpp"
+#include "BlockingQueue.hpp"
 
+class QueueMap;
 class Looper;
 
 class Authorization {
@@ -22,6 +23,7 @@ private:
     std::atomic_bool mRunning;
     std::atomic_bool mAbortRequested{};
 
+    QueueMap* userQueues;
     BlockingQueue<Message> mMessages;
     Looper* looper;
 
@@ -47,7 +49,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Authorization(UserBase *user_base);
+    Authorization(UserBase *user_base, QueueMap* user_queues);
     ~Authorization();
 
     CryptoPP::RSA::PublicKey getKey(std::string username);

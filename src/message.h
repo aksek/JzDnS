@@ -88,6 +88,7 @@ public:
 	size_t getContentSize();
 	std::string getContentText();
 	std::pair<std::string, size_t> getContent();
+	std::string getMessageTypeString();
 	
 private:
 	MessageType _messageType;

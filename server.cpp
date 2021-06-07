@@ -122,7 +122,7 @@ int main()
 
     }
 
-    looper.stop();
+//    looper.stop();
 
 	return 0;
 }

@@ -451,3 +451,7 @@ MessageType Message::messageTypeFromString(std::string messageType){
 		return MessageType::Get_all_problems;
 	else throw std::runtime_error("messageType not exist");
 }
+
+std::string Message::getMessageTypeString() {
+    return messageTypeToString(_messageType);
+}

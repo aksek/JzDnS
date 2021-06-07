@@ -13,7 +13,7 @@ project(JzDnS)
 #find_package(Boost REQUIRED COMPONENTS archive)
 
 add_executable(server
-        server.cpp
+        src/main.cpp
         src/cryptography.hpp src/cryptography.cpp
         src/BlockingQueue.hpp
         src/authorization.hpp src/authorization.cpp
@@ -27,7 +27,9 @@ add_executable(server
         src/Looper.cpp src/Looper.hpp
         src/QueueMap.cpp src/QueueMap.hpp
         src/AdminModule.h src/AdminModule.cpp
-        src/RiddleModule.h src/RiddleModule.cpp src/ServerModule.cpp src/ServerModule.hpp)
+        src/RiddleModule.h src/RiddleModule.cpp
+        src/ServerModule.cpp src/ServerModule.hpp
+        src/Logger.cpp src/Logger.h)
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp -lboost_serialization -lboost_system -pthread ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
@@ -41,7 +43,8 @@ add_boost_test(test/cryptography_test.cpp "${DEPS}")
 
 set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp src/User.cpp
         src/RiddleBase.cpp src/Riddle.cpp src/QueueMap.cpp src/RiddleService.cpp src/AdminService.cpp
-        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp)
+        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp src/Logger.cpp src/ServerModule.cpp )
+
 add_boost_test(test/looper_test.cpp "${DEPS}")
 
 

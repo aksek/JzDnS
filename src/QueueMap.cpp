@@ -38,10 +38,21 @@ void QueueMap::add_user(const std::string& user, BlockingQueue<Message> *queue) 
 
 Message QueueMap::pop(std::string user) {
     Message message(MessageType::Login_error, "");
-    queues[user]->waitAndPop(message);
+    queues[user]->waitAndPop(message);  //TODO replace with try
 
     return message;
 }
 
-QueueMap::QueueMap(Authorization *authorization1) : authorization(authorization1){}
+bool QueueMap::isInMap(std::string userName)
+{
+    if (queues.find(userName) == queues.end())
+        return false;
+    else
+        return true;
+}
+
+
+void QueueMap::setAuthorization(Authorization *t_authorization) {
+    QueueMap::authorization = t_authorization;
+}
 

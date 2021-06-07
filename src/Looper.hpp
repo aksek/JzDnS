@@ -19,6 +19,7 @@
 #include "QueueMap.hpp"
 #include "RiddleModule.h"
 #include "AdminModule.h"
+#include "ServerModule.hpp"
 
 
 class Authorization;
@@ -36,6 +37,7 @@ private:
     Authorization* authorization;
     AdminModule* adminModule;
     RiddleModule* riddleModule;
+    ServerModule* serverModule;
 
     CryptoPP::AutoSeededRandomPool rng;
     CryptoPP::RSA::PublicKey public_key;
@@ -54,7 +56,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule);
+    Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule, ServerModule* serverModule);
     ~Looper();
 
     bool run();
