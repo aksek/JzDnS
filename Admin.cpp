@@ -1,10 +1,93 @@
 #include "Admin.h"
 
-Admin::Admin(int l)
+void * Admin::handle_connection(void * arguments)
+{   
+    int port = ((struct InfoAdmin *)arguments)->port;
+    std::string address = ((struct InfoAdmin *)arguments)->address;
+    int buffersize = ((struct InfoAdmin *)arguments)->bufferSize;
+    BlockingQueueAdmin<std::string>* queue = ((struct InfoAdmin *)arguments)->queue;
+
+    int clientSocket, ret;
+	struct sockaddr_in serverAddr;
+	char buffer[buffersize];
+
+    int n = address.length();
+    char char_addr[n+1];
+    strcpy(char_addr, address.c_str());
+
+	for(int i = 0; i < buffersize; ++i)
+	{
+		buffer[i] = '\0';
+	}
+
+	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if(clientSocket < 0){
+		printf("[-]Error in connection.\n");
+		exit(1);
+	}
+	printf("[+]Client Socket is created.\n");
+
+	memset(&serverAddr, '\0', sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(port);
+	serverAddr.sin_addr.s_addr = inet_addr(char_addr);
+
+	ret = connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+	if(ret < 0){
+		printf("[-]Error in connection.\n");
+		exit(1);
+	}
+	printf("[+]Connected to Server.\n");
+
+
+	while(1)
+    {
+        queue->lockServer();
+		printf("Client: \t");
+        std::string result;
+        std::cout << queue->empty() << std::endl;
+        sleep(1);
+        queue->waitAndPop(result);
+        std::cout << "Got from admin: " << result << std::endl;
+        sleep(1);
+        std::cout << queue->empty() << std::endl;
+        sleep(1);
+        strcpy(buffer, result.c_str());
+        sleep(1);
+        send(clientSocket, buffer, strlen(buffer), 0);
+
+        if(strcmp(buffer, ":exit") == 0){
+            close(clientSocket);
+            printf("[-]Disconnected from server.\n");
+            exit(1);
+        }
+
+        for(int i = 0; i < buffersize; ++i)
+	    {
+		    buffer[i] = '\0';
+	    }
+
+        if(recv(clientSocket, buffer, buffersize, 0) < 0){
+            printf("[-]Error in receiving data.\n");
+        }else{
+            printf("Server: \t%s\n", buffer);
+            std::string response(buffer);
+            queue->push(response);
+            std::cout << "Sending to admin: " << response << std::endl;
+            queue->unlockAdmin();
+        }
+        
+	}
+    
+
+}
+
+Admin::Admin(int l, int mbs)
 {
     servers = getServersFromFile();
     connected = false;
     maxQuestionLength = l;
+    maxBuffSize = mbs;
 }
 
 std::vector<ServerStructure> Admin::getServersFromFile()
@@ -91,11 +174,31 @@ void Admin::connectToServer(ServerStructure serv)
     std::cout << "Trying to connect to: " << std::endl;
     serv.showInfo();
 
-    /*
-    Handle connection and new thread
-    */
+    struct InfoAdmin ia = {serv.getPort(), serv.getAddress(), maxBuffSize, &queue };
 
-   connected = true;
+    connected = true;
+
+    queue.lockServer();
+    queue.lockAdmin();
+
+    sleep(1);
+    std::string s = "hello";
+
+    std::cout << "Sending: " << s << std::endl;
+    sleep(1);
+    queue.push(s);
+    std::cout << queue.empty() << std::endl;
+    sleep(1);
+    queue.unlockServer();
+
+    connetion_thread = std::thread(&Admin::handle_connection, this, &ia);
+    std::string result;
+
+    queue.lockAdmin();
+    queue.waitAndPop(result);
+    std::cout << "Got from server: " << result << std::endl;
+    
+
 
    /*
     Message m(MessageType::Get_all_problems, 101, nullptr);
@@ -125,35 +228,38 @@ void Admin::disconnectFromServer()
         return;
     }
 
-    /*
-    Handle disconnection and kill thread
-    */
+    connected = false;
 
-   connected = false;
+    if(connetion_thread.joinable()) connetion_thread.join();
 }
 
 void Admin::addNewProblem()
 {
-    std::cout << std::endl << "*********** Add new problem: ***********" << std::endl;
+    if(connected)
+    {
+        std::cout << std::endl << "*********** Add new problem: ***********" << std::endl;
 
-    std::string q = insertQuestion(); 
-    std::string a = insertAnswer();
+        std::string q = insertQuestion(); 
+        std::string a = insertAnswer();
 
-    int number = 3;
-    std::pair<std::string, std::string> p(q,a);
-    /*
-    SerializeContent sc;
-    std::pair<std::string, size_t> serializedContent = sc.serializePairStringString(p);
-    Message m(MessageType::New_problem, 101, serializedContent);
-    std::string toSend = m.serialize();
-    std::string receive = sendToServer(toSend);
-    !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    int number = deserializedMess.deserialize(content, size); !!!!!!!
-    */
+        int number = 3;
+        std::pair<std::string, std::string> p(q,a);
+        /*
+        SerializeContent sc;
+        std::pair<std::string, size_t> serializedContent = sc.serializePairStringString(p);
+        Message m(MessageType::New_problem, 101, serializedContent);
+        std::string toSend = m.serialize();
+        std::string receive = sendToServer(toSend);
+        !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
+        int number = deserializedMess.deserialize(content, size); !!!!!!!
+        */
 
-    Problem pr(number, q, a);
+        Problem pr(number, q, a);
 
-    problems.push_back(pr);
+        problems.push_back(pr);
+    }
+    else
+        std::cout << "You should connect to server first!" << std::endl;
 }
 
 std::string Admin::insertQuestion()
