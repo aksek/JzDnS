@@ -26,44 +26,107 @@
 int clientSocket;
 char bufferSend[BUFFER_SIZE];
 char bufferRecv[BUFFER_SIZE];
-
 std::string lastMessage;
+
 std::mutex userMutex;
 bool wyslana;
 bool odgadnieta;
 
-std::string createAnswerMess(std::string answer){return answer;}
+std::string nick;
+CryptoPP::RSA::PublicKey kluczPubliczny;
+CryptoPP::RSA::PrivateKey kluczPrywatny;
+
+//tworzenie komunikatu o rozwiązaniu
+std::string createAnswerMess(std::string answer);
+
+//wysłanie komunikatu
 void sendMess(std::string message);
-void* getAnswerFromUser(void* arg);
+
+//odbiór rozwiązania od użytkownika
 std::string getAnswer();
+
+//wątek do odbioru rozwiązania i jego wysłania
+void* getAnswerFromUser(void* arg);
 
 class User{
 private:
 std::vector<ServerStructure> servers;
 
-std::string getLogin(){return "";};
-std::string createLoginMess(std::string name){return "";};
-std::string getRegist(){return "";};
-std::string createRegistMess(std::string name){return "";};
+//pobranie od użytkownika danych do logowania
+std::string getLogin();
+
+//stworzenie komunikatu logowania
+std::string createLoginMess(std::string name);
+
+//pobranie od użytkownika danych do rejestracji
+std::pair<std::string, CryptoPP::RSA::PublicKey> getRegist();
+
+//stworzenie komunikatu danych do rejestracji
+std::string createRegistMess(std::pair<std::string, CryptoPP::RSA::PublicKey> dane);
+
+//deserializacja komunikatu po logowaniu
 bool decodeLoginAnswer(Message message);
+
+//deserializacja komunikatu z zagadką
 std::string decodeProblemMessage(Message message);
+
+//deserializacja komunikatu o poprawności rozwiązania
 bool checkAnswerMessage(Message message);
+
+//wysłanie komuikatu i odbiór odpowiedzi
 Message sendAndRecv(std::string message);
+
+//odebranie komunikatu
 Message recvMess();
+
+//obsługa komunikatu o spóźnieniu z rozwiązaniem
 void roundOver(Message message){};
+
+//połaczenie z serwerem
 void connection(ServerStructure);
+
+//rozłączenie
 void disconnect();
+
+//pomocnicza - wybór sposobu weryfikacji tożsamości i jej obsługa
 int access();
+
+//pytanie o kontynuowanie po niepoprawnym rozwiązaniu
+bool checkContinue();
+
+//pytanie o kontynuowanie po zagadce
+bool checkNext();
+
+//wybranie i połączenie z serwerem
+bool chooseServerToConnectTo();
+
+//wybór logowania lub ejestracji
+int choiceLoginOrRegist();
+
+//logowanie
+bool login();//wysłać i odebrać
+
+//rejestracja
+bool regist();//wysłać i odebrać
+
+//odebranie zagadki
+std::string getProblem();//wysłać i odebrać
+
+//obsługa rozwiązywania zagadki
+bool showProblem(std::string text);
+
+//pobranie serwerów z pliku
+std::vector<ServerStructure> getServersFromFile();
+
+//wyświetlenie opcji
+void showPossibleServers();
+
+//ustalenie czy pod podanym numerem jest dany serwer
+bool isNumber(const std::string& str);
 
 public:
 User(){};
-bool choiceSerwer(){return true;};
-int choiceLoginOrRegist(){return 0;};
-bool login();//wysłać i odebrać
-bool regist();//wysłać i odebrać
-std::string getProblem();//wysłać i odebrać
-bool showProblem(std::string text);
+
+//pętla zdarzeń
 bool run();
-bool checkContinue(){return true;};
-bool checkNext(){return true;};
 };
