@@ -170,8 +170,8 @@ bool User::checkAnswerMessage(Message message){
 }
 
 std::string User::getProblem(){
-	//przygotuj recvMessage
-	Message recvMessage = sendAndRecv("prepereMessage");
+	Message message(MessageType::Get_current_problem, nick);
+	Message recvMessage = sendAndRecv(message.serialize());
 	return decodeProblemMessage(recvMessage);
 }
 
