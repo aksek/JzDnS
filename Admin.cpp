@@ -6,7 +6,7 @@ void * Admin::handle_connection(void * arguments)
     std::string address = ((struct InfoAdmin *)arguments)->address;
     int buffersize = ((struct InfoAdmin *)arguments)->bufferSize;
     BlockingQueueAdmin<std::string>* queue = ((struct InfoAdmin *)arguments)->queue;
-
+/*
     int clientSocket, ret;
 	struct sockaddr_in serverAddr;
 	char buffer[buffersize];
@@ -73,6 +73,75 @@ void * Admin::handle_connection(void * arguments)
         }
         
 	}
+ */
+
+    int sockfd;
+    char buffer[buffersize];
+    char *hello = "Hello from client";
+    struct sockaddr_in     servaddr;
+  
+    if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+        perror("socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+  
+    memset(&servaddr, 0, sizeof(servaddr));
+
+    int k = address.length();
+    char char_addr[k+1];
+    strcpy(char_addr, address.c_str());
+
+    for(int i = 0; i < buffersize; ++i)
+	{
+		buffer[i] = '\0';
+	}
+
+    servaddr.sin_family = AF_INET;
+	servaddr.sin_port = htons(port);
+	servaddr.sin_addr.s_addr = inet_addr(char_addr);
+      
+    int n;
+    socklen_t len = sizeof(servaddr); 
+
+    while(1)
+    {
+        queue->lockServer();
+
+        std::string result;
+
+        queue->waitAndPop(result);
+
+        strcpy(buffer, result.c_str());
+        
+        sendto(sockfd, (char *)buffer, strlen(hello),
+            MSG_CONFIRM, (const struct sockaddr *) &servaddr, 
+                sizeof(servaddr));
+
+        if(strcmp(buffer, ":exit") == 0){
+            close(sockfd);
+            printf("[-]Disconnected from server.\n");
+            queue->unlockAdmin();
+            queue->unlockServer();
+            break;
+        }
+
+        for(int i = 0; i < buffersize; ++i)
+        {
+            buffer[i] = '\0';
+        }
+            
+        n = recvfrom(sockfd, (char *)buffer, buffersize, 
+                    MSG_WAITALL, (struct sockaddr *) &servaddr,
+                    &len);
+
+        if(n<0)
+            printf("[-]Error in receiving data.\n");
+        else{
+            std::string response(buffer);
+            queue->push(response);
+            queue->unlockAdmin();
+        }
+    }
 }
 
 Admin::Admin(int l, int mbs)
@@ -139,6 +208,7 @@ void Admin::chooseServerToConnectTo()
     showPossibleServers();
 
     std::cout << "Please insert number of server you want to connect to:" << std::endl;
+    std::cout << "or [q] to quit" << std::endl;
     std::string number;
     bool correct = false;
     int index = -1;
@@ -155,6 +225,8 @@ void Admin::chooseServerToConnectTo()
             else
                 correct = true;
         }
+        else if(number[0] == 'q')
+            return;
         else
             std::cout << "Please enter a number!" << std::endl;
     } while (!correct);
@@ -216,7 +288,7 @@ void Admin::disconnectFromServer()
 
     std::string s = ":exit";
     queue.push(s);
-    std::cout << queue.empty() << std::endl;
+
     queue.unlockServer();
 
     connected = false;
@@ -330,6 +402,7 @@ void Admin::selectProblemToDelete()
 {
     std::cout << std::endl << "*********** Delete problem: ***********" << std::endl;
 
+
     if(!connected)
     {
         std::cout << "You should be connected first!" << std::endl;
@@ -396,6 +469,7 @@ void Admin::editProblem(int index)
     std::cout << "[0]\tto edit question\n";
     std::cout << "[1]\tto edit answer\n";
     std::cout << "[2]\tto edit whole problem\n";
+    std::cout << "[q]\tto quit\n";
     char c;
     std::cin >> c;
     while(std::cin.get()>31) {};
