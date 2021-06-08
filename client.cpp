@@ -400,6 +400,7 @@ bool User::chooseServerToConnectTo()
     } while (!correct);
 
     connection(servers[index-1]);
+    return true;
 }
 
 bool User::isNumber(const std::string& str)
@@ -408,4 +409,8 @@ bool User::isNumber(const std::string& str)
         if (std::isdigit(c) == 0) return false;
     }
     return true;
+}
+
+User::User(){
+	servers = getServersFromFile();
 }

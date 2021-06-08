@@ -125,7 +125,7 @@ void showPossibleServers();
 bool isNumber(const std::string& str);
 
 public:
-User(){};
+User();
 
 //pętla zdarzeń
 bool run();
