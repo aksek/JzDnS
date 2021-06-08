@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/msg.h>
+#include <mutex>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
@@ -23,22 +23,19 @@
 
 #define BUFFER_SIZE 300
 
-int clientSocket, ret;
+int clientSocket;
 char bufferSend[BUFFER_SIZE];
 char bufferRecv[BUFFER_SIZE];
 
-struct Problem{
-std::string text;
-std::string answer;
-};
-
 std::string lastMessage;
+std::mutex userMutex;
+bool wyslana;
+bool odgadnieta;
 
 std::string createAnswerMess(std::string answer){return answer;}
 void sendMess(std::string message);
 void* getAnswerFromUser(void* arg);
 std::string getAnswer();
-
 
 class User{
 private:
@@ -49,17 +46,24 @@ std::string createLoginMess(std::string name){return "";};
 std::string getRegist(){return "";};
 std::string createRegistMess(std::string name){return "";};
 bool decodeLoginAnswer(Message message);
-std::string decodeProblemMessage(Message message){return "";};
+std::string decodeProblemMessage(Message message);
+bool checkAnswerMessage(Message message);
 Message sendAndRecv(std::string message);
 Message recvMess();
+void roundOver(Message message){};
+void connection(ServerStructure);
+void disconnect();
+int access();
 
 public:
 User(){};
-void choiceSerwer(){};
-void connection(ServerStructure){};
-void disconnect(){};
-void login();//wysłać i odebrać
-void regist();//wysłać i odebrać
-void getProblem();//wysłać i odebrać
-void showProblem(std::string text);
+bool choiceSerwer(){return true;};
+int choiceLoginOrRegist(){return 0;};
+bool login();//wysłać i odebrać
+bool regist();//wysłać i odebrać
+std::string getProblem();//wysłać i odebrać
+bool showProblem(std::string text);
+bool run();
+bool checkContinue(){return true;};
+bool checkNext(){return true;};
 };

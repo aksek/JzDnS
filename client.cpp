@@ -1,7 +1,72 @@
 #include "client.hpp"
 
 int main(){
+	User user;
+	while(user.run()){
+		;	
+	}
 	return 0;
+}
+
+bool User::run(){
+	if(choiceSerwer()){
+		int log = -1;
+		while(log==-1){
+			log = access();
+		}
+		if(log==1){
+			while(showProblem(getProblem())){
+				;
+			}
+		}
+		return true;	
+	}else return false;
+}
+
+int User::access(){
+	int choice = choiceLoginOrRegist();
+	if(choice==0){
+		disconnect();
+		return 0;
+	}else if(choice==1){
+		if(login())
+			return 1;
+		else return -1;
+	}else if(choice==2){
+		if(regist())
+			return 1;
+		else return -1;
+	}else throw std::runtime_error("niezdefiniowany wybór");
+}
+
+void connection(ServerStructure serv){
+	struct sockaddr_in serverAddr;
+
+	int port = serv.getPort();
+	std::string address = serv.getAddress();
+
+	int n = address.length();
+	char char_addr[n+1];
+	strcpy(char_addr, address.c_str());
+
+
+	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if(clientSocket < 0){
+		throw std::runtime_error("utworzenia gniazda");
+	}
+	
+	memset(&serverAddr, '\0', sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(port);
+	serverAddr.sin_addr.s_addr = inet_addr(char_addr);
+
+	if(connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0){
+		throw std::runtime_error("błąd połączenia");
+	}
+}
+
+void User::disconnect(){
+
 }
 
 Message User::sendAndRecv(std::string message){
@@ -48,7 +113,7 @@ Message User::recvMess(){
 	return mess;
 }
 
-void User::login(){
+bool User::login(){
 	std::string message;
 	do{
 		message = getLogin();
@@ -57,14 +122,10 @@ void User::login(){
 		}
 	}while(message.size()>=BUFFER_SIZE);
 	Message recvMessage = sendAndRecv(message);
-	if(decodeLoginAnswer(recvMessage)){
-		getProblem();
-	}else{
-		std::cout<<"Bad login"<<std::endl;
-	}
+	return decodeLoginAnswer(recvMessage);
 }
 
-void User::regist(){
+bool User::regist(){
 	std::string message;
 	do{
 		message = getRegist();
@@ -73,38 +134,74 @@ void User::regist(){
 		}
 	}while(message.size()>=BUFFER_SIZE);
 	Message recvMessage = sendAndRecv(message);
-	if(decodeLoginAnswer(recvMessage)){
-		getProblem();
-	}else{
-		std::cout<<"Bad login"<<std::endl;
-	}
-
-	getProblem();
+	return decodeLoginAnswer(recvMessage);
 }
 
 bool User::decodeLoginAnswer(Message message){
-	if(message.getMessageType()!=MessageType::Login_OK)
+	if(message.getMessageType()!=MessageType::Login_OK){
+		disconnect();
 		throw std::runtime_error("zly komunikat");
-
+	}
+	//deserializacja message
 
 	return true;
 }
 
-void User::getProblem(){
+bool User::checkAnswerMessage(Message message){
+	if(message.getMessageType()!=MessageType::Correct){
+		disconnect();
+		throw std::runtime_error("zly komunikat");
+	}
+	//deseralizacja message
 
-	Message recvMessage = sendAndRecv("prepereMessage");
-	showProblem(decodeProblemMessage(recvMessage));
+	return true;
 }
 
-void User::showProblem(std::string text){
+std::string User::getProblem(){
+	//przygotuj recvMessage
+	Message recvMessage = sendAndRecv("prepereMessage");
+	return decodeProblemMessage(recvMessage);
+}
+
+std::string User::decodeProblemMessage(Message message){
+	if(message.getMessageType()!=MessageType::Problem){
+		disconnect();
+		throw std::runtime_error("zly komunikat");
+	}
+	//deserializacja message
+
+	return "";
+}
+
+bool User::showProblem(std::string text){
 	std::cout<<"Riddle:"<<std::endl;
 	std::cout<<text<<std::endl;	
+
+	userMutex.lock();
+	wyslana = false;
+	odgadnieta = false;
+	userMutex.unlock();
 
 	pthread_t answerUser;
 	pthread_create(&answerUser, NULL, &getAnswerFromUser, nullptr);
 
-	Message message = recvMess();//zablokuje się
-	
+	Message message = recvMess();
+	if(message.getMessageType()==MessageType::Round_over){
+		userMutex.lock();
+		odgadnieta = true;
+		pthread_cancel(answerUser);
+		pthread_join(answerUser, nullptr);
+		roundOver(message);
+		if(wyslana) recvMess();
+		userMutex.unlock();
+	}else if(checkAnswerMessage(message)){
+		std::cout<<"Gratulacje! Jako pierwszy rozwiązałeś poprawnie zagadkę!"<<std::endl;
+	}else{
+		if(checkContinue()){
+			 return showProblem(text);
+		}else return false;
+	}
+	return checkNext();
 }
 
 std::string getAnswer(){
@@ -115,6 +212,7 @@ std::string getAnswer(){
 }
 
 void* getAnswerFromUser(void* arg){
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	std::string message;
 	do{
 		message = getAnswer();
@@ -122,6 +220,11 @@ void* getAnswerFromUser(void* arg){
 			std::cout<<"Zbyt długa odpowiedz, podaj jeszcze raz odpowiedz"<<std::endl;
 		}
 	}while(message.size()>=BUFFER_SIZE);
-	sendMess(message);
+	userMutex.lock();
+	if(!odgadnieta){
+		sendMess(message);
+		wyslana = true;
+	}
+	userMutex.unlock();
 	return nullptr;
 }
