@@ -6,74 +6,6 @@ void * Admin::handle_connection(void * arguments)
     std::string address = ((struct InfoAdmin *)arguments)->address;
     int buffersize = ((struct InfoAdmin *)arguments)->bufferSize;
     BlockingQueueAdmin<std::string>* queue = ((struct InfoAdmin *)arguments)->queue;
-/*
-    int clientSocket, ret;
-	struct sockaddr_in serverAddr;
-	char buffer[buffersize];
-
-    int n = address.length();
-    char char_addr[n+1];
-    strcpy(char_addr, address.c_str());
-
-	for(int i = 0; i < buffersize; ++i)
-	{
-		buffer[i] = '\0';
-	}
-
-	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if(clientSocket < 0){
-		printf("[-]Error in connection.\n");
-		exit(1);
-	}
-	printf("[+]Client Socket is created.\n");
-
-	memset(&serverAddr, '\0', sizeof(serverAddr));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(port);
-	serverAddr.sin_addr.s_addr = inet_addr(char_addr);
-
-	ret = connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-	if(ret < 0){
-		printf("[-]Error in connection.\n");
-		exit(1);
-	}
-	printf("[+]Connected to Server.\n");
-
-
-	while(1)
-    {
-        queue->lockServer();
-
-        std::string result;
-
-        queue->waitAndPop(result);
-
-        strcpy(buffer, result.c_str());
-        send(clientSocket, buffer, strlen(buffer), 0);
-
-        if(strcmp(buffer, ":exit") == 0){
-            close(clientSocket);
-            printf("[-]Disconnected from server.\n");
-            queue->unlockAdmin();
-            queue->unlockServer();
-            break;
-        }
-
-        for(int i = 0; i < buffersize; ++i)
-	    {
-		    buffer[i] = '\0';
-	    }
-
-        if(recv(clientSocket, buffer, buffersize, 0) < 0){
-            printf("[-]Error in receiving data.\n");
-        }else{
-            std::string response(buffer);
-            queue->push(response);
-            queue->unlockAdmin();
-        }
-        
-	}
- */
 
     int sockfd;
     char buffer[buffersize];
@@ -259,18 +191,18 @@ void Admin::connectToServer(ServerStructure serv)
 
 
    /*
-    Message m(MessageType::Get_all_problems, 101, nullptr);
+    Message m(MessageType::Get_all_problems, "Admin");
     std::string toSend = m.serialize();
     std::string receive = sendToServer(toSend);
     !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
     std::vector<std::tuple<int, std::string, std::string> > serverProblems = deserializedMess.deserialize(content, size); !!!!!!!
     int num;
     std::string question, answer;
-    for(int i = 0; i < erverProblems.size(); ++i)
+    for(int i = 0; i < serverProblems.size(); ++i)
     {
-        num = std::get<0>(erverProblems[i]);
-        question = std::get<1>(erverProblems[i]);
-        answer = std::get<2>(erverProblems[i]);
+        num = std::get<0>(serverProblems[i]);
+        question = std::get<1>(serverProblems[i]);
+        answer = std::get<2>(serverProblems[i]);
         Problem p(num, question, answer);
         problems.push_back(p)
     }
