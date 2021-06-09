@@ -1,4 +1,5 @@
 #include "Admin.h"
+#include "src/message.h"
 
 void * Admin::handle_connection(void * arguments)
 {
@@ -258,23 +259,29 @@ void Admin::connectToServer(ServerStructure serv)
     queue.waitAndPop(result);
 
 
-   /*
-    Message m(MessageType::Get_all_problems, 101, nullptr);
+    SerializeContent serializer;
+   
+    Message m(MessageType::Get_all_problems, "Admin");
     std::string toSend = m.serialize();
+
+    
+
     std::string receive = sendToServer(toSend);
-    !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    std::vector<std::tuple<int, std::string, std::string> > serverProblems = deserializedMess.deserialize(content, size); !!!!!!!
+
+    Message response(receive);
+
+    auto serverProblems = std::get<std::vector<std::tuple<int, std::string, std::string> > >(serializer.deserialize(MessageType::Problems, response.getContent()));
     int num;
     std::string question, answer;
-    for(int i = 0; i < erverProblems.size(); ++i)
+    for(int i = 0; i < serverProblems.size(); ++i)
     {
-        num = std::get<0>(erverProblems[i]);
-        question = std::get<1>(erverProblems[i]);
-        answer = std::get<2>(erverProblems[i]);
+        num = std::get<0>(serverProblems[i]);
+        question = std::get<1>(serverProblems[i]);
+        answer = std::get<2>(serverProblems[i]);
         Problem p(num, question, answer);
-        problems.push_back(p)
+        problems.push_back(p);
     }
-   */
+   
 
 }
 
