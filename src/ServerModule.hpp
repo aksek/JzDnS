@@ -17,7 +17,23 @@
 #include <netinet/in.h>
 #include "BlockingQueue.hpp"
 #include "Logger.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <thread>
+#include "QueueMap.hpp"
+#include "Looper.hpp"
+#include <errno.h>
 
+#define PORT 5001
+#define BUFFER_SIZE 1024
+#define ADDRESS "127.0.0.1"
+#define MAXLINE     1024
 
 class QueueMap;
 
@@ -25,19 +41,22 @@ class Looper;
 
 class ServerModule {
 private:
+    enum class IP_Version {IPv4, IPv6};
     class ConnectionHandler
     {
     private:
-        std::atomic_bool itsTimeToSayGoodbye;
-        std::string userName;
+
         std::thread threadToSend;
         std::thread threadToReceive;
         ServerModule& sM;
+        IP_Version version;
+        struct sockaddr_in servaddr;
+        int sockfd;
 
     public:
-        ConnectionHandler(ServerModule& s, int socket, sockaddr_in address);
-        void handle_connection_receive(int socket, sockaddr_in address);
-        void handle_connection_send(int socket, sockaddr_in address);
+        ConnectionHandler(ServerModule& s, IP_Version v);
+        void handle_connection_receive();
+        void handle_connection_send();
         void joinThreadToSend();
         void joinThreadToReceive();
         void run();
@@ -47,10 +66,12 @@ private:
 
 //        std::vector<std::thread> mChildThreadsToSend;
 //        std::vector<std::thread> mChildThreadsToReceive;
-    std::thread mThread;
+    ConnectionHandler handlerForIPv4;
+    ConnectionHandler handlerForIPv6;
+//    std::thread mThread;
     std::atomic_bool mRunning;
-    std::atomic_bool mAbortRequested{};
-    std::vector<std::reference_wrapper<ConnectionHandler>> connectionHandlers;
+    std::atomic_bool itsTimeToSayGoodbye{};
+//    std::vector<std::reference_wrapper<ConnectionHandler>> connectionHandlers;
     QueueMap* userQueues;
     BlockingQueue<Message> mMessagesIPv4;
     BlockingQueue<Message> mMessagesIPv6;
@@ -80,14 +101,16 @@ public:
     ServerModule()
     : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
     , mRunning(false)
-    , mAbortRequested(false)
-    , mMessages()
-    , userQueues(queues)
+    , itsTimeToSayGoodbye(false)
+    , mMessagesIPv4()
+    , mMessagesIPv6()
+//    , userQueues(queues)
     , looper(nullptr)
 //    , connectionHandlers()
     , logger("ServerModule" + to_string(std::time(0)))
-    {
-    };
+    , handlerForIPv4(*this, IP_Version::IPv4)
+    , handlerForIPv6(*this, IP_Version::IPv6)
+    {}
     ~ServerModule();
 
     void setLooper(Looper* aLooper);

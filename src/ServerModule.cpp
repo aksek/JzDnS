@@ -1,22 +1,4 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <thread>
-
-
 #include"ServerModule.hpp"
-#include "QueueMap.hpp"
-#include "Looper.hpp"
-
-#define PORT 4444
-#define BUFFER_SIZE 1024
-#define ADDRESS "127.0.0.1"
-#define MAX_USERS 10
 
 struct Info
 {
@@ -24,52 +6,12 @@ struct Info
     sockaddr_in address;
 };
 
-void ServerModule::runFunc() {
-    mRunning.store(true);
-    logger.write("Start");
-
-    int sockfd, ret;
-    struct sockaddr_in serverAddr;
-
-    int newSocket;
-    struct sockaddr_in newAddr;
-
-    socklen_t addr_size;
-
-    char buffer[BUFFER_SIZE];
+//void ServerModule::runFunc() {
 
 
-    for(int i = 0; i < BUFFER_SIZE; ++i)
-    {
-        buffer[i] = '\0';
-    }
-
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(sockfd < 0){
-        logger.write("[-]Error in connection.");
-        exit(1);
-    }
-    logger.write("[+]Server Socket is created.");
-
-    memset(&serverAddr, '\0', sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT);
-    serverAddr.sin_addr.s_addr = inet_addr(ADDRESS);
 
 
-    ret = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-    if(ret < 0){
-        logger.write("[-]Error in binding.");
-        exit(1);
-    }
-    logger.write("[+]Bind to port " + to_string(PORT));
-
-    if(listen(sockfd, MAX_USERS) == 0){
-        logger.write("[+]Listening....");
-    }else{
-        logger.write("[-]Error in binding.");
-    }
-
+/*
     while(!mAbortRequested.load()) {
         struct timeval waitThreshold;
         waitThreshold.tv_sec = 2;
@@ -93,8 +35,8 @@ void ServerModule::runFunc() {
             continue;
    }
     logger.write("Finish");
-    mRunning.store(false);
-}
+    mRunning.store(false);*/
+//}
 
 bool ServerModule::post(Message &&aMessage) {
     if (not running()) {
@@ -113,37 +55,51 @@ bool ServerModule::post(Message &&aMessage) {
     return true;
 }
 
-void ServerModule::ConnectionHandler::handle_connection_receive(int socket, sockaddr_in address)
+void ServerModule::ConnectionHandler::handle_connection_receive()
 {
     char buffer[BUFFER_SIZE];
-    while(!sM.mAbortRequested.load()) {
+
+    struct sockaddr_in cliaddr;
+    socklen_t len = sizeof(cliaddr);
+
+    while(!sM.itsTimeToSayGoodbye.load()) {
         struct timeval tv;
         tv.tv_sec = 10;
         tv.tv_usec = 0;
         fd_set readfds;
         FD_ZERO(&readfds);
-        FD_SET(socket, &readfds);
-        int ret = select(socket + 1, &readfds, NULL, NULL, &tv);
+        FD_SET(sockfd, &readfds);
+
+        int ret = select(sockfd + 1, &readfds, NULL, NULL, &tv);
 
         if(ret > 0) {
-            recv(socket, buffer, BUFFER_SIZE, 0);
-            if (strcmp(buffer, ":exit") == 0) {
-                sM.logger.write(std::string("Disconnected from ") + std::string(inet_ntoa(address.sin_addr)) + " : " + to_string(ntohs(address.sin_port)));
-                itsTimeToSayGoodbye.store(true);
-                break;
+            recvfrom(sockfd, buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *) &cliaddr, &len);
+
+            Message message((std::string(buffer)));
+            std::string username = message.getUserID();
+
+            if(version == IP_Version::IPv4)
+            {
+                if (!sM.user_address_IPv4.count(username)) {
+                    sM.user_address_IPv4.insert(std::make_pair(username, cliaddr));
+                    sM.user_version.insert(std::make_pair(message.getUserID(), IP_Version::IPv4));
+                }
             }
             else
             {
-                sM.logger.write("Received message");
-//            send(socket, buffer, strlen(buffer), 0);
-                Message message((std::string(buffer)));
-                std::string username = message.getUserID();
-                if (!sM.userQueues->isInMap(username)) sM.userQueues->add_user(username, new BlockingQueue<Message>());
+                if (!sM.user_address_IPv6.count(username)) {
+                    sM.user_address_IPv6.insert(std::make_pair(username, cliaddr));
+                    sM.user_version.insert(std::make_pair(message.getUserID(), IP_Version::IPv6));
+                }
+            }
+            sM.logger.write("Received message");
+
+            if (!sM.userQueues->isInMap(username)) sM.userQueues->add_user(username, new BlockingQueue<Message>());
 
                 sM.looper->getDispatcher()->post(Message((std::string(buffer))));
 
                 bzero(buffer, sizeof(buffer));
-            }
+
         }
         if(ret == 0)
             continue;
@@ -151,13 +107,30 @@ void ServerModule::ConnectionHandler::handle_connection_receive(int socket, sock
     }
 }
 
-void ServerModule::ConnectionHandler::handle_connection_send(int socket, sockaddr_in address) {
+void ServerModule::ConnectionHandler::handle_connection_send() {
     char buffer[BUFFER_SIZE];
-    while(!sM.mAbortRequested.load() || !itsTimeToSayGoodbye) {
-        Message next = sM.userQueues->pop(userName);
+
+    while(!sM.itsTimeToSayGoodbye.load()) {
+        Message next(MessageType::OK, "");
+        if (version == IP_Version::IPv4) {
+
+            if (!sM.mMessagesIPv4.tryWaitAndPop(next, 2000)) {
+                sM.logger.write("Timeout");
+                continue;
+            }
+        } else if (version == IP_Version::IPv6) {
+
+            if (!sM.mMessagesIPv6.tryWaitAndPop(next, 2000)) {
+                sM.logger.write("Timeout");
+                continue;
+            }
+        }
+
         if (next.getUserID().empty()) {
             continue;
         }
+
+        //przetwarzanie do kogo mamy wyslac
         sM.logger.write("Sending message: " + next.getMessageTypeString());
 
         std::string serialized_message = next.serialize();
@@ -171,11 +144,13 @@ void ServerModule::ConnectionHandler::handle_connection_send(int socket, sockadd
 
         } else continue;
 
-        send(socket, serialized_message.c_str(), strlen(serialized_message.c_str()), 0);
+        sendto(sockfd, serialized_message.c_str(), serialized_message.length(),
+               MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+               sizeof(cliaddr));
     }
 }
 
-ServerModule::ConnectionHandler::ConnectionHandler(ServerModule &s, int socket, sockaddr_in address)
+ServerModule::ConnectionHandler::ConnectionHandler(ServerModule& s, IP_Version v)
 : sM(s)
 , version(v) {
 
@@ -206,7 +181,7 @@ ServerModule::ConnectionHandler::ConnectionHandler(const ServerModule::Connectio
 }
 */
 ServerModule::~ServerModule() {
-    for(auto &handler : connectionHandlers)
+    /*for(auto &handler : connectionHandlers)
     {
         handler.get().joinThreadToSend();
         handler.get().joinThreadToReceive();
@@ -246,10 +221,9 @@ void ServerModule::stop() {
 }
 
 void ServerModule::abortAndJoin() {
-    mAbortRequested.store(true);
-    if (mThread.joinable()) {
-        mThread.join();
-    }
+    itsTimeToSayGoodbye.store(true);
+    handlerForIPv4.stop();
+    handlerForIPv6.stop();
 }
 
 void ServerModule::ConnectionHandler::stop() {
