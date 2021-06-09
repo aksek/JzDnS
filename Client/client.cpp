@@ -282,7 +282,7 @@ int User::choiceLoginOrRegist(){
 std::string createAnswerMess(std::string answer){
 	SerializeContent serializer;
 	std::pair<std::string, size_t> content = serializer.serializeString(answer);
-	content = asymmetric_encrypt(kluczPubliczny, content, randPool);
+	content = asymmetric_encrypt(kluczPublicznySerwera, content, randPool);
 	Message message(MessageType::Solution, nick, content);
 	return message.serialize();
 }
@@ -296,6 +296,7 @@ std::string User::getLogin(){
 std::string User::createLoginMess(std::string name){
 	SerializeContent serializer;
 	std::pair<std::string, size_t> content = serializer.serializeString(name);
+	content.first = asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
 	Message message(MessageType::Login, nick, content);
 	return message.serialize();
 }

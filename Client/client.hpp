@@ -35,6 +35,7 @@ bool wyslana;
 bool odgadnieta;
 
 std::string nick;
+CryptoPP::RSA::PublicKey kluczPublicznySerwera;
 CryptoPP::RSA::PublicKey kluczPubliczny;
 CryptoPP::RSA::PrivateKey kluczPrywatny;
 CryptoPP::AutoSeededRandomPool randPool;
