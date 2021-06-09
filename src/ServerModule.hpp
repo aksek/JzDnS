@@ -40,6 +40,8 @@ private:
         void handle_connection_send(int socket, sockaddr_in address);
         void joinThreadToSend();
         void joinThreadToReceive();
+        void run();
+        void stop();
 //        ConnectionHandler(const ConnectionHandler &obj);
     };
 
@@ -50,12 +52,17 @@ private:
     std::atomic_bool mAbortRequested{};
     std::vector<std::reference_wrapper<ConnectionHandler>> connectionHandlers;
     QueueMap* userQueues;
-    BlockingQueue<Message> mMessages;
+    BlockingQueue<Message> mMessagesIPv4;
+    BlockingQueue<Message> mMessagesIPv6;
     Looper* looper;
     Logger logger;
 
+    std::map<std::string, IP_Version> user_version;
+    std::map<std::string, struct sockaddr_in> user_address_IPv4;
+    std::map<std::string, struct sockaddr_in> user_address_IPv6;
 
-    void runFunc();
+
+//    void runFunc();
     bool post(Message &&aMessage);
 
 
@@ -67,16 +74,17 @@ public:
         explicit Dispatcher(ServerModule &aServer);
     public:
         bool post(Message &&aMessage);
+        bool post_to_all(Message &&aMessage);
     };
 
-    ServerModule(QueueMap* queues)
+    ServerModule()
     : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
     , mRunning(false)
     , mAbortRequested(false)
     , mMessages()
     , userQueues(queues)
     , looper(nullptr)
-    , connectionHandlers()
+//    , connectionHandlers()
     , logger("ServerModule" + to_string(std::time(0)))
     {
     };
@@ -92,6 +100,7 @@ public:
 private:
     std::shared_ptr<Dispatcher> mDispatcher;
 };
+
 
 
 #endif //JZDNS_SERVERMODULE_HPP

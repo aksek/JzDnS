@@ -5,6 +5,7 @@
 #include "Looper.hpp"
 #include"cryptography.hpp"
 #include"Logger.h"
+#include"ServerModule.hpp"
 
 void Looper::runFunc() {
     mRunning.store(true);
@@ -43,10 +44,12 @@ void Looper::runFunc() {
             case MessageType::Problems:
             case MessageType::OK:
 
-                userQueues->post_to(next.getUserID(), next);
+//                userQueues->post_to(next.getUserID(), next);
+                serverModule->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Round_over:
-                userQueues->post_except(next.getUserID(), next);
+//                userQueues->post_except(next.getUserID(), next);
+                serverModule->getDispatcher()->post_to_all(std::move(next));
                 break;
             case MessageType::Login:
             case MessageType::Register:
@@ -74,7 +77,7 @@ void Looper::runFunc() {
     mRunning.store(false);
 }
 
-Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule, ServerModule* serverModule)
+Looper::Looper(Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule, ServerModule* serverModule)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
@@ -83,7 +86,6 @@ Looper::Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule*
 , riddleModule(riddleModule)
 , adminModule(adminModule)
 , serverModule(serverModule)
-, userQueues(userQueues)
 {
     Cryptography::load_private_key(private_key, "./private_key.pem");
     Cryptography::load_public_key(public_key, "./public_key.pem");

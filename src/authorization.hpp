@@ -23,7 +23,7 @@ private:
     std::atomic_bool mRunning;
     std::atomic_bool mAbortRequested{};
 
-    QueueMap* userQueues;
+//    QueueMap* userQueues;
     BlockingQueue<Message> mMessages;
     Looper* looper;
 
@@ -49,7 +49,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Authorization(UserBase *user_base, QueueMap* user_queues);
+    Authorization(UserBase *user_base);
     ~Authorization();
 
     CryptoPP::RSA::PublicKey getKey(std::string username);

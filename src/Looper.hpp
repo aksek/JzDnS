@@ -19,9 +19,9 @@
 #include "QueueMap.hpp"
 #include "RiddleModule.h"
 #include "AdminModule.h"
-#include "ServerModule.hpp"
+//#include "ServerModule.hpp"
 
-
+class ServerModule;
 class Authorization;
 
 class Looper {
@@ -56,7 +56,7 @@ public:
         bool post(Message &&aMessage);
     };
 
-    Looper(QueueMap* userQueues, Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule, ServerModule* serverModule);
+    Looper(Authorization* authorization, RiddleModule* riddleModule, AdminModule* adminModule, ServerModule* serverModule);
     ~Looper();
 
     bool run();

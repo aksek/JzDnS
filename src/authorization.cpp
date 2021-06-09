@@ -10,13 +10,12 @@
 #include <utility>
 
 
-Authorization::Authorization(UserBase *user_base, QueueMap* user_queues)
+Authorization::Authorization(UserBase *user_base)
 : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
 , mRunning(false)
 , mAbortRequested(false)
 , mMessages()
 , base(user_base)
-, userQueues(user_queues)
 {
     serializer = new SerializeContent;
 }
@@ -27,10 +26,7 @@ bool Authorization::authorize(std::string username) {
     if (user == nullptr) {
         return false;
     }
-    if (userQueues->isInMap(username)) {
-        BlockingQueue<Message>* queue = new BlockingQueue<Message>();
-        userQueues->add_user(username, queue);
-    }
+
     return true;
 }
 
@@ -42,10 +38,7 @@ bool Authorization::authorize(const std::string& username, CryptoPP::RSA::Public
             return true;
         } else return false;
     }
-    if (userQueues->isInMap(username)) {
-        BlockingQueue<Message>* queue = new BlockingQueue<Message>();
-        userQueues->add_user(username, queue);
-    }
+
     return true;
 }
 

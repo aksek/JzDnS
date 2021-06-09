@@ -102,7 +102,11 @@ bool ServerModule::post(Message &&aMessage) {
     }
 
     try {
-        mMessages.push(aMessage);
+        if (user_version[aMessage.getUserID()] == IP_Version::IPv4) {
+            mMessagesIPv4.push(aMessage);
+        } else if (user_version[aMessage.getUserID()] == IP_Version::IPv6) {
+            mMessagesIPv6.push(aMessage);
+        }
     } catch (...) {
         return false;
     }
@@ -158,18 +162,23 @@ void ServerModule::ConnectionHandler::handle_connection_send(int socket, sockadd
 
         std::string serialized_message = next.serialize();
 
+        sockaddr_in cliaddr;
+        if (version == IP_Version::IPv4) {
+            cliaddr = sM.user_address_IPv4[next.getUserID()];
+
+        } else if (version == IP_Version::IPv6) {
+            cliaddr = sM.user_address_IPv6[next.getUserID()];
+
+        } else continue;
+
         send(socket, serialized_message.c_str(), strlen(serialized_message.c_str()), 0);
     }
 }
 
 ServerModule::ConnectionHandler::ConnectionHandler(ServerModule &s, int socket, sockaddr_in address)
 : sM(s)
-, itsTimeToSayGoodbye(false)
-, threadToReceive(&ConnectionHandler::handle_connection_receive, this, socket, address)
-, threadToSend(&ConnectionHandler::handle_connection_send, this, socket, address) {
+, version(v) {
 
-//    mChildThreadsToReceive.emplace_back(std::thread(&ConnectionHandler::handle_connection_receive, this, socket, address));
-//    mChildThreadsToSend.emplace_back(std::thread(&ConnectionHandler::handle_connection_send, this, socket, address));
 }
 /*
 ServerModule::ConnectionHandler::~ConnectionHandler()
@@ -202,8 +211,8 @@ ServerModule::~ServerModule() {
         handler.get().joinThreadToSend();
         handler.get().joinThreadToReceive();
     }
-
-    connectionHandlers.clear();
+*/
+//    connectionHandlers.clear();
     abortAndJoin();
 }
 
@@ -214,7 +223,11 @@ void ServerModule::setLooper(Looper *aLooper) {
 bool ServerModule::run() {
     try
     {
-        mThread = std::thread(&ServerModule::runFunc, this);
+//        mThread = std::thread(&ServerModule::runFunc, this);
+
+        handlerForIPv4.run();
+        handlerForIPv6.run();
+
     }
     catch(...)
     {
@@ -239,6 +252,16 @@ void ServerModule::abortAndJoin() {
     }
 }
 
+void ServerModule::ConnectionHandler::stop() {
+    if (threadToReceive.joinable()) {
+        threadToReceive.join();
+    }
+    if (threadToSend.joinable()) {
+        threadToSend.join();
+    }
+}
+
+
 std::shared_ptr<ServerModule::Dispatcher> ServerModule::getDispatcher() {
     return mDispatcher;
 }
@@ -250,5 +273,38 @@ ServerModule::Dispatcher::Dispatcher(ServerModule &aServer)
 
 bool ServerModule::Dispatcher::post(Message &&aMessage) {
     return mAssignedServerModule.post(std::move(aMessage));
+}
+bool ServerModule::Dispatcher::post_to_all(Message &&aMessage) {
+    for (auto user_v : mAssignedServerModule.user_version) {
+        Message message(aMessage.getMessageType(), user_v.first, aMessage.getContent());
+        if (!mAssignedServerModule.post(std::move(message))) return false;
+    }
+    return true;
+}
+
+void ServerModule::ConnectionHandler::run() {
+
+    if( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    {
+        sM.logger.write("socket creation failed");
+        sM.itsTimeToSayGoodbye.store(true);
+    }
+
+    //tworzenie adresu
+    // servaddr.sin_family = (version == IP_Version::IPv4) ? AF_INET : AF_INET6; // IPv4
+    servaddr.sin_family = AF_INET; // IPv4
+    servaddr.sin_addr.s_addr = inet_addr(ADDRESS);
+    servaddr.sin_port = htons(PORT);
+
+    if ( bind(sockfd, (const struct sockaddr *)&servaddr,
+              sizeof(servaddr)) < 0 )
+    {
+        sM.logger.write("bind failed");
+        sM.logger.write("Oh dear, something went wrong with read()! %s\n", strerror(errno));
+        sM.itsTimeToSayGoodbye.store(true);
+    }
+
+    threadToSend = std::thread(&ServerModule::ConnectionHandler::handle_connection_send, this);
+    threadToReceive = std::thread(&ServerModule::ConnectionHandler::handle_connection_receive, this);
 }
 

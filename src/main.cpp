@@ -2,28 +2,29 @@
 #include "BlockingQueue.hpp"
 #include "Looper.hpp"
 #include "cryptography.hpp"
+#include "ServerModule.hpp"
 
 int main()
 {
     UserBase userBase;
     RiddleBase riddleBase;
     riddleBase.loadBaseFromDisk("riddleBase");
-    QueueMap userQueues;
+//    QueueMap userQueues;
     BlockingQueue<Message> queue;
 
     CryptoPP::RSA::PublicKey admin_public_key;
     Cryptography::load_public_key(admin_public_key, "admin_public_key.pem");
-    User admin("veryImportantAdmin", User::UserType::ADMIN, admin_public_key);
+    User admin("Admin", User::UserType::ADMIN, admin_public_key);
     userBase.addUser(admin);
-    Authorization authorization(&userBase, &userQueues);
-    userQueues.setAuthorization(&authorization);
+    Authorization authorization(&userBase);
+//    userQueues.setAuthorization(&authorization);
 
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
-    ServerModule serverModule(&userQueues);
+    ServerModule serverModule;
 
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
+    Looper looper(&authorization, &riddleModule, &adminModule, &serverModule);
 
     looper.run();
 
