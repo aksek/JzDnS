@@ -225,9 +225,13 @@ void ServerModule::ConnectionHandler::run() {
     //tworzenie adresu
     // servaddr.sin_family = (version == IP_Version::IPv4) ? AF_INET : AF_INET6; // IPv4
     servaddr.sin_family = AF_INET; // IPv4
-    servaddr.sin_addr.s_addr = inet_addr(ADDRESS);
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     servaddr.sin_port = htons(PORT);
 
+    inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr);
+
+    int very_true = 1;
+    setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&very_true,sizeof(int));
     if ( bind(sockfd, (const struct sockaddr *)&servaddr,
               sizeof(servaddr)) < 0 )
     {
