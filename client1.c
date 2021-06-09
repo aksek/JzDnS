@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
   
-#define PORT        4470
+#define PORT        4471
 #define MAXLINE     1024
 #define ADDRESS     "127.0.0.1"
   
