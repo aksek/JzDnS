@@ -6,38 +6,6 @@ struct Info
     sockaddr_in address;
 };
 
-//void ServerModule::runFunc() {
-
-
-
-
-/*
-    while(!mAbortRequested.load()) {
-        struct timeval waitThreshold;
-        waitThreshold.tv_sec = 2;
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(sockfd, &readfds);
-        ret = select(sockfd + 1, &readfds, NULL, NULL, &waitThreshold);
-        if(ret > 0)
-        {
-            newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
-
-            logger.write(std::string("Connection accepted from ") + std::string(inet_ntoa(newAddr.sin_addr)) + " : " + to_string(ntohs(newAddr.sin_port)));
-
-            if(newSocket < 0)
-                continue;
-
-            ConnectionHandler cosik(*this, newSocket, newAddr);
-            connectionHandlers.push_back(cosik);
-        }
-        else if(ret == 0)
-            continue;
-   }
-    logger.write("Finish");
-    mRunning.store(false);*/
-//}
-
 bool ServerModule::post(Message &&aMessage) {
     if (not running()) {
         return false;
@@ -155,13 +123,7 @@ ServerModule::ConnectionHandler::ConnectionHandler(ServerModule& s, IP_Version v
 , version(v) {
 
 }
-/*
-ServerModule::ConnectionHandler::~ConnectionHandler()
-{
-    threadToReceive.join();
-    threadToSend.join();
-}
-*/
+
 
 void ServerModule::ConnectionHandler::joinThreadToSend()
 {
@@ -172,14 +134,7 @@ void ServerModule::ConnectionHandler::joinThreadToReceive()
 {
     threadToReceive.join();
 }
-/*
-ServerModule::ConnectionHandler::ConnectionHandler(const ServerModule::ConnectionHandler &obj) : sM(obj.sM){
-    this->itsTimeToSayGoodbye.store(obj.itsTimeToSayGoodbye.load());
-    this->userName = obj.userName;
-    this->threadToSend = std::move(obj.threadToSend);// .store(obj.threadToSend.load());
-    this->threadToReceive = std::move(obj.threadToReceive);
-}
-*/
+
 ServerModule::~ServerModule() {
     /*for(auto &handler : connectionHandlers)
     {
@@ -227,6 +182,7 @@ void ServerModule::abortAndJoin() {
 }
 
 void ServerModule::ConnectionHandler::stop() {
+    close(sockfd);
     if (threadToReceive.joinable()) {
         threadToReceive.join();
     }
