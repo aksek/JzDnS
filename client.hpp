@@ -24,6 +24,8 @@
 #define BUFFER_SIZE 300
 
 int clientSocket;
+sockaddr_in servAddr;
+socklen_t len;
 char bufferSend[BUFFER_SIZE];
 char bufferRecv[BUFFER_SIZE];
 std::string lastMessage;
@@ -35,6 +37,7 @@ bool odgadnieta;
 std::string nick;
 CryptoPP::RSA::PublicKey kluczPubliczny;
 CryptoPP::RSA::PrivateKey kluczPrywatny;
+CryptoPP::AutoSeededRandomPool randPool;
 
 //tworzenie komunikatu o rozwiązaniu
 std::string createAnswerMess(std::string answer);
@@ -80,7 +83,7 @@ Message sendAndRecv(std::string message);
 Message recvMess();
 
 //obsługa komunikatu o spóźnieniu z rozwiązaniem
-void roundOver(Message message){};
+void roundOver(Message message);
 
 //połaczenie z serwerem
 void connection(ServerStructure);

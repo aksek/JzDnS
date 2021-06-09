@@ -44,8 +44,6 @@ int User::access(){
 }
 
 void User::connection(ServerStructure serv){
-	struct sockaddr_in serverAddr;
-
 	int port = serv.getPort();
 	std::string address = serv.getAddress();
 
@@ -54,23 +52,20 @@ void User::connection(ServerStructure serv){
 	strcpy(char_addr, address.c_str());
 
 
-	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	clientSocket = socket(AF_INET, SOCK_DGRAM, 0);
 	if(clientSocket < 0){
 		throw std::runtime_error("utworzenia gniazda");
 	}
 	
-	memset(&serverAddr, '\0', sizeof(serverAddr));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(port);
-	serverAddr.sin_addr.s_addr = inet_addr(char_addr);
-
-	if(connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0){
-		throw std::runtime_error("błąd połączenia");
-	}
+	memset(&servAddr, '\0', sizeof(servAddr));
+	servAddr.sin_family = AF_INET;
+	servAddr.sin_port = htons(port);
+	servAddr.sin_addr.s_addr = inet_addr(char_addr);
+	len = sizeof(servAddr);
 }
 
 void User::disconnect(){
-
+	close(clientSocket);
 }
 
 Message User::sendAndRecv(std::string message){
@@ -81,8 +76,8 @@ Message User::sendAndRecv(std::string message){
 		bufferRecv[i] = '\0';
 	}
 	strncpy(bufferSend, message.c_str(), BUFFER_SIZE);
-	send(clientSocket, bufferSend, BUFFER_SIZE, 0);
-	if(recv(clientSocket, bufferRecv, BUFFER_SIZE, 0) < 0)
+	sendto(clientSocket, (char*)bufferSend, BUFFER_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servAddr, sizeof(servAddr));
+	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
         	std::runtime_error("blad gniazda");
 
 	std::string messRecv(bufferRecv);
@@ -99,7 +94,7 @@ void sendMess(std::string message){
 		bufferSend[i] = '\0';
 	}
 	strncpy(bufferSend, message.c_str(), BUFFER_SIZE);
-	send(clientSocket, bufferSend, BUFFER_SIZE, 0);
+	sendto(clientSocket, (char*)bufferSend, BUFFER_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servAddr, sizeof(servAddr));
 }
 
 Message User::recvMess(){
@@ -107,7 +102,7 @@ Message User::recvMess(){
 	{
 		bufferRecv[i] = '\0';
 	}
-	if(recv(clientSocket, bufferRecv, BUFFER_SIZE, 0) < 0)
+	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
         	std::runtime_error("blad gniazda");
 
 	std::string messRecv(bufferRecv);
@@ -149,7 +144,7 @@ bool User::decodeLoginAnswer(Message message){
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	//contentText = funkcja(contentText); ->odszyfrowywanie
+	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::OK, contentText, sizeContent);
 	int valueInt = std::get<int>(value);
 	if(valueInt==1) return true;
@@ -164,7 +159,7 @@ bool User::checkAnswerMessage(Message message){
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	//contentText = funkcja(contentText); ->odszyfrowywanie
+	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::Correct, contentText, sizeContent);
 	return std::get<bool>(value);
 }
@@ -183,7 +178,7 @@ std::string User::decodeProblemMessage(Message message){
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	//contentText = funkcja(contentText); ->odszyfrowywanie
+	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::Problem, contentText, sizeContent);
 	return std::get<std::string>(value);
 }
@@ -287,7 +282,7 @@ int User::choiceLoginOrRegist(){
 std::string createAnswerMess(std::string answer){
 	SerializeContent serializer;
 	std::pair<std::string, size_t> content = serializer.serializeString(answer);
-	//content.first = funkcja(content.fist);->szyfrowanie
+	content = asymmetric_encrypt(kluczPubliczny, content, randPool);
 	Message message(MessageType::Solution, nick, content);
 	return message.serialize();
 }
@@ -301,7 +296,6 @@ std::string User::getLogin(){
 std::string User::createLoginMess(std::string name){
 	SerializeContent serializer;
 	std::pair<std::string, size_t> content = serializer.serializeString(name);
-	//content.first = funkcja(content.first);->szyfrowanie
 	Message message(MessageType::Login, nick, content);
 	return message.serialize();
 }
@@ -310,11 +304,10 @@ std::pair<std::string, CryptoPP::RSA::PublicKey> User::getRegist(){
 	std::cout<<"Podaj login:"<<std::endl;
 	std::cin>>nick;
 
-	CryptoPP::AutoSeededRandomPool rng;
 	CryptoPP::RSA::PrivateKey private_key;
 	CryptoPP::RSA::PublicKey public_key;
 	CryptoPP::InvertibleRSAFunction params;
-	params.GenerateRandomWithKeySize(rng, 3072);
+	params.GenerateRandomWithKeySize(randPool, 3072);
 	kluczPubliczny = CryptoPP::RSA::PublicKey(params);
 	kluczPrywatny = CryptoPP::RSA::PrivateKey(params);
 
@@ -324,7 +317,6 @@ std::pair<std::string, CryptoPP::RSA::PublicKey> User::getRegist(){
 std::string User::createRegistMess(std::pair<std::string, CryptoPP::RSA::PublicKey> dane){
 	SerializeContent serializer;
 	std::pair<std::string, size_t> content = serializer.serializePublicKey(dane);
-	//content.first = funkcja(content.first);->szyfrowanie
 	Message message(MessageType::Login, nick, content);
 	return message.serialize();
 }
@@ -409,6 +401,17 @@ bool User::isNumber(const std::string& str)
         if (std::isdigit(c) == 0) return false;
     }
     return true;
+}
+
+void User::roundOver(Message message){
+	SerializeContent serializer;
+	std::string content = message.getContentText();
+	size_t sizeContent = message.getContentSize();
+	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
+	ValueContent valueContent = serializer.deserialize(message.getMessageType(), content, sizeContent);
+	std::pair<std::string, std::string> contentValue = std::get<std::pair<std::string, std::string> >(valueContent);
+	std::cout<<"Niestety! zagadka już została rozwiązana przez: "<<contentValue.first<<std::endl;
+	std::cout<<"Odpowiedz: "<<contentValue.second<<std::endl;
 }
 
 User::User(){
