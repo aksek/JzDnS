@@ -9,7 +9,7 @@
 void Looper::runFunc() {
     mRunning.store(true);
 
-    Logger logger("Looper_log");
+    Logger logger("Looper" + to_string(std::time(0)));
     logger.write("Start");
 
     while(!mAbortRequested.load()) {
@@ -19,7 +19,7 @@ void Looper::runFunc() {
             logger.write("Timeout");
             continue;
         }
-        logger.write("Received" + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
+        logger.write("Received " + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
 
         // Depending on the direction of routing (other server modules / outside) the message requires either encryption
         // or decryption. The decrypted version is created here, encryption is handled by the QueueMap's 'post' methods

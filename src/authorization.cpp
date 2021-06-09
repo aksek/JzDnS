@@ -101,7 +101,7 @@ void Authorization::handleRegister(ValueContent content, std::string user) {
 
 void Authorization::runFunc() {
     mRunning.store(true);
-    Logger logger("Authorization");
+    Logger logger("Authorization" + to_string(std::time(0)));
     logger.write("Start");
 
     while(!mAbortRequested.load()) {

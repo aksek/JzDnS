@@ -61,7 +61,7 @@ void ServerModule::runFunc() {
         logger.write("[-]Error in binding.");
         exit(1);
     }
-    logger.write("[+]Bind to port %d" + to_string(PORT));
+    logger.write("[+]Bind to port " + to_string(PORT));
 
     if(listen(sockfd, MAX_USERS) == 0){
         logger.write("[+]Listening....");
@@ -71,7 +71,7 @@ void ServerModule::runFunc() {
 
     while(!mAbortRequested.load()) {
         struct timeval waitThreshold;
-        waitThreshold.tv_sec = 10;
+        waitThreshold.tv_sec = 2;
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(sockfd, &readfds);
@@ -130,6 +130,10 @@ void ServerModule::ConnectionHandler::handle_connection_receive(int socket, sock
             {
                 sM.logger.write("Received message");
 //            send(socket, buffer, strlen(buffer), 0);
+                Message message((std::string(buffer)));
+                std::string username = message.getUserID();
+                if (!sM.userQueues->isInMap(username)) sM.userQueues->add_user(username, new BlockingQueue<Message>());
+
                 sM.looper->getDispatcher()->post(Message((std::string(buffer))));
 
                 bzero(buffer, sizeof(buffer));

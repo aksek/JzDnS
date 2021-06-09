@@ -78,13 +78,16 @@ BOOST_AUTO_TEST_CASE(get_existing_riddle_test)
 
 BOOST_AUTO_TEST_CASE(serialisation_test)
 {
-    std::string cosik = "cosik";
+    std::string cosik = "riddleBase";
     RiddleBase rb;
     Riddle r1 = Riddle(1, cosik, "cosik");
     Riddle r2 = Riddle(2, cosik, "cosik42");
 
-    BOOST_CHECK(rb.addRiddle(r1) == 0);
-    BOOST_CHECK(rb.addRiddle(r2) == 0);
+    BOOST_CHECK(rb.addRiddle(r1) != 0);
+    BOOST_CHECK(rb.addRiddle(r2) != 0);
+    BOOST_CHECK(rb.addRiddle(r3) != 0);
+    BOOST_CHECK(rb.addRiddle(r4) != 0);
+    BOOST_CHECK(rb.addRiddle(r5) != 0);
 
     rb.saveBaseOnDisk(cosik);
     RiddleBase rb2;

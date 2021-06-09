@@ -57,7 +57,7 @@ public:
     , userQueues(queues)
     , looper(nullptr)
     , connectionHandlers()
-    , logger("ServerModule")
+    , logger("ServerModule" + to_string(std::time(0)))
     {
     };
     ~ServerModule();

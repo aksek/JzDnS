@@ -71,7 +71,7 @@ void RiddleModule::handleGetProblem(std::string user)
 void RiddleModule::runFunc()
 {
     mRunning.store(true);
-    Logger logger("Authorization");
+    Logger logger("RiddleModule" + to_string(std::time(0)));
     logger.write("Start");
 
     while (!mAbortRequested.load())
@@ -82,7 +82,7 @@ void RiddleModule::runFunc()
             logger.write("Timeout");
             continue;
         }
-        logger.write("Received" + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
+        logger.write("Received " + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());

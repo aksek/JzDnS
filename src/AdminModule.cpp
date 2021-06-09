@@ -35,7 +35,7 @@ serializer()
 void AdminModule::runFunc()
 {
     mRunning.store(true);
-    Logger logger("AdminModule");
+    Logger logger("AdminModule" + to_string(std::time(0)));
     logger.write("Start");
 
     while (!mAbortRequested.load())
@@ -46,7 +46,7 @@ void AdminModule::runFunc()
             logger.write("Timeout");
             continue;
         }
-        logger.write("Received" + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
+        logger.write("Received " + next.getMessageTypeString() + " : " + std::string(next.getUserID()));
 
         MessageType type = next.getMessageType();
         ValueContent content = serializer->deserialize(type, next.getContent());

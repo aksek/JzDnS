@@ -47,5 +47,17 @@ set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp s
 
 add_boost_test(test/looper_test.cpp "${DEPS}")
 
+set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp src/User.cpp
+        src/RiddleBase.cpp src/Riddle.cpp src/QueueMap.cpp src/RiddleService.cpp src/AdminService.cpp
+        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp src/Logger.cpp src/ServerModule.cpp )
+
+add_boost_test(test/UserBaseTests.cpp "${DEPS}")
+
+set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp src/User.cpp
+        src/RiddleBase.cpp src/Riddle.cpp src/QueueMap.cpp src/RiddleService.cpp src/AdminService.cpp
+        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp src/Logger.cpp src/ServerModule.cpp )
+
+add_boost_test(test/riddleDbTests.cpp "${DEPS}")
+
 
 enable_testing(true)
