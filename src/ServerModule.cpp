@@ -220,6 +220,8 @@ void ServerModule::ConnectionHandler::run() {
         sM.itsTimeToSayGoodbye.store(true);
     }
 
+    memset(&servaddr, 0, sizeof(servaddr));
+
     //tworzenie adresu
     // servaddr.sin_family = (version == IP_Version::IPv4) ? AF_INET : AF_INET6; // IPv4
     servaddr.sin_family = AF_INET; // IPv4
