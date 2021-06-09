@@ -37,7 +37,7 @@ void ServerModule::runFunc() {
     socklen_t addr_size;
 
     char buffer[BUFFER_SIZE];
-    pid_t childpid;
+
 
     for(int i = 0; i < BUFFER_SIZE; ++i)
     {
@@ -55,6 +55,7 @@ void ServerModule::runFunc() {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(PORT);
     serverAddr.sin_addr.s_addr = inet_addr(ADDRESS);
+
 
     ret = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(ret < 0){
@@ -78,16 +79,17 @@ void ServerModule::runFunc() {
         ret = select(sockfd + 1, &readfds, NULL, NULL, &waitThreshold);
         if(ret > 0)
         {
-        newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
+            newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
 
-        logger.write(std::string("Connection accepted from ") + std::string(inet_ntoa(newAddr.sin_addr)) + " : " + to_string(ntohs(newAddr.sin_port)));
+            logger.write(std::string("Connection accepted from ") + std::string(inet_ntoa(newAddr.sin_addr)) + " : " + to_string(ntohs(newAddr.sin_port)));
 
-        if(newSocket < 0)
-            continue;
+            if(newSocket < 0)
+                continue;
 
-        ConnectionHandler cosik(*this, newSocket, newAddr);
-        connectionHandlers.push_back(cosik);}
-        if(ret == 0)
+            ConnectionHandler cosik(*this, newSocket, newAddr);
+            connectionHandlers.push_back(cosik);
+        }
+        else if(ret == 0)
             continue;
    }
     logger.write("Finish");

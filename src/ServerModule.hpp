@@ -25,6 +25,26 @@ class Looper;
 
 class ServerModule {
 private:
+    class ConnectionHandler
+    {
+    private:
+        std::atomic_bool itsTimeToSayGoodbye;
+        std::string userName;
+        std::thread threadToSend;
+        std::thread threadToReceive;
+        ServerModule& sM;
+
+    public:
+        ConnectionHandler(ServerModule& s, int socket, sockaddr_in address);
+        void handle_connection_receive(int socket, sockaddr_in address);
+        void handle_connection_send(int socket, sockaddr_in address);
+        void joinThreadToSend();
+        void joinThreadToReceive();
+//        ConnectionHandler(const ConnectionHandler &obj);
+    };
+
+//        std::vector<std::thread> mChildThreadsToSend;
+//        std::vector<std::thread> mChildThreadsToReceive;
     std::thread mThread;
     std::atomic_bool mRunning;
     std::atomic_bool mAbortRequested{};
@@ -38,7 +58,7 @@ private:
     void runFunc();
     bool post(Message &&aMessage);
 
-    void * handle_connection(void * arguments);
+
 public:
     class Dispatcher {
         friend class ServerModule;

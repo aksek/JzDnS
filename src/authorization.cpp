@@ -27,7 +27,10 @@ bool Authorization::authorize(std::string username) {
     if (user == nullptr) {
         return false;
     }
-
+    if (userQueues->isInMap(username)) {
+        BlockingQueue<Message>* queue = new BlockingQueue<Message>();
+        userQueues->add_user(username, queue);
+    }
     return true;
 }
 
@@ -107,7 +110,8 @@ void Authorization::runFunc() {
     while(!mAbortRequested.load()) {
         Message next(MessageType::OK, "");
 
-        if (!mMessages.tryWaitAndPop(next, 2000)) {
+                bool result = mMessages.tryWaitAndPop(next, 2000);
+        if (!result) {
             logger.write("Timeout");
             continue;
         }

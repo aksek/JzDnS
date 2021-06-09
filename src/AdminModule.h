@@ -10,7 +10,7 @@
 #include <atomic>
 #include "AdminService.h"
 #include "BlockingQueue.hpp"
-//#include "Looper.hpp"
+#include "Looper.hpp"
 #include <map>
 
 class Looper;

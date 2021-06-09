@@ -5,22 +5,33 @@
 
 int main()
 {
-    CryptoPP::AutoSeededRandomPool rng1;
-    CryptoPP::AutoSeededRandomPool rng2;
-    CryptoPP::AutoSeededRandomPool rng3;
-    CryptoPP::RSA::PrivateKey private_key;
-    CryptoPP::RSA::PublicKey public_key;
+    UserBase userBase;
+    RiddleBase riddleBase;
+    riddleBase.loadBaseFromDisk("riddleBase");
+    QueueMap userQueues;
+    BlockingQueue<Message> queue;
 
-    Cryptography::generate_public_private_key(public_key, private_key, rng1);
+    CryptoPP::RSA::PublicKey admin_public_key;
+    Cryptography::load_public_key(admin_public_key, "admin_public_key.pem");
+    User admin("veryImportantAdmin", User::UserType::ADMIN, admin_public_key);
+    userBase.addUser(admin);
+    Authorization authorization(&userBase, &userQueues);
+    userQueues.setAuthorization(&authorization);
 
-    std::string message = "In a hole in the ground there lived a hobbit";
+    RiddleModule riddleModule(&riddleBase);
+    AdminModule adminModule(&riddleBase);
+    ServerModule serverModule(&userQueues);
 
-    std::string encrypted = Cryptography::asymmetric_encrypt(public_key, message, rng2);
 
-    std::cout << encrypted << std::endl;
+    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
 
-    std::string decrypted = Cryptography::asymmetric_decrypt(private_key, encrypted, rng3);
+    looper.run();
 
-    std::cout << decrypted << std::endl;
+    std::cout << "To terminate Server press q ";
+
+    while(getchar() != 'q');
+
+    looper.stop();
+
     return 0;
 }
