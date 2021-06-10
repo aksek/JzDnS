@@ -45,6 +45,7 @@ class Admin
         bool connected;
         int maxQuestionLength;
         int maxBuffSize;
+        std::string id = "Admin";
         std::thread connetion_thread;
 
         void * handle_connection(void * arguments);

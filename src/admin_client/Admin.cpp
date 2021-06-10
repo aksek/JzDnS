@@ -93,7 +93,7 @@ std::vector<ServerStructure> Admin::getServersFromFile()
     std::vector<ServerStructure> servers;
 
     std::fstream file;
-    file.open("servers.txt");
+    file.open("../servers.txt");
     std::string name, address, line;
     int port;
     int i = 0;
@@ -219,7 +219,7 @@ void Admin::connectToServer(ServerStructure serv)
         question = std::get<1>(serverProblems[i]);
         answer = std::get<2>(serverProblems[i]);
         Problem p(num, question, answer);
-        problems.push_back(p)
+        problems.push_back(p);
     }
 
 
@@ -255,21 +255,27 @@ void Admin::addNewProblem()
 
         int number = 3;
         std::pair<std::string, std::string> p(q,a);
-        /*
+
         SerializeContent sc;
         std::pair<std::string, size_t> serializedContent = sc.serializePairStringString(p);
-        Message m(MessageType::New_problem, 101, serializedContent);
+        Message m(MessageType::New_problem, id, serializedContent);
         std::string toSend = m.serialize();
-         queue.push(toSend);
-         queue.unlockServer();
-         queue.lockAdmin();
+        queue.push(toSend);
+        queue.unlockServer();
+        queue.lockAdmin();
         std::string receive;
-         queue.waitAndPop(receive);
-        !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-        int number = deserializedMess.deserialize(content, size); !!!!!!!
-        */
+        queue.waitAndPop(receive);
 
-        Problem pr(number, q, a);
+        Message mess(receive);
+
+        std::string contentText = mess.getContentText();
+        size_t sizeContent = mess.getContentSize();
+
+        contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+        auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
+
+        Problem pr(num, q, a);
 
         problems.push_back(pr);
     }
@@ -367,19 +373,25 @@ void Admin::selectProblemToDelete()
 
     int n = selectProblem();
 
-    /*
+
     SerializeContent sc;
-    std::pair<std::string, size_t> serializedContent = sc.serializeInt(int n);
-    Message m(MessageType::New_problem, 101, serializedContent);
+    std::pair<std::string, size_t> serializedContent = sc.serializeInt(n);
+    Message m(MessageType::New_problem, id, serializedContent);
     std::string toSend = m.serialize();
     queue.push(toSend);
     queue.unlockServer();
     queue.lockAdmin();
-    std::string receive;
-    queue.waitAndPop(receive);
-    !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    int number = deserializedMess.deserialize(content, size); !!!!!!!
-    */
+    std::string content;
+    queue.waitAndPop(content);
+
+    Message mess(content);
+
+    std::string contentText = mess.getContentText();
+    size_t sizeContent = mess.getContentSize();
+
+    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+    auto messageAfterDeserialisation = sc.deserialize(MessageType::OK, contentText,sizeContent);
 
     problems.erase(problems.begin() + n);
 }
@@ -443,19 +455,24 @@ void Admin::editQuestion(int index)
     problems[index].setQuestion(newQuestion);
     std::pair<int, std::string> p(problems[index].getIndex(), newQuestion);
 
-    /*
     SerializeContent sc;
     std::pair<std::string, size_t> serializedContent = sc.serializePairIntString(p);
-    Message m(MessageType::Edit_problem, 101, serializedContent);
+    Message m(MessageType::Edit_problem, id, serializedContent);
     std::string toSend = m.serialize();
     queue.push(toSend);
     queue.unlockServer();
     queue.lockAdmin();
     std::string receive;
     queue.waitAndPop(receive);
-    !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    int number = deserializedMess.deserialize(content, size); !!!!!!!
-    */
+
+    Message mess(receive);
+
+    std::string contentText = mess.getContentText();
+    size_t sizeContent = mess.getContentSize();
+
+    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+    auto messageAfterDeserialisation = sc.deserialize(MessageType::OK, contentText, sizeContent);
 }
 
 void Admin::editAnswer(int index)
@@ -465,7 +482,6 @@ void Admin::editAnswer(int index)
     problems[index].setAnswer(newAnswer);
     std::pair<int, std::string> p(problems[index].getIndex(), newAnswer);
 
-    /*
     SerializeContent sc;
     std::pair<std::string, size_t> serializedContent = sc.serializePairIntString(p);
     Message m(MessageType::Edit_solution, 101, serializedContent);
@@ -475,9 +491,17 @@ void Admin::editAnswer(int index)
     queue.lockAdmin();
     std::string receive;
     queue.waitAndPop(receive);
-    !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    int number = deserializedMess.deserialize(content, size); !!!!!!!
-    */
+
+    Message mess(receive);
+
+    std::string contentText = mess.getContentText();
+    size_t sizeContent = mess.getContentSize();
+
+    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+    SerializeContent serializer;
+    auto messageAfterDeserialisation = serializer.deserialize(MessageType::OK, receive, receive.size());
+
 }
 
 void Admin::editWholeProblem(int index)
@@ -488,20 +512,29 @@ void Admin::editWholeProblem(int index)
     std::string newAnswer = insertAnswer();
     problems[index].setAnswer(newAnswer);
     
-    /*
+
     std::tuple<int, std::string, std::string> t(problems[index].getIndex(), newQuestion, newAnswer);
     SerializeContent sc;
     std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
-    Message m(MessageType::Edit_solution, 101, serializedContent);
+    Message m(MessageType::Edit_solution, id, serializedContent);
     std::string toSend = m.serialize();
     queue.push(toSend);
     queue.unlockServer();
     queue.lockAdmin();
     std::string receive;
     queue.waitAndPop(receive);
-    !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    int number = deserializedMess.deserialize(content, size); !!!!!!!
-    */
+
+    Message mess(receive);
+
+    std::string contentText = mess.getContentText();
+    size_t sizeContent = mess.getContentSize();
+
+    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+    SerializeContent serializer;
+
+    auto messageAfterDeserialisation = serializer.deserialize(MessageType::OK, receive, receive.size());
+
 }
 
 void Admin::showAllProblems()
