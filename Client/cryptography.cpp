@@ -7,7 +7,7 @@
 #include<cryptopp/oids.h>
 #include<cryptopp/cryptlib.h>
 #include<cryptopp/rsa.h>
-#include<cryptopp/chacha.h>
+//#include<cryptopp/chacha.h>
 
 #include<iostream>
 
@@ -67,7 +67,7 @@ std::string Cryptography::asymmetric_decrypt(const PrivateKey &key, const std::s
     );
     return recovered;
 }
-
+/*
 void Cryptography::generate_symmetric_key(SecByteBlock &key, SecByteBlock &iv) {
     key = SecByteBlock(32);
     iv = SecByteBlock(8);
@@ -98,4 +98,4 @@ std::string Cryptography::symmetric_decrypt(const std::string &message, const Se
 
     return recover;
 }
-
+*/

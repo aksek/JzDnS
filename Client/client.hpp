@@ -20,6 +20,7 @@
 #include "serverStructure.h"
 #include "fstream"
 #include "message.h"
+#include "cryptography.hpp"
 
 #define BUFFER_SIZE 300
 

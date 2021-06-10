@@ -138,13 +138,14 @@ bool User::regist(){
 
 bool User::decodeLoginAnswer(Message message){
 	SerializeContent deserializer;
+	Cryptography crypt;
 	if(message.getMessageType()!=MessageType::OK){
 		disconnect();
 		throw std::runtime_error("zly komunikat");
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
+	contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::OK, contentText, sizeContent);
 	int valueInt = std::get<int>(value);
 	if(valueInt==1) return true;
@@ -153,13 +154,14 @@ bool User::decodeLoginAnswer(Message message){
 
 bool User::checkAnswerMessage(Message message){
 	SerializeContent deserializer;
+	Cryptography crypt;
 	if(message.getMessageType()!=MessageType::Correct){
 		disconnect();
 		throw std::runtime_error("zly komunikat");
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
+	contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::Correct, contentText, sizeContent);
 	return std::get<bool>(value);
 }
@@ -172,13 +174,14 @@ std::string User::getProblem(){
 
 std::string User::decodeProblemMessage(Message message){
 	SerializeContent deserializer;
+	Cryptography crypt;
 	if(message.getMessageType()!=MessageType::Problem){
 		disconnect();
 		throw std::runtime_error("zly komunikat");
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
+	contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::Problem, contentText, sizeContent);
 	return std::get<std::string>(value);
 }
@@ -281,8 +284,9 @@ int User::choiceLoginOrRegist(){
 
 std::string createAnswerMess(std::string answer){
 	SerializeContent serializer;
+	Cryptography crypt;
 	std::pair<std::string, size_t> content = serializer.serializeString(answer);
-	content = asymmetric_encrypt(kluczPublicznySerwera, content, randPool);
+	content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
 	Message message(MessageType::Solution, nick, content);
 	return message.serialize();
 }
@@ -295,8 +299,9 @@ std::string User::getLogin(){
 
 std::string User::createLoginMess(std::string name){
 	SerializeContent serializer;
+	Cryptography crypt;
 	std::pair<std::string, size_t> content = serializer.serializeString(name);
-	content.first = asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
+	content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
 	Message message(MessageType::Login, nick, content);
 	return message.serialize();
 }
@@ -317,7 +322,9 @@ std::pair<std::string, CryptoPP::RSA::PublicKey> User::getRegist(){
 
 std::string User::createRegistMess(std::pair<std::string, CryptoPP::RSA::PublicKey> dane){
 	SerializeContent serializer;
+	Cryptography crypt;
 	std::pair<std::string, size_t> content = serializer.serializePublicKey(dane);
+	content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
 	Message message(MessageType::Login, nick, content);
 	return message.serialize();
 }
@@ -406,9 +413,10 @@ bool User::isNumber(const std::string& str)
 
 void User::roundOver(Message message){
 	SerializeContent serializer;
+	Cryptography crypt;
 	std::string content = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	content = asymmetric_decrypt(kluczPrywatny, content, randPool);
+	content = crypt.asymmetric_decrypt(kluczPrywatny, content, randPool);
 	ValueContent valueContent = serializer.deserialize(message.getMessageType(), content, sizeContent);
 	std::pair<std::string, std::string> contentValue = std::get<std::pair<std::string, std::string> >(valueContent);
 	std::cout<<"Niestety! zagadka już została rozwiązana przez: "<<contentValue.first<<std::endl;
