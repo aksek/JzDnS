@@ -71,8 +71,7 @@ void Authorization::sendResponse(std::string &user) {
             user_type_code = 1;
         }
     }
-//    auto result = serializer->serializeInt(user_type_code);
-    auto result = serializer->serializeString("1");
+    auto result = serializer->serializeInt(user_type_code);
     looper->getDispatcher()->post(Message(MessageType::OK, user, result));
 }
 

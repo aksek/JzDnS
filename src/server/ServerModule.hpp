@@ -34,7 +34,7 @@
 
 #define PORT 5011
 #define BUFFER_SIZE 1024
-#define ADDRESS "0.0.0.1"
+#define ADDRESS "127.0.0.2"
 #define MAXLINE     1024
 
 class QueueMap;

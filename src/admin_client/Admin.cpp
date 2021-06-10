@@ -11,7 +11,7 @@ void * Admin::handle_connection(void * arguments)
 
     int sockfd;
     char buffer[buffersize];
-    char *hello = "Hello from client";
+//    char *hello = "Hello from client";
     struct sockaddr_in     servaddr;
   
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -47,7 +47,7 @@ void * Admin::handle_connection(void * arguments)
 
         strcpy(buffer, result.c_str());
         
-        sendto(sockfd, (char *)buffer, strlen(hello),
+        sendto(sockfd, (char *)buffer, strlen(buffer),
             MSG_CONFIRM, (const struct sockaddr *) &servaddr, 
                 sizeof(servaddr));
 
@@ -81,6 +81,8 @@ void * Admin::handle_connection(void * arguments)
 Admin::Admin(int l, int mbs)
 {
     servers = getServersFromFile();
+    Cryptography::load_public_key(admin_public_key, "admin_public_key.pem");
+    Cryptography::load_private_key(admin_private_key, "admin_private_key.pem");
     connected = false;
     maxQuestionLength = l;
     maxBuffSize = mbs;
@@ -93,7 +95,7 @@ std::vector<ServerStructure> Admin::getServersFromFile()
     std::vector<ServerStructure> servers;
 
     std::fstream file;
-    file.open("../servers.txt");
+    file.open("servers.txt");
     std::string name, address, line;
     int port;
     int i = 0;
@@ -119,7 +121,7 @@ std::vector<ServerStructure> Admin::getServersFromFile()
 
 void Admin::showPossibleServers()
 {
-    std::cout << std::endl << "*********** Possible Servers: ***********" << std::endl;
+    std::cout << std::endl << "*********** Available Servers: ***********" << std::endl;
 
     int i = 1;
     for(ServerStructure server : servers)
@@ -181,9 +183,16 @@ void Admin::connectToServer(ServerStructure serv)
     queue.lockServer();
     queue.lockAdmin();
 
-    std::string s = "hello";
+//    std::string s = "hello";
+//
+//    queue.push(s);
 
-    queue.push(s);
+    SerializeContent serializer;
+    auto serialized_login_message_content = serializer.serializePublicKey(std::make_pair(id, admin_public_key));
+    Message login(MessageType::Register, id, serialized_login_message_content);
+    std::string serialized_message = login.serialize();
+
+    queue.push(serialized_message);
 
     queue.unlockServer();
 
@@ -195,7 +204,7 @@ void Admin::connectToServer(ServerStructure serv)
 
     Message m(MessageType::Get_all_problems, id);
     std::string toSend = m.serialize();
-    Cryptography::asymmetric_encrypt(server_public_key, toSend, rng);
+//    Cryptography::asymmetric_encrypt(server_public_key, toSend, rng);
     queue.push(toSend);
     queue.unlockServer();
 
@@ -207,9 +216,8 @@ void Admin::connectToServer(ServerStructure serv)
     std::string contentText = mess.getContentText();
     size_t sizeContent = mess.getContentSize();
 
-    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
-    SerializeContent serializer;
     auto serverProblems = std::get<std::vector<std::tuple<int, std::string, std::string> >>(serializer.deserialize(MessageType::Problems, contentText, sizeContent));
     int num;
     std::string question, answer;
@@ -271,7 +279,7 @@ void Admin::addNewProblem()
         std::string contentText = mess.getContentText();
         size_t sizeContent = mess.getContentSize();
 
-        contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+//        contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
         auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
 
@@ -389,7 +397,7 @@ void Admin::selectProblemToDelete()
     std::string contentText = mess.getContentText();
     size_t sizeContent = mess.getContentSize();
 
-    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
     auto messageAfterDeserialisation = sc.deserialize(MessageType::OK, contentText,sizeContent);
 
@@ -470,7 +478,7 @@ void Admin::editQuestion(int index)
     std::string contentText = mess.getContentText();
     size_t sizeContent = mess.getContentSize();
 
-    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
     auto messageAfterDeserialisation = sc.deserialize(MessageType::OK, contentText, sizeContent);
 }
@@ -497,7 +505,7 @@ void Admin::editAnswer(int index)
     std::string contentText = mess.getContentText();
     size_t sizeContent = mess.getContentSize();
 
-    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
     SerializeContent serializer;
     auto messageAfterDeserialisation = serializer.deserialize(MessageType::OK, receive, receive.size());
@@ -529,7 +537,7 @@ void Admin::editWholeProblem(int index)
     std::string contentText = mess.getContentText();
     size_t sizeContent = mess.getContentSize();
 
-    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
     SerializeContent serializer;
 

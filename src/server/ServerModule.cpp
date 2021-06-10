@@ -11,14 +11,16 @@ bool ServerModule::post(Message &&aMessage) {
         return false;
     }
 
-    std::string encrypted = Cryptography::asymmetric_encrypt(authorization->getKey(aMessage.getUserID()), aMessage.getContentText(), rng);
-    Message encryptedMessage(aMessage.getMessageType(), aMessage.getUserID(), encrypted, aMessage.getContentSize());
+//    std::string encrypted = Cryptography::asymmetric_encrypt(authorization->getKey(aMessage.getUserID()), aMessage.getContentText(), rng);
+//    Message encryptedMessage(aMessage.getMessageType(), aMessage.getUserID(), encrypted, aMessage.getContentSize());
 
     try {
         if (user_version[aMessage.getUserID()] == IP_Version::IPv4) {
-            mMessagesIPv4.push(encryptedMessage);
+//            mMessagesIPv4.push(encryptedMessage);
+            mMessagesIPv4.push(aMessage);
         } else if (user_version[aMessage.getUserID()] == IP_Version::IPv6) {
-            mMessagesIPv6.push(encryptedMessage);
+//            mMessagesIPv6.push(encryptedMessage);
+            mMessagesIPv6.push(aMessage);
         }
     } catch (...) {
         return false;
@@ -33,9 +35,11 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
     struct sockaddr_in cliaddr;
     socklen_t len = sizeof(cliaddr);
 
+    sM.mRunning.store(true);
+
     while(!sM.itsTimeToSayGoodbye.load()) {
         struct timeval tv;
-        tv.tv_sec = 10;
+        tv.tv_sec = 60;
         tv.tv_usec = 0;
         fd_set readfds;
         FD_ZERO(&readfds);
@@ -65,7 +69,7 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
             }
             sM.logger.write("Received message");
 
-            if (!sM.userQueues->isInMap(username)) sM.userQueues->add_user(username, new BlockingQueue<Message>());
+//            if (!sM.userQueues->isInMap(username)) sM.userQueues->add_user(username, new BlockingQueue<Message>());
 
                 sM.looper->getDispatcher()->post(Message((std::string(buffer))));
 
@@ -76,11 +80,12 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
             continue;
 
     }
+    sM.mRunning.store(false);
 }
 
 void ServerModule::ConnectionHandler::handle_connection_send() {
     char buffer[BUFFER_SIZE];
-
+    sM.mRunning.store(true);
     while(!sM.itsTimeToSayGoodbye.load()) {
         Message next(MessageType::OK, "");
         if (version == IP_Version::IPv4) {
@@ -119,6 +124,7 @@ void ServerModule::ConnectionHandler::handle_connection_send() {
                MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
                sizeof(cliaddr));
     }
+    sM.mRunning.store(false);
 }
 
 ServerModule::ConnectionHandler::ConnectionHandler(ServerModule& s, IP_Version v)
@@ -229,10 +235,10 @@ void ServerModule::ConnectionHandler::run() {
     //tworzenie adresu
     // servaddr.sin_family = (version == IP_Version::IPv4) ? AF_INET : AF_INET6; // IPv4
     servaddr.sin_family = AF_INET; // IPv4
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_addr.s_addr = inet_addr(ADDRESS);
     servaddr.sin_port = htons(PORT);
 
-    inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr);
+    inet_pton(AF_INET, ADDRESS, &servaddr.sin_addr);
 
     int very_true = 1;
     setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&very_true,sizeof(int));

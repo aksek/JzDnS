@@ -36,7 +36,7 @@ class Admin
     private:
         CryptoPP::AutoSeededRandomPool rng;
         CryptoPP::RSA::PublicKey server_public_key;
-        CryptoPP::RSA::PublicKey admin_pubilc_key;
+        CryptoPP::RSA::PublicKey admin_public_key;
         CryptoPP::RSA::PrivateKey admin_private_key;
 
         std::vector<ServerStructure> servers;

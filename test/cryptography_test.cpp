@@ -47,7 +47,11 @@ BOOST_AUTO_TEST_CASE(encrypt_decrypt_test) {
     CryptoPP::RSA::PrivateKey private_key;
     CryptoPP::RSA::PublicKey public_key;
 
-    Cryptography::generate_public_private_key(public_key, private_key, rng);
+//    Cryptography::generate_public_private_key(public_key, private_key, rng);
+
+    Cryptography::load_private_key(private_key, "./private_key.pem");
+    Cryptography::load_public_key(public_key, "./public_key.pem");
+
 
     std::string message = "In a hole in the ground there lived a hobbit";
 

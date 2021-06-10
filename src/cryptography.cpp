@@ -37,7 +37,7 @@ void Cryptography::save_private_key_file(const PrivateKey &key, const std::strin
 
 void Cryptography::generate_public_private_key(RSA::PublicKey &public_key, RSA::PrivateKey &private_key, AutoSeededRandomPool &rng) {
     CryptoPP::InvertibleRSAFunction params;
-    params.GenerateRandomWithKeySize(rng, 3072);
+    params.GenerateRandomWithKeySize(rng, 1536);
 
     public_key = CryptoPP::RSA::PublicKey(params);
     private_key = CryptoPP::RSA::PrivateKey(params);

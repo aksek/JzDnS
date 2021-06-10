@@ -70,5 +70,9 @@ set(DEPS src/server/authorization.cpp src/server/Looper.cpp src/message.cpp src/
 
 add_boost_test(test/riddleDbTests.cpp "${DEPS}")
 
+set(DEPS src/message.cpp src/cryptography.cpp)
+
+add_boost_test(test/serialization_test.cpp "${DEPS}")
+
 
 enable_testing(true)

@@ -24,18 +24,18 @@ void Looper::runFunc() {
 
         // Depending on the direction of routing (other server modules / outside) the message requires either encryption
         // or decryption. The decrypted version is created here, encryption is handled by the QueueMap's 'post' methods
-        std::string decrypted;
-        switch(next.getMessageType()) {
-            case MessageType::Solution:
-            case MessageType::New_problem:
-            case MessageType::Delete_problem:
-            case MessageType::Update:
-                decrypted = Cryptography::asymmetric_decrypt(private_key, next.getContentText(), rng);
-                break;
-            default:
-                break;
-        }
-        Message decrypted_message(next.getMessageType(), next.getUserID(), decrypted, next.getContentSize());
+//        std::string decrypted;
+//        switch(next.getMessageType()) {
+//            case MessageType::Solution:
+//            case MessageType::New_problem:
+//            case MessageType::Delete_problem:
+//            case MessageType::Update:
+//                decrypted = Cryptography::asymmetric_decrypt(private_key, next.getContentText(), rng);
+//                break;
+//            default:
+//                break;
+//        }
+//        Message decrypted_message(next.getMessageType(), next.getUserID(), decrypted, next.getContentSize());
 
         switch(next.getMessageType()) {
             case MessageType::Retransmit:
@@ -56,7 +56,8 @@ void Looper::runFunc() {
                 authorization->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Solution:
-                riddleModule->getDispatcher()->post(std::move(decrypted_message));
+//                riddleModule->getDispatcher()->post(std::move(decrypted_message));
+                riddleModule->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Get_current_problem:
                 riddleModule->getDispatcher()->post(std::move(next));
@@ -64,7 +65,8 @@ void Looper::runFunc() {
             case MessageType::New_problem:
             case MessageType::Delete_problem:
             case MessageType::Update:
-                adminModule->getDispatcher()->post(std::move(decrypted_message));
+//                adminModule->getDispatcher()->post(std::move(decrypted_message));
+                adminModule->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Get_all_problems:
                 adminModule->getDispatcher()->post(std::move(next));
