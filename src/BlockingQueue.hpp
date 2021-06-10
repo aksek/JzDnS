@@ -78,7 +78,6 @@ public:
                 if (queue.empty()) {
                     return false;
                 }
-
             }
             _value = queue.front();
             queue.pop();

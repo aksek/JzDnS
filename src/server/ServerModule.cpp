@@ -48,7 +48,10 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
         int ret = select(sockfd + 1, &readfds, NULL, NULL, &tv);
 
         if(ret > 0) {
-            recvfrom(sockfd, buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *) &cliaddr, &len);
+            int n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *) &cliaddr, &len);
+
+            if( n < 0 )
+                sM.logger.write("Recvfrom failed!");
 
             Message message((std::string(buffer)));
             std::string username = message.getUserID();

@@ -202,12 +202,20 @@ void Admin::connectToServer(ServerStructure serv)
     queue.lockAdmin();
     queue.waitAndPop(result);
 
+    Message mess1(result);
+
+    std::string contentText1 = mess1.getContentText();
+    size_t sizeContent1 = mess1.getContentSize();
+
+//    std::string newContentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText1, rng);
+
     Message m(MessageType::Get_all_problems, id);
     std::string toSend = m.serialize();
 //    Cryptography::asymmetric_encrypt(server_public_key, toSend, rng);
     queue.push(toSend);
     queue.unlockServer();
 
+    queue.lockAdmin();
     std::string content;
     queue.waitAndPop(content);
 
