@@ -145,7 +145,7 @@ bool User::decodeLoginAnswer(Message message){
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
+	//contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::OK, contentText, sizeContent);
 	int valueInt = std::get<int>(value);
 	if(valueInt==1) return true;
@@ -161,7 +161,7 @@ bool User::checkAnswerMessage(Message message){
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
+	//contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::Correct, contentText, sizeContent);
 	return std::get<bool>(value);
 }
@@ -181,7 +181,7 @@ std::string User::decodeProblemMessage(Message message){
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
+	//contentText = crypt.asymmetric_decrypt(kluczPrywatny, contentText, randPool);
 	ValueContent value = deserializer.deserialize(MessageType::Problem, contentText, sizeContent);
 	return std::get<std::string>(value);
 }
@@ -286,7 +286,7 @@ std::string createAnswerMess(std::string answer){
 	SerializeContent serializer;
 	Cryptography crypt;
 	std::pair<std::string, size_t> content = serializer.serializeString(answer);
-	content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
+	//content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
 	Message message(MessageType::Solution, nick, content);
 	return message.serialize();
 }
@@ -301,7 +301,7 @@ std::string User::createLoginMess(std::string name){
 	SerializeContent serializer;
 	Cryptography crypt;
 	std::pair<std::string, size_t> content = serializer.serializeString(name);
-	content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
+	//content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
 	Message message(MessageType::Login, nick, content);
 	return message.serialize();
 }
@@ -324,7 +324,7 @@ std::string User::createRegistMess(std::pair<std::string, CryptoPP::RSA::PublicK
 	SerializeContent serializer;
 	Cryptography crypt;
 	std::pair<std::string, size_t> content = serializer.serializePublicKey(dane);
-	content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
+	//content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
 	Message message(MessageType::Login, nick, content);
 	return message.serialize();
 }
@@ -416,7 +416,7 @@ void User::roundOver(Message message){
 	Cryptography crypt;
 	std::string content = message.getContentText();
 	size_t sizeContent = message.getContentSize();
-	content = crypt.asymmetric_decrypt(kluczPrywatny, content, randPool);
+	//content = crypt.asymmetric_decrypt(kluczPrywatny, content, randPool);
 	ValueContent valueContent = serializer.deserialize(message.getMessageType(), content, sizeContent);
 	std::pair<std::string, std::string> contentValue = std::get<std::pair<std::string, std::string> >(valueContent);
 	std::cout<<"Niestety! zagadka już została rozwiązana przez: "<<contentValue.first<<std::endl;
@@ -424,5 +424,11 @@ void User::roundOver(Message message){
 }
 
 User::User(){
+	CryptoPP::RSA::PrivateKey private_key;
+	CryptoPP::RSA::PublicKey public_key;
+	CryptoPP::InvertibleRSAFunction params;
+	params.GenerateRandomWithKeySize(randPool, 3072);
+	kluczPublicznySerwera = CryptoPP::RSA::PublicKey(params);
+
 	servers = getServersFromFile();
 }
