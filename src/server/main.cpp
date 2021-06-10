@@ -1,7 +1,7 @@
 #include <iostream>
-#include "BlockingQueue.hpp"
+#include "../BlockingQueue.hpp"
 #include "Looper.hpp"
-#include "cryptography.hpp"
+#include "../cryptography.hpp"
 #include "ServerModule.hpp"
 
 int main()
@@ -21,7 +21,7 @@ int main()
 
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
-    ServerModule serverModule;
+    ServerModule serverModule(&authorization);
 
 
     Looper looper(&authorization, &riddleModule, &adminModule, &serverModule);

@@ -12,11 +12,11 @@
 #include <mutex>
 #include <map>
 //#include "BlockingQueue.hpp"
-#include "message.h"
+#include "../message.h"
 #include "authorization.hpp"
 #include "RiddleService.h"
 #include "AdminService.h"
-#include "QueueMap.hpp"
+#include "../QueueMap.hpp"
 #include "RiddleModule.h"
 #include "AdminModule.h"
 //#include "ServerModule.hpp"

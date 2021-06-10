@@ -13,22 +13,22 @@ project(JzDnS)
 #find_package(Boost REQUIRED COMPONENTS archive)
 
 add_executable(server
-        src/main.cpp
+        src/server/main.cpp
         src/cryptography.hpp src/cryptography.cpp
         src/BlockingQueue.hpp
-        src/authorization.hpp src/authorization.cpp
-        src/Riddle.h src/Riddle.cpp
-        src/RiddleBase.h src/RiddleBase.cpp
-        src/User.h src/User.cpp
-        src/UserBase.h src/UserBase.cpp
+        src/server/authorization.hpp src/server/authorization.cpp
+        src/server/Riddle.h src/server/Riddle.cpp
+        src/server/RiddleBase.h src/server/RiddleBase.cpp
+        src/server/User.h src/server/User.cpp
+        src/server/UserBase.h src/server/UserBase.cpp
         src/message.h src/message.cpp
-        src/RiddleService.h src/RiddleService.cpp
-        src/AdminService.h src/AdminService.cpp
-        src/Looper.cpp src/Looper.hpp
+        src/server/RiddleService.h src/server/RiddleService.cpp
+        src/server/AdminService.h src/server/AdminService.cpp
+        src/server/Looper.cpp src/server/Looper.hpp
         src/QueueMap.cpp src/QueueMap.hpp
-        src/AdminModule.h src/AdminModule.cpp
-        src/RiddleModule.h src/RiddleModule.cpp
-        src/ServerModule.cpp src/ServerModule.hpp
+        src/server/AdminModule.h src/server/AdminModule.cpp
+        src/server/RiddleModule.h src/server/RiddleModule.cpp
+        src/server/ServerModule.cpp src/server/ServerModule.hpp
         src/Logger.cpp src/Logger.h)
 
 set(LINK_FLAGS "-L /home/aniela/software/cryptopp -l cryptopp -lboost_serialization -lboost_system -pthread ")
@@ -36,26 +36,37 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
 target_link_libraries(server -lboost_serialization cryptopp -pthread)
 #target_link_libraries(jzdns Boost::archive)
 
+add_executable(admin_client
+        src/admin_client/main.cpp
+        src/admin_client/Admin.cpp src/admin_client/Admin.h
+        src/admin_client/BlockingQueueAdmin.hpp
+        src/admin_client/Problem.cpp src/admin_client/Problem.h
+        src/admin_client/serverStructure.cpp src/admin_client/serverStructure.h
+        src/cryptography.cpp src/cryptography.hpp
+        src/message.cpp src/message.h)
+
+target_link_libraries(admin_client -lboost_serialization cryptopp -pthread)
+
 include(BoostTestHelpers.cmake)
 
 set(DEPS src/cryptography.cpp)
 add_boost_test(test/cryptography_test.cpp "${DEPS}")
 
-set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp src/User.cpp
-        src/RiddleBase.cpp src/Riddle.cpp src/QueueMap.cpp src/RiddleService.cpp src/AdminService.cpp
-        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp src/Logger.cpp src/ServerModule.cpp )
+set(DEPS src/server/authorization.cpp src/server/Looper.cpp src/message.cpp src/server/UserBase.cpp src/server/User.cpp
+        src/server/RiddleBase.cpp src/server/Riddle.cpp src/QueueMap.cpp src/server/RiddleService.cpp src/server/AdminService.cpp
+        src/cryptography.cpp src/server/RiddleModule.cpp src/server/AdminModule.cpp src/Logger.cpp src/server/ServerModule.cpp)
 
 add_boost_test(test/looper_test.cpp "${DEPS}")
 
-set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp src/User.cpp
-        src/RiddleBase.cpp src/Riddle.cpp src/QueueMap.cpp src/RiddleService.cpp src/AdminService.cpp
-        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp src/Logger.cpp src/ServerModule.cpp )
+set(DEPS src/server/authorization.cpp src/server/Looper.cpp src/message.cpp src/server/UserBase.cpp src/server/User.cpp
+        src/server/RiddleBase.cpp src/server/Riddle.cpp src/QueueMap.cpp src/server/RiddleService.cpp src/server/AdminService.cpp
+        src/cryptography.cpp src/server/RiddleModule.cpp src/server/AdminModule.cpp src/Logger.cpp src/server/ServerModule.cpp)
 
 add_boost_test(test/UserBaseTests.cpp "${DEPS}")
 
-set(DEPS src/authorization.cpp src/Looper.cpp src/message.cpp src/UserBase.cpp src/User.cpp
-        src/RiddleBase.cpp src/Riddle.cpp src/QueueMap.cpp src/RiddleService.cpp src/AdminService.cpp
-        src/cryptography.cpp src/RiddleModule.cpp src/AdminModule.cpp src/Logger.cpp src/ServerModule.cpp )
+set(DEPS src/server/authorization.cpp src/server/Looper.cpp src/message.cpp src/server/UserBase.cpp src/server/User.cpp
+        src/server/RiddleBase.cpp src/server/Riddle.cpp src/QueueMap.cpp src/server/RiddleService.cpp src/server/AdminService.cpp
+        src/cryptography.cpp src/server/RiddleModule.cpp src/server/AdminModule.cpp src/Logger.cpp src/server/ServerModule.cpp)
 
 add_boost_test(test/riddleDbTests.cpp "${DEPS}")
 

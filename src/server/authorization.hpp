@@ -5,14 +5,14 @@
 
 #include "User.h"
 #include "UserBase.h"
-#include "message.h"
+#include "../message.h"
 #include <thread>
 #include <atomic>
 #include <memory>
 #include <functional>
 #include <stdexcept>
 #include <mutex>
-#include "BlockingQueue.hpp"
+#include "../BlockingQueue.hpp"
 
 class QueueMap;
 class Looper;

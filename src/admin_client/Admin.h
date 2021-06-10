@@ -15,6 +15,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <cryptopp/rsa.h>
+#include <cryptopp/osrng.h>
 #include "serverStructure.h"
 #include "Problem.h"
 #include "fstream"
@@ -32,6 +34,11 @@ struct InfoAdmin
 class Admin
 {
     private:
+        CryptoPP::AutoSeededRandomPool rng;
+        CryptoPP::RSA::PublicKey server_public_key;
+        CryptoPP::RSA::PublicKey admin_pubilc_key;
+        CryptoPP::RSA::PrivateKey admin_private_key;
+
         std::vector<ServerStructure> servers;
         std::vector<Problem> problems;
         BlockingQueueAdmin<std::string> queue;

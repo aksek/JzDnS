@@ -4,7 +4,7 @@
 
 #include "Looper.hpp"
 #include "RiddleModule.h"
-#include "Logger.h"
+#include "../Logger.h"
 
 bool RiddleModule::post(Message &&aMessage)
 {

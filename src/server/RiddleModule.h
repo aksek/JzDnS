@@ -8,8 +8,8 @@
 
 #include <thread>
 #include <atomic>
-#include "message.h"
-#include "BlockingQueue.hpp"
+#include "../message.h"
+#include "../BlockingQueue.hpp"
 #include "RiddleService.h"
 //#include "Looper.hpp"
 class Looper;

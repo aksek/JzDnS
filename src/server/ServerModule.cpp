@@ -11,11 +11,14 @@ bool ServerModule::post(Message &&aMessage) {
         return false;
     }
 
+    std::string encrypted = Cryptography::asymmetric_encrypt(authorization->getKey(aMessage.getUserID()), aMessage.getContentText(), rng);
+    Message encryptedMessage(aMessage.getMessageType(), aMessage.getUserID(), encrypted, aMessage.getContentSize());
+
     try {
         if (user_version[aMessage.getUserID()] == IP_Version::IPv4) {
-            mMessagesIPv4.push(aMessage);
+            mMessagesIPv4.push(encryptedMessage);
         } else if (user_version[aMessage.getUserID()] == IP_Version::IPv6) {
-            mMessagesIPv6.push(aMessage);
+            mMessagesIPv6.push(encryptedMessage);
         }
     } catch (...) {
         return false;
@@ -202,6 +205,7 @@ ServerModule::Dispatcher::Dispatcher(ServerModule &aServer)
 }
 
 bool ServerModule::Dispatcher::post(Message &&aMessage) {
+
     return mAssignedServerModule.post(std::move(aMessage));
 }
 bool ServerModule::Dispatcher::post_to_all(Message &&aMessage) {

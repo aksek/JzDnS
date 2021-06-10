@@ -9,7 +9,7 @@
 #include <map>
 #include "BlockingQueue.hpp"
 #include "message.h"
-#include "authorization.hpp"
+#include "server/authorization.hpp"
 
 class QueueMap {
     std::map<std::string, BlockingQueue<Message>* > queues;

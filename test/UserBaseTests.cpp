@@ -1,7 +1,7 @@
 //Author: Patryk Karbownik
 #define BOOST_TEST_MODULE user_db_test
 
-#include "../src/UserBase.h"
+#include "../src/server/UserBase.h"
 #include <boost/test/included/unit_test.hpp>
 
 using namespace boost::unit_test;

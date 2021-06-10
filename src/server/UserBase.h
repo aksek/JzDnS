@@ -13,7 +13,7 @@
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <mutex>
-#include "cryptography.hpp"
+#include "../cryptography.hpp"
 
 class UserBase {
 private:

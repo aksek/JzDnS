@@ -6,9 +6,9 @@
 #include <boost/test/included/unit_test.hpp>
 #include <cryptopp/rsa.h>
 #include <cryptopp/osrng.h>
-#include "../src/authorization.hpp"
-#include "../src/UserBase.h"
-#include "../src/Looper.hpp"
+#include "../src/server/authorization.hpp"
+#include "../src/server/UserBase.h"
+#include "../src/server/Looper.hpp"
 #include "../src/cryptography.hpp"
 
 

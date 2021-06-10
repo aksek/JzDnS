@@ -12,15 +12,15 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include "src/message.h"
-#include "src/Riddle.h"
+#include "src/server/Riddle.h"
 #include "src/cryptography.hpp"
-#include "src/UserBase.h"
-#include "src/authorization.hpp"
-#include "src/RiddleBase.h"
-#include "src/RiddleModule.h"
-#include "src/AdminModule.h"
+#include "src/server/UserBase.h"
+#include "src/server/authorization.hpp"
+#include "src/server/RiddleBase.h"
+#include "src/server/RiddleModule.h"
+#include "src/server/AdminModule.h"
 #include "src/QueueMap.hpp"
-#include "src/Looper.hpp"
+#include "src/server/Looper.hpp"
 
 #define PORT 4444
 #define BUFFER_SIZE 1024

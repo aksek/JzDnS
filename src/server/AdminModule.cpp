@@ -4,7 +4,7 @@
 
 #include "Looper.hpp"
 #include "AdminModule.h"
-#include "Logger.h"
+#include "../Logger.h"
 
 bool AdminModule::post(Message &&aMessage)
 {

@@ -1,4 +1,6 @@
 #include "Admin.h"
+#include "../message.h"
+#include "../cryptography.hpp"
 
 void * Admin::handle_connection(void * arguments)
 {
@@ -86,6 +88,8 @@ Admin::Admin(int l, int mbs)
 
 std::vector<ServerStructure> Admin::getServersFromFile()
 {
+    Cryptography::load_public_key(server_public_key, "public_key.pem");
+
     std::vector<ServerStructure> servers;
 
     std::fstream file;
@@ -189,13 +193,24 @@ void Admin::connectToServer(ServerStructure serv)
     queue.lockAdmin();
     queue.waitAndPop(result);
 
-
-   /*
-    Message m(MessageType::Get_all_problems, "Admin");
+    Message m(MessageType::Get_all_problems, id);
     std::string toSend = m.serialize();
-    std::string receive = sendToServer(toSend);
-    !!!!!!!!!!!!! deserialize !!!!!!!!!!!!!!!!!!!
-    std::vector<std::tuple<int, std::string, std::string> > serverProblems = deserializedMess.deserialize(content, size); !!!!!!!
+    Cryptography::asymmetric_encrypt(server_public_key, toSend, rng);
+    queue.push(toSend);
+    queue.unlockServer();
+
+    std::string content;
+    queue.waitAndPop(content);
+
+    Message mess(content);
+
+    std::string contentText = mess.getContentText();
+    size_t sizeContent = mess.getContentSize();
+
+    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+    SerializeContent serializer;
+    auto serverProblems = std::get<std::vector<std::tuple<int, std::string, std::string> >>(serializer.deserialize(MessageType::Problems, contentText, sizeContent));
     int num;
     std::string question, answer;
     for(int i = 0; i < serverProblems.size(); ++i)
@@ -206,7 +221,7 @@ void Admin::connectToServer(ServerStructure serv)
         Problem p(num, question, answer);
         problems.push_back(p)
     }
-   */
+
 
 }
 
@@ -259,7 +274,7 @@ void Admin::addNewProblem()
         problems.push_back(pr);
     }
     else
-        std::cout << "You should connect to server first!" << std::endl;
+        std::cout << "You should connect to a server first!" << std::endl;
 }
 
 std::string Admin::insertQuestion()
@@ -269,8 +284,8 @@ std::string Admin::insertQuestion()
     std::getline(std::cin, quest);
     while(!( quest.length() > 0 && quest.length() <  maxQuestionLength))
     {
-        std::cout << "Length of question should be between 1 and " << maxQuestionLength << "!" << std::endl;
-        std::cout << "Pleas try again" << std::endl;
+        std::cout << "Question length should be between 1 and " << maxQuestionLength << "!" << std::endl;
+        std::cout << "Please try again" << std::endl;
         quest = "";
         std::getline(std::cin, quest);
     }
@@ -279,12 +294,12 @@ std::string Admin::insertQuestion()
 
 std::string Admin::insertAnswer()
 {
-    std::cout << "Please insert a answer to question" << std::endl;
+    std::cout << "Please insert an answer to question" << std::endl;
     std::string k = "";
     std::getline(std::cin, k);
     while(!isNumber(k))
     {
-        std::cout << "Pleas inser a number! Try again!" << std::endl;
+        std::cout << "Please insert a number! Try again!" << std::endl;
         k = "";
         std::getline(std::cin, k);
     }
@@ -348,7 +363,7 @@ void Admin::selectProblemToDelete()
     }
 
     showAllProblems();
-    std::cout << std::endl << "Insert a number of problem to delete:" << std::endl;
+    std::cout << std::endl << "Insert a number of problems to delete:" << std::endl;
 
     int n = selectProblem();
 
@@ -386,7 +401,7 @@ void Admin::selectProblemToEdit()
     }
 
     showAllProblems();
-    std::cout << std::endl << "Insert a number of problem to delete:" << std::endl;
+    std::cout << std::endl << "Input the index of the problem to edit:" << std::endl;
 
     int n = selectProblem();
 
@@ -495,7 +510,7 @@ void Admin::showAllProblems()
 
     if( problems.size() < 1)
     {
-        std::cout << "There is no problem to show!" << std::endl;
+        std::cout << "There are no problems to show!" << std::endl;
         return;
     }
 
@@ -524,7 +539,7 @@ void Admin::showOptions()
 
 void Admin::run()
 {
-    std::cout << "--------Welcome in Administrator module--------" << std::endl;
+    std::cout << "--------Welcome to Administrator module--------" << std::endl;
     showOptions();
     bool continueWork = true;
 
@@ -565,7 +580,7 @@ void Admin::run()
                 continueWork = false;
                 break;
             default:
-                std::cout<< "Unknown option, please give correct one!" << std::endl;
+                std::cout<< "Unknown option, please try again!" << std::endl;
                 
         }
     }

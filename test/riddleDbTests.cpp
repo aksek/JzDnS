@@ -2,7 +2,7 @@
 
 #define BOOST_TEST_MODULE riddle_db_test
 #include <boost/test/included/unit_test.hpp>
-#include "../src/RiddleBase.h"
+#include "../src/server/RiddleBase.h"
 #include <cstdio>
 
 using namespace boost::unit_test;

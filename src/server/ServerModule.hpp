@@ -7,7 +7,7 @@
 
 #include "User.h"
 #include "UserBase.h"
-#include "message.h"
+#include "../message.h"
 #include <thread>
 #include <atomic>
 #include <memory>
@@ -15,8 +15,8 @@
 #include <stdexcept>
 #include <mutex>
 #include <netinet/in.h>
-#include "BlockingQueue.hpp"
-#include "Logger.h"
+#include "../BlockingQueue.hpp"
+#include "../Logger.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -26,9 +26,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <thread>
-#include "QueueMap.hpp"
+#include "../QueueMap.hpp"
 #include "Looper.hpp"
 #include <errno.h>
+#include "../cryptography.hpp"
+#include <cryptopp/osrng.h>
 
 #define PORT 5011
 #define BUFFER_SIZE 1024
@@ -76,7 +78,10 @@ private:
     BlockingQueue<Message> mMessagesIPv4;
     BlockingQueue<Message> mMessagesIPv6;
     Looper* looper;
+    Authorization* authorization;
+    CryptoPP::AutoSeededRandomPool rng;
     Logger logger;
+
 
     std::map<std::string, IP_Version> user_version;
     std::map<std::string, struct sockaddr_in> user_address_IPv4;
@@ -98,7 +103,7 @@ public:
         bool post_to_all(Message &&aMessage);
     };
 
-    ServerModule()
+    ServerModule(Authorization *authorization)
     : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
     , mRunning(false)
     , itsTimeToSayGoodbye(false)
@@ -110,6 +115,7 @@ public:
     , logger("ServerModule" + to_string(std::time(0)))
     , handlerForIPv4(*this, IP_Version::IPv4)
     , handlerForIPv6(*this, IP_Version::IPv6)
+    , authorization(authorization)
     {}
     ~ServerModule();
 
