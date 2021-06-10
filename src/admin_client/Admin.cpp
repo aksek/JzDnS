@@ -484,7 +484,7 @@ void Admin::editAnswer(int index)
 
     SerializeContent sc;
     std::pair<std::string, size_t> serializedContent = sc.serializePairIntString(p);
-    Message m(MessageType::Edit_solution, 101, serializedContent);
+    Message m(MessageType::Edit_solution, id, serializedContent);
     std::string toSend = m.serialize();
     queue.push(toSend);
     queue.unlockServer();
