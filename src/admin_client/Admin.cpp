@@ -469,11 +469,11 @@ void Admin::editQuestion(int index)
     problems[index].printInfo();
     std::string newQuestion = insertQuestion();
     problems[index].setQuestion(newQuestion);
-    std::pair<int, std::string> p(problems[index].getIndex(), newQuestion);
-
+	
+    std::tuple<int, std::string, std::string> t(problems[index].getIndex(), newQuestion, problems[index].getAnswer());
     SerializeContent sc;
-    std::pair<std::string, size_t> serializedContent = sc.serializePairIntString(p);
-    Message m(MessageType::Edit_problem, id, serializedContent);
+    std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
+    Message m(MessageType::Update, id, serializedContent);
     std::string toSend = m.serialize();
     queue.push(toSend);
     queue.unlockServer();
@@ -496,11 +496,11 @@ void Admin::editAnswer(int index)
     problems[index].printInfo();
     std::string newAnswer = insertAnswer();
     problems[index].setAnswer(newAnswer);
-    std::pair<int, std::string> p(problems[index].getIndex(), newAnswer);
-
+    
+    std::tuple<int, std::string, std::string> t(problems[index].getIndex(), problems[index].getQuestion(), newAnswer);
     SerializeContent sc;
-    std::pair<std::string, size_t> serializedContent = sc.serializePairIntString(p);
-    Message m(MessageType::Edit_solution, id, serializedContent);
+    std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
+    Message m(MessageType::Update, id, serializedContent);
     std::string toSend = m.serialize();
     queue.push(toSend);
     queue.unlockServer();
