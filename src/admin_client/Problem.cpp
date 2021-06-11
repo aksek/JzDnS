@@ -22,6 +22,16 @@ std::string Problem::getAnswer()
     return answer;
 }
 
+std::string Problem::getQuestion()
+{
+    return question;
+}
+
+std::string Problem::getAnswer()
+{
+    return answer;
+}
+
 void Problem::printInfo()
 {
     std::cout<< "Problem nr." << getIndex() << std::endl;
