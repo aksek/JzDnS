@@ -25,6 +25,10 @@ class Problem
         void setQuestion(std::string q);
 
         void setAnswer(std::string a);
+    
+        std::string getQuestion();
+    
+        std::string getAnswer();
 };
 
 
