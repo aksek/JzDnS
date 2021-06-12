@@ -75,8 +75,8 @@ void Authorization::handleRegister(ValueContent content, std::string user) {
 
 void Authorization::sendResponse(std::string &user) {
     int user_type_code = 0;
-    User::UserType user_type = base->getUser(user)->getUserType();
     if (authorize(user)) {
+        User::UserType user_type = base->getUser(user)->getUserType();
         if (user_type == User::ADMIN) {
             user_type_code = 2;
         } else {
@@ -109,8 +109,10 @@ void Authorization::runFunc() {
         switch(type) {
             case MessageType::Login:
                 handleLogin(content, next.getUserID());
+                break;
             case MessageType::Register:
                 handleRegister(content, next.getUserID());
+                break;
             default:
                 break;
         }

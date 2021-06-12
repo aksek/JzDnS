@@ -43,7 +43,8 @@ add_executable(admin_client
         src/admin_client/Problem.cpp src/admin_client/Problem.h
         src/admin_client/serverStructure.cpp src/admin_client/serverStructure.h
         src/cryptography.cpp src/cryptography.hpp
-        src/message.cpp src/message.h)
+        src/message.cpp src/message.h
+        src/Logger.cpp src/Logger.h)
 
 target_link_libraries(admin_client -lboost_serialization -lcryptopp -pthread)
 

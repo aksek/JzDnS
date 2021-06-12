@@ -78,7 +78,7 @@ void * Admin::handle_connection(void * arguments)
     }
 }
 
-Admin::Admin(int l, int mbs) logger("AdminUser" + to_string(std::time(nullptr)))
+Admin::Admin(int l, int mbs) : logger("AdminUser" + to_string(std::time(nullptr)))
 {
     servers = getServersFromFile();
     Cryptography::load_public_key(admin_public_key, "admin_public_key.pem");
@@ -202,7 +202,7 @@ void Admin::connectToServer(ServerStructure serv)
     Message login(MessageType::Register, id, serialized_login_message_content);
     std::string serialized_message = login.serialize();
 
-    logger.write("Trying to connect to server : " + serv.getName() + " on port: " + serv.getPort() + " with address: " + serv.getAddress() );
+    logger.write("Trying to connect to server : " + serv.getName() + " on port: " + to_string(serv.getPort()) + " with address: " + serv.getAddress() );
 
     queue.push(serialized_message);
 

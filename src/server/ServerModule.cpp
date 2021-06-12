@@ -55,7 +55,10 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
             {
                 if (!sM.user_address_IPv4.count(username)) {
                     sM.user_address_IPv4.insert(std::make_pair(username, cliaddr));
-                    sM.user_version.insert(std::make_pair(message.getUserID(), IP_Version::IPv4));
+                    sM.user_version.insert(std::make_pair(username, IP_Version::IPv4));
+                } else {
+                    sM.user_address_IPv4[username] =  cliaddr;
+                    sM.user_version[username] = IP_Version::IPv4;
                 }
             }
             else
@@ -63,6 +66,9 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
                 if (!sM.user_address_IPv6.count(username)) {
                     sM.user_address_IPv6.insert(std::make_pair(username, cliaddr));
                     sM.user_version.insert(std::make_pair(message.getUserID(), IP_Version::IPv6));
+                } else {
+                    sM.user_address_IPv6[username] =  cliaddr;
+                    sM.user_version[username] = IP_Version::IPv6;
                 }
             }
             sM.logger.write("Received message");
