@@ -236,7 +236,7 @@ bool ServerModule::Dispatcher::post(Message &&aMessage) {
 }
 bool ServerModule::Dispatcher::post_to_all(Message &&aMessage) {
     for (auto user_v : mAssignedServerModule.user_version) {
-        if (user_v.first != aMessage.getUserID()) {
+        if (user_v.first != aMessage.getUserID() && mAssignedServerModule.authorization->determineUserType(user_v.first) != 2) {
             Message message(aMessage.getMessageType(), user_v.first, aMessage.getContent());
             if (!mAssignedServerModule.post(std::move(message))) return false;
         }

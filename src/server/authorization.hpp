@@ -36,9 +36,9 @@ private:
     bool authorize(std::string username);
     bool authorize(const std::string& username, CryptoPP::RSA::PublicKey public_key);
 
-
     void handleLogin(ValueContent content, std::string user);
     void handleRegister(ValueContent content, std::string user);
+
 public:
     class Dispatcher {
         friend class Authorization;
@@ -52,13 +52,16 @@ public:
     Authorization(UserBase *user_base);
     ~Authorization();
 
-    CryptoPP::RSA::PublicKey getKey(std::string username);
     void setLooper(Looper* looper);
     bool run();
     bool running() const;
     void stop();
     void abortAndJoin();
     std::shared_ptr<Dispatcher> getDispatcher();
+
+    int determineUserType(std::string username);
+    CryptoPP::RSA::PublicKey getKey(std::string username);
+
 private:
     std::shared_ptr<Dispatcher> mDispatcher;
 

@@ -177,6 +177,21 @@ void Authorization::setLooper(Looper *aLooper) {
     looper = aLooper;
 }
 
+int Authorization::determineUserType(std::string username) {
+    User* user = base->getUser(username);
+    if (user != nullptr) {
+        switch(user->getUserType()) {
+            case User::UserType::ADMIN:
+                return 2;
+            case User::UserType::NORMAL:
+                return 1;
+            default:
+                return 0;
+        }
+    }
+    return 0;
+}
+
 
 Authorization::Dispatcher::Dispatcher(Authorization &aAuthorization) : mAssignedAuthorization(aAuthorization) {}
 
