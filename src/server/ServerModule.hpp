@@ -78,6 +78,9 @@ private:
     std::map<std::string, IP_Version> user_version;
     std::map<std::string, struct sockaddr_in> user_address_IPv4;
     std::map<std::string, struct sockaddr_in> user_address_IPv6;
+    std::map<std::string, std::string> retransmit_message;
+    std::map<std::string, int> retransmit_count;
+
 
     bool post(Message &&aMessage);
 

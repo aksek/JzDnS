@@ -67,9 +67,15 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
             }
             sM.logger.write("Received message");
 
+            Message received_message((std::string(buffer)));
+            if (received_message.getMessageType() == MessageType::Retransmit) {
+                sM.retransmit_count[received_message.getUserID()]++;
+                sM.getDispatcher()->post(Message(sM.retransmit_message[received_message.getUserID()]));
+            } else {
                 sM.looper->getDispatcher()->post(Message((std::string(buffer))));
+            }
 
-                bzero(buffer, sizeof(buffer));
+            bzero(buffer, sizeof(buffer));
 
         }
         if(ret == 0)
@@ -105,6 +111,16 @@ void ServerModule::ConnectionHandler::handle_connection_send() {
         sM.logger.write("Sending message: " + next.getMessageTypeString());
 
         std::string serialized_message = next.serialize();
+        std::string user = next.getUserID();
+
+        if (!sM.retransmit_message.count(user)) {
+            sM.retransmit_message.insert(std::make_pair(user, serialized_message));
+            sM.retransmit_count.insert(std::make_pair(user, 1));
+        } else {
+            sM.retransmit_message[user] = serialized_message;
+            sM.retransmit_count[user] = 1;
+        }
+
 
         sockaddr_in cliaddr;
         if (version == IP_Version::IPv4) {
