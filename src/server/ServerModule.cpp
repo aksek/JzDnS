@@ -146,7 +146,7 @@ ServerModule::ConnectionHandler::ConnectionHandler(ServerModule& s, IP_Version v
 
 
 ServerModule::~ServerModule() {
-
+    logger.close();
     abortAndJoin();
 }
 

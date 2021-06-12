@@ -99,6 +99,7 @@ void RiddleModule::runFunc()
         }
     }
     logger.write("Finish");
+    logger.close();
     mRunning.store(false);
 }
 
