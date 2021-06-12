@@ -143,6 +143,26 @@ void ServerModule::ConnectionHandler::handle_connection_send() {
                MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
                sizeof(cliaddr));
     }
+
+    Message termination_message(MessageType::Server_terminated, "");
+    std::string serialized_message = termination_message.serialize();
+
+    if (version == IP_Version::IPv4) {
+        for (auto user_cliaddr : sM.user_address_IPv4) {
+            sendto(sockfd, serialized_message.c_str(), serialized_message.length(),
+                   MSG_CONFIRM, (const struct sockaddr *) &user_cliaddr.second,
+                   sizeof(user_cliaddr.second));
+        }
+
+    } else if (version == IP_Version::IPv6) {
+        for (auto user_cliaddr : sM.user_address_IPv6) {
+            sendto(sockfd, serialized_message.c_str(), serialized_message.length(),
+                   MSG_CONFIRM, (const struct sockaddr *) &user_cliaddr.second,
+                   sizeof(user_cliaddr.second));
+        }
+
+    }
+
     sM.mRunning.store(false);
 }
 
