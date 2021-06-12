@@ -29,7 +29,7 @@ add_executable(server
         src/server/ServerModule.cpp src/server/ServerModule.hpp
         src/Logger.cpp src/Logger.h)
 
-set(LINK_FLAGS "-lcryptopp -lboost_serialization -lboost_system -pthread ")
+set(LINK_FLAGS "-L /home/aniela/software/cryptopp -lcryptopp -lboost_serialization -lboost_system -pthread ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
 target_link_libraries(server -lboost_serialization -lcryptopp -pthread)
 #target_link_libraries(jzdns Boost::archive)

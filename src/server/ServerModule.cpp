@@ -208,8 +208,10 @@ bool ServerModule::Dispatcher::post(Message &&aMessage) {
 }
 bool ServerModule::Dispatcher::post_to_all(Message &&aMessage) {
     for (auto user_v : mAssignedServerModule.user_version) {
-        Message message(aMessage.getMessageType(), user_v.first, aMessage.getContent());
-        if (!mAssignedServerModule.post(std::move(message))) return false;
+        if (user_v.first != aMessage.getUserID()) {
+            Message message(aMessage.getMessageType(), user_v.first, aMessage.getContent());
+            if (!mAssignedServerModule.post(std::move(message))) return false;
+        }
     }
     return true;
 }

@@ -21,6 +21,7 @@
 #include "Problem.h"
 #include "fstream"
 #include "BlockingQueueAdmin.hpp"
+#include "../Logger.h"
 //#include "message/src/message.h"
 
 struct InfoAdmin
@@ -47,6 +48,7 @@ class Admin
         int maxBuffSize;
         std::string id = "Admin";
         std::thread connetion_thread;
+        Logger logger;
 
         void * handle_connection(void * arguments);
 
@@ -75,7 +77,7 @@ class Admin
     public:
         Admin(int l, int mbs);
 
-        ~Admin(){  if(connetion_thread.joinable()) connetion_thread.join(); }
+        ~Admin();
 
         void run();
 
