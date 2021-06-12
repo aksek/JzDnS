@@ -1,5 +1,7 @@
 #include "client.hpp"
 
+#include <iostream>
+
 int main(){
 	User user;
 	while(user.run()){
@@ -82,6 +84,7 @@ Message User::sendAndRecv(std::string message){
 
 	std::string messRecv(bufferRecv);
         Message mess(messRecv);
+	std::cout<<mess.getMessageTypeString()<<std::endl;
 	if(mess.getMessageType()==MessageType::Retransmit)
 		return sendAndRecv(message);
 	else return mess;
@@ -325,7 +328,7 @@ std::string User::createRegistMess(std::pair<std::string, CryptoPP::RSA::PublicK
 	Cryptography crypt;
 	std::pair<std::string, size_t> content = serializer.serializePublicKey(dane);
 	//content.first = crypt.asymmetric_encrypt(kluczPublicznySerwera, content.first, randPool);
-	Message message(MessageType::Login, nick, content);
+	Message message(MessageType::Register, nick, content);
 	return message.serialize();
 }
 

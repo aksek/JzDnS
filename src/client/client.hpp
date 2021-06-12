@@ -22,7 +22,7 @@
 #include "../message.h"
 #include "../cryptography.hpp"
 
-#define BUFFER_SIZE 1000
+#define BUFFER_SIZE 2000
 
 int clientSocket;
 sockaddr_in servAddr;
