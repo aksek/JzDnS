@@ -42,7 +42,7 @@ int User::access(){
 		if(regist())
 			return 1;
 		else return -1;
-	}else throw std::runtime_error("niezdefiniowany wybór");
+	}else throw std::runtime_error("undefined option");
 }
 
 void User::connection(ServerStructure serv){
@@ -56,7 +56,7 @@ void User::connection(ServerStructure serv){
 
 	clientSocket = socket(AF_INET, SOCK_DGRAM, 0);
 	if(clientSocket < 0){
-		throw std::runtime_error("utworzenia gniazda");
+		throw std::runtime_error("socket creation error");
 	}
 	
 	memset(&servAddr, '\0', sizeof(servAddr));
@@ -64,7 +64,7 @@ void User::connection(ServerStructure serv){
 	servAddr.sin_port = htons(port);
 	servAddr.sin_addr.s_addr = inet_addr(char_addr);
 	len = sizeof(servAddr);
-	std::cout<<"polaczono"<<std::endl;
+	std::cout<<"Connected successfully"<<std::endl;
 }
 
 void User::disconnect(){
@@ -81,7 +81,7 @@ Message User::sendAndRecv(std::string message){
 	strncpy(bufferSend, message.c_str(), BUFFER_SIZE);
 	sendto(clientSocket, (char*)bufferSend, BUFFER_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servAddr, sizeof(servAddr));
 	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
-        	std::runtime_error("blad gniazda");
+        	std::runtime_error("socket error");
 
 	std::string messRecv(bufferRecv);
         Message mess(messRecv);
@@ -106,7 +106,7 @@ Message User::recvMess(){
 		bufferRecv[i] = '\0';
 	}
 	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
-        	std::runtime_error("blad gniazda");
+        	std::runtime_error("socket error");
 
 	std::string messRecv(bufferRecv);
         Message mess(messRecv);
@@ -120,7 +120,7 @@ bool User::login(){
 	do{
 		message = createLoginMess(getLogin());
 		if(message.size()>=BUFFER_SIZE){
-			std::cout<<"Zbyt długa odpowiedz, podaj jeszcze raz odpowiedz"<<std::endl;
+			std::cout<<"Input too long, try again"<<std::endl;
 		}
 	}while(message.size()>=BUFFER_SIZE);
 	Message recvMessage = sendAndRecv(message);
@@ -132,7 +132,7 @@ bool User::regist(){
 	do{
 		message = createRegistMess(getRegist());
 		if(message.size()>=BUFFER_SIZE){
-			std::cout<<"Zbyt długa odpowiedz, podaj jeszcze raz odpowiedz"<<std::endl;
+			std::cout<<"Input too long, try again"<<std::endl;
 		}
 	}while(message.size()>=BUFFER_SIZE);
 	Message recvMessage = sendAndRecv(message);
@@ -240,7 +240,7 @@ void* getAnswerFromUser(void* arg){
 	do{
 		message = getAnswer();
 		if(message.size()>=BUFFER_SIZE){
-			std::cout<<"Zbyt długa odpowiedz, podaj jeszcze raz odpowiedz"<<std::endl;
+			std::cout<<"Input too long, try again"<<std::endl;
 		}
 	}while(message.size()>=BUFFER_SIZE);
 	userMutex.lock();
@@ -253,11 +253,11 @@ void* getAnswerFromUser(void* arg){
 }
 
 bool User::checkContinue(){
-	std::cout<<"Niestety, to nie jest poprawne rozwiązanie"<<std::endl;
+	std::cout<<"Sorry, this is not the correct answer"<<std::endl;
 	do{
-		std::cout<<"Chcesz spróbować jeszcze raz?"<<std::endl;
-		std::cout<<"1 - tak"<<std::endl;
-		std::cout<<"0 - nie"<<std::endl;
+		std::cout<<"Would you like again?"<<std::endl;
+		std::cout<<"1 - yes"<<std::endl;
+		std::cout<<"0 - no"<<std::endl;
 		char c;
 		std::cin>>c;
 		if(c=='1') {
@@ -272,7 +272,7 @@ bool User::checkContinue(){
 	}
 		std::cin.ignore();
 		std::cin.clear();
-		std::cout<<"Nie ma takiej opcji, wpisz '0' lub '1'"<<std::endl;
+		std::cout<<"Unknown option, input '0' lub '1'"<<std::endl;
 	}while(true);
 }
 
@@ -294,15 +294,15 @@ bool User::checkNext(){
 	}
 	std::cin.ignore();
 	std::cin.clear();
-	std::cout<<"Nie ma takiej opcji, wpisz '0' lub '1'"<<std::endl;
+	std::cout<<"Unknown option, input '0' lub '1'"<<std::endl;
 	return checkNext();
 }
 
 int User::choiceLoginOrRegist(){
-	std::cout<<"Wybierz opcje:"<<std::endl;
-	std::cout<<"1 - logowanie"<<std::endl;
-	std::cout<<"2 - rejestracja"<<std::endl;
-	std::cout<<"0 - wróć"<<std::endl;
+	std::cout<<"Choose option:"<<std::endl;
+	std::cout<<"1 - log in"<<std::endl;
+	std::cout<<"2 - register"<<std::endl;
+	std::cout<<"0 - return"<<std::endl;
 	char c;
 	std::cin>>c;
 	if(c=='1') {
@@ -322,7 +322,7 @@ int User::choiceLoginOrRegist(){
 	}
 	std::cin.ignore();
 	std::cin.clear();
-	std::cout<<"Nie ma takiej opcji, wpisz '0', '1', lub '2'"<<std::endl;
+	std::cout<<"Unknown option, input '0', '1', lub '2'"<<std::endl;
 	return choiceLoginOrRegist();
 }
 
@@ -336,7 +336,7 @@ std::string createAnswerMess(std::string answer){
 }
 
 std::string User::getLogin(){
-	std::cout<<"Podaj login:"<<std::endl;
+	std::cout<<"Input login:"<<std::endl;
 	std::cin>>nick;
 	return nick;
 }
@@ -351,7 +351,7 @@ std::string User::createLoginMess(std::string name){
 }
 
 std::pair<std::string, CryptoPP::RSA::PublicKey> User::getRegist(){
-	std::cout<<"Podaj login:"<<std::endl;
+	std::cout<<"Input login:"<<std::endl;
 	std::cin>>nick;
 
 	CryptoPP::RSA::PrivateKey private_key;
@@ -404,7 +404,7 @@ std::vector<ServerStructure> User::getServersFromFile()
 
 void User::showPossibleServers()
 {
-    std::cout << std::endl << "*********** Possible Servers: ***********" << std::endl;
+    std::cout << std::endl << "*********** Available Servers: ***********" << std::endl;
 
     int i = 1;
     for(ServerStructure server : servers)
@@ -421,7 +421,7 @@ bool User::chooseServerToConnectTo()
     showPossibleServers();
 
     std::cout << "If you want exit, choose 0"<<std::endl;
-    std::cout << "Please insert number of server you want to connect to:" << std::endl;
+    std::cout << "Please insert the id of the server you want to connect to:" << std::endl;
     std::string number;
     bool correct = false;
     int index = -1;
@@ -429,14 +429,14 @@ bool User::chooseServerToConnectTo()
     do
     {
         std::getline(std::cin, number);
-	std::cout<<"liczba: "<<number<<std::endl;
+	std::cout<<"id: "<<number<<std::endl;
         if(isNumber(number))
         {
             index = stoi(number);
 	    
 	    if(index == 0) return false;
             if(index > servers.size() || index < 1)
-                std::cout << "Incorrect server number, please try again!" << std::endl;
+                std::cout << "Incorrect server id, please try again!" << std::endl;
             else
                 correct = true;
         }
@@ -464,8 +464,8 @@ void User::roundOver(Message message){
 	//content = crypt.asymmetric_decrypt(kluczPrywatny, content, randPool);
 	ValueContent valueContent = serializer.deserialize(message.getMessageType(), content, sizeContent);
 	std::pair<std::string, std::string> contentValue = std::get<std::pair<std::string, std::string> >(valueContent);
-	std::cout<<"Niestety! zagadka już została rozwiązana przez: "<<contentValue.first<<std::endl;
-	std::cout<<"Odpowiedz: "<<contentValue.second<<std::endl;
+	std::cout<<"Oh no! The problem has already been solved by: "<<contentValue.first<<std::endl;
+	std::cout<<"Answer: "<<contentValue.second<<std::endl;
 }
 
 User::User(){
