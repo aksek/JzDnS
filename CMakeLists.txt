@@ -6,11 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 
 project(JzDnS)
-#include_directories(/home/aniela/software/cryptopp/)
-#include_directories(boost/archive)
-#include_directories(boost/serialization)
 
-#find_package(Boost REQUIRED COMPONENTS archive)
+
+#Server-----------------------------------------------------------------
 
 add_executable(server
         src/server/main.cpp
@@ -36,6 +34,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LINK_FLAGS}")
 target_link_libraries(server -lboost_serialization cryptopp -pthread)
 #target_link_libraries(jzdns Boost::archive)
 
+#Admin-----------------------------------------------------------------
+
 add_executable(admin_client
         src/admin_client/main.cpp
         src/admin_client/Admin.cpp src/admin_client/Admin.h
@@ -46,6 +46,18 @@ add_executable(admin_client
         src/message.cpp src/message.h)
 
 target_link_libraries(admin_client -lboost_serialization cryptopp -pthread)
+
+#Client-----------------------------------------------------------------
+
+add_executable(client
+        src/client/client.cpp src/client/client.hpp
+        src/client/serverStructure.cpp src/client/serverStructure.h
+        src/cryptography.cpp src/cryptography.hpp
+        src/message.cpp src/message.h)
+
+target_link_libraries(client -lboost_serialization cryptopp -pthread)
+
+#Unit tests-----------------------------------------------------------------
 
 include(BoostTestHelpers.cmake)
 
