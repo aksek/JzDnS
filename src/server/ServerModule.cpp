@@ -69,8 +69,10 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
 
             Message received_message((std::string(buffer)));
             if (received_message.getMessageType() == MessageType::Retransmit) {
-                sM.retransmit_count[received_message.getUserID()]++;
-                sM.getDispatcher()->post(Message(sM.retransmit_message[received_message.getUserID()]));
+                if (sM.retransmit_count[received_message.getUserID()] <= 5) {
+                    sM.retransmit_count[received_message.getUserID()]++;
+                    sM.getDispatcher()->post(Message(sM.retransmit_message[received_message.getUserID()]));
+                }
             } else {
                 sM.looper->getDispatcher()->post(Message((std::string(buffer))));
             }
@@ -146,7 +148,7 @@ ServerModule::ConnectionHandler::ConnectionHandler(ServerModule& s, IP_Version v
 
 
 ServerModule::~ServerModule() {
-
+    logger.close();
     abortAndJoin();
 }
 

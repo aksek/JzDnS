@@ -86,15 +86,20 @@ Admin::Admin(int l, int mbs) logger("AdminUser" + to_string(std::time(nullptr)))
     connected = false;
     maxQuestionLength = l;
     maxBuffSize = mbs;
+    logger.write("Opening admin module");
 }
 
 Admin::~Admin()
 {
+    logger.write("Closing admin module");
+
     if(connected)
         disconnectFromServer();
 
     if(connetion_thread.joinable()) 
         connetion_thread.join();
+
+    logger.close();
 }
 
 std::vector<ServerStructure> Admin::getServersFromFile()
@@ -197,6 +202,8 @@ void Admin::connectToServer(ServerStructure serv)
     Message login(MessageType::Register, id, serialized_login_message_content);
     std::string serialized_message = login.serialize();
 
+    logger.write("Trying to connect to server : " + serv.getName() + " on port: " + serv.getPort() + " with address: " + serv.getAddress() );
+
     queue.push(serialized_message);
 
     queue.unlockServer();
@@ -212,11 +219,16 @@ void Admin::connectToServer(ServerStructure serv)
     std::string contentText1 = mess1.getContentText();
     size_t sizeContent1 = mess1.getContentSize();
 
+    logger.write("Connected");
+
 //    std::string newContentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText1, rng);
 
     Message m(MessageType::Get_all_problems, id);
     std::string toSend = m.serialize();
 //    Cryptography::asymmetric_encrypt(server_public_key, toSend, rng);
+
+    logger.write("Sending request for all problems from server");
+
     queue.push(toSend);
     queue.unlockServer();
 
@@ -230,6 +242,8 @@ void Admin::connectToServer(ServerStructure serv)
     size_t sizeContent = mess.getContentSize();
 
 //    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+    logger.write("Received problems from server");
 
     auto serverProblems = std::get<std::vector<std::tuple<int, std::string, std::string> >>(serializer.deserialize(MessageType::Problems, contentText, sizeContent));
     int num;
@@ -255,6 +269,9 @@ void Admin::disconnectFromServer()
     }
 
     std::string s = ":exit";
+
+    logger.write("Disconnecting from server");
+
     queue.push(s);
 
     queue.unlockServer();
@@ -277,6 +294,8 @@ void Admin::addNewProblem()
         int number = 3;
         std::pair<std::string, std::string> p(q,a);
 
+        logger.write("Sending new problem");
+
         SerializeContent sc;
         std::pair<std::string, size_t> serializedContent = sc.serializePairStringString(p);
         Message m(MessageType::New_problem, id, serializedContent);
@@ -297,6 +316,8 @@ void Admin::addNewProblem()
         auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
 
         Problem pr(num, q, a);
+
+        logger.write("New problem added correctly!");
 
         problems.push_back(pr);
     }
@@ -474,6 +495,8 @@ void Admin::editQuestion(int index)
     problems[index].printInfo();
     std::string newQuestion = insertQuestion();
     problems[index].setQuestion(newQuestion);
+
+    logger.write("Updating question of problem nr" + problems[index].getIndex());
 	
     std::tuple<int, std::string, std::string> t(problems[index].getIndex(), newQuestion, problems[index].getAnswer());
     SerializeContent sc;
@@ -494,6 +517,8 @@ void Admin::editQuestion(int index)
 //    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
     auto messageAfterDeserialisation = sc.deserialize(MessageType::OK, contentText, sizeContent);
+
+    logger.write("Successful update");
 }
 
 void Admin::editAnswer(int index)
@@ -501,6 +526,8 @@ void Admin::editAnswer(int index)
     problems[index].printInfo();
     std::string newAnswer = insertAnswer();
     problems[index].setAnswer(newAnswer);
+
+    logger.write("Updating answer of problem nr" + problems[index].getIndex());
     
     std::tuple<int, std::string, std::string> t(problems[index].getIndex(), problems[index].getQuestion(), newAnswer);
     SerializeContent sc;
@@ -523,6 +550,7 @@ void Admin::editAnswer(int index)
     SerializeContent serializer;
     auto messageAfterDeserialisation = serializer.deserialize(MessageType::OK, receive, receive.size());
 
+    logger.write("Successful update");
 }
 
 void Admin::editWholeProblem(int index)
@@ -532,8 +560,9 @@ void Admin::editWholeProblem(int index)
     problems[index].setQuestion(newQuestion);
     std::string newAnswer = insertAnswer();
     problems[index].setAnswer(newAnswer);
-    
 
+    logger.write("Updating whole problem nr" + problems[index].getIndex());
+    
     std::tuple<int, std::string, std::string> t(problems[index].getIndex(), newQuestion, newAnswer);
     SerializeContent sc;
     std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
@@ -555,6 +584,8 @@ void Admin::editWholeProblem(int index)
     SerializeContent serializer;
 
     auto messageAfterDeserialisation = serializer.deserialize(MessageType::OK, receive, receive.size());
+
+    logger.write("Successful update");
 
 }
 

@@ -68,6 +68,7 @@ void AdminModule::runFunc()
         }
     }
     logger.write("Finish");
+    logger.close();
     mRunning.store(false);
 }
 

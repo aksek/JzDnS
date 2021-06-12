@@ -117,6 +117,7 @@ void Authorization::runFunc() {
 
     }
     logger.write("Finish");
+    logger.close();
     mRunning.store(false);
 }
 
