@@ -64,6 +64,7 @@ void User::connection(ServerStructure serv){
 	servAddr.sin_port = htons(port);
 	servAddr.sin_addr.s_addr = inet_addr(char_addr);
 	len = sizeof(servAddr);
+	std::cout<<"polaczono"<<std::endl;
 }
 
 void User::disconnect(){
@@ -78,6 +79,7 @@ Message User::sendAndRecv(std::string message){
 		bufferRecv[i] = '\0';
 	}
 	strncpy(bufferSend, message.c_str(), BUFFER_SIZE);
+	std::cout<<message<<std::endl;
 	sendto(clientSocket, (char*)bufferSend, BUFFER_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servAddr, sizeof(servAddr));
 	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
         	std::runtime_error("blad gniazda");
@@ -210,6 +212,7 @@ bool User::showProblem(std::string text){
 		roundOver(message);
 		if(wyslana) recvMess();
 		userMutex.unlock();
+		return false;
 	}else if(checkAnswerMessage(message)){
 		std::cout<<"Gratulacje! Jako pierwszy rozwiązałeś poprawnie zagadkę!"<<std::endl;
 	}else{
@@ -224,6 +227,8 @@ std::string getAnswer(){
 	std::cout<<"Answer:";
 	std::string answerText;
 	std::cin>>answerText;
+	std::cin.ignore();
+	std::cin.clear();
 	return createAnswerMess(answerText);
 }
 
@@ -255,6 +260,8 @@ bool User::checkContinue(){
 		std::cin>>c;
 		if(c=='1') return true;
 		if(c=='0') return false;
+		std::cin.ignore();
+		std::cin.clear();
 		std::cout<<"Nie ma takiej opcji, wpisz '0' lub '1'"<<std::endl;
 	}while(true);
 }
@@ -267,6 +274,8 @@ bool User::checkNext(){
 	std::cin>>c;
 	if(c=='1') return true;
 	if(c=='0') return false;
+	std::cin.ignore();
+	std::cin.clear();
 	std::cout<<"Nie ma takiej opcji, wpisz '0' lub '1'"<<std::endl;
 	return checkNext();
 }
@@ -281,6 +290,8 @@ int User::choiceLoginOrRegist(){
 	if(c=='1') return 1;
 	if(c=='2') return 2;
 	if(c=='0') return 0;
+	std::cin.ignore();
+	std::cin.clear();
 	std::cout<<"Nie ma takiej opcji, wpisz '0', '1', lub '2'"<<std::endl;
 	return choiceLoginOrRegist();
 }
