@@ -61,6 +61,18 @@ void Authorization::handleLogin(ValueContent content, std::string user) {
     sendResponse(user);
 }
 
+void Authorization::handleRegister(ValueContent content, std::string user) {
+    if (!std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
+        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
+        return;
+    }
+    auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
+
+    authorize(user, username_key.second);
+
+    sendResponse(user);
+}
+
 void Authorization::sendResponse(std::string &user) {
     int user_type_code = 0;
     User::UserType user_type = base->getUser(user)->getUserType();
@@ -73,18 +85,6 @@ void Authorization::sendResponse(std::string &user) {
     }
     auto result = serializer->serializeInt(user_type_code);
     looper->getDispatcher()->post(Message(MessageType::OK, user, result));
-}
-
-void Authorization::handleRegister(ValueContent content, std::string user) {
-    if (!std::holds_alternative<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content)) {
-        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
-        return;
-    }
-    auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
-
-    authorize(user, username_key.second);
-
-    sendResponse(user);
 }
 
 
