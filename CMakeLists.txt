@@ -64,11 +64,11 @@ include(BoostTestHelpers.cmake)
 set(DEPS src/cryptography.cpp)
 add_boost_test(test/cryptography_test.cpp "${DEPS}")
 
-set(DEPS src/server/authorization.cpp src/server/Looper.cpp src/message.cpp src/server/UserBase.cpp src/server/User.cpp
-        src/server/RiddleBase.cpp src/server/Riddle.cpp src/QueueMap.cpp src/server/RiddleService.cpp src/server/AdminService.cpp
-        src/cryptography.cpp src/server/RiddleModule.cpp src/server/AdminModule.cpp src/Logger.cpp src/server/ServerModule.cpp)
-
-add_boost_test(test/looper_test.cpp "${DEPS}")
+#set(DEPS src/server/authorization.cpp src/server/Looper.cpp src/message.cpp src/server/UserBase.cpp src/server/User.cpp
+#        src/server/RiddleBase.cpp src/server/Riddle.cpp src/QueueMap.cpp src/server/RiddleService.cpp src/server/AdminService.cpp
+#        src/cryptography.cpp src/server/RiddleModule.cpp src/server/AdminModule.cpp src/Logger.cpp src/server/ServerModule.cpp)
+#
+#add_boost_test(test/looper_test.cpp "${DEPS}")
 
 set(DEPS src/server/authorization.cpp src/server/Looper.cpp src/message.cpp src/server/UserBase.cpp src/server/User.cpp
         src/server/RiddleBase.cpp src/server/Riddle.cpp src/QueueMap.cpp src/server/RiddleService.cpp src/server/AdminService.cpp

@@ -9,6 +9,7 @@
 #include "../src/server/authorization.hpp"
 #include "../src/server/UserBase.h"
 #include "../src/server/Looper.hpp"
+#include "../src/server/ServerModule.hpp"
 #include "../src/cryptography.hpp"
 
 
@@ -29,28 +30,24 @@ BOOST_AUTO_TEST_CASE(login_test) {
     UserBase userBase;
     userBase.addUser(User("a", User::UserType::NORMAL, user_public_key));
 
-    QueueMap userQueues;
-    Authorization authorization(&userBase, &userQueues);
-    userQueues.setAuthorization(&authorization);BlockingQueue<Message> queue;
-    userQueues.add_user("a", &queue);
+    Authorization authorization(&userBase);
 
     RiddleBase riddleBase;
     riddleBase.addRiddle(riddle);
     RiddleModule riddleModule(&riddleBase);
     AdminModule adminModule(&riddleBase);
 
-    ServerModule serverModule(&userQueues);
+    ServerModule serverModule(&authorization);
 
 
     SerializeContent serializer;
     auto content = serializer.serializeString("a");
 
-    Looper looper(&userQueues, &authorization, &riddleModule, &adminModule, &serverModule);
+    Looper looper(&authorization, &riddleModule, &adminModule, &serverModule);
     BOOST_TEST_CHECKPOINT( "Looper initiated");
     looper.run();
     BOOST_TEST_CHECKPOINT( "Looper running");
     looper.getDispatcher()->post(Message(MessageType::Login, "a", content));
-    Message result = userQueues.pop("a");
 
     BOOST_CHECK(result.getMessageType() == MessageType::OK);
 
