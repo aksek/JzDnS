@@ -44,11 +44,9 @@ void Looper::runFunc() {
             case MessageType::Problems:
             case MessageType::OK:
 
-//                userQueues->post_to(next.getUserID(), next);
                 serverModule->getDispatcher()->post(std::move(next));
                 break;
             case MessageType::Round_over:
-//                userQueues->post_except(next.getUserID(), next);
                 serverModule->getDispatcher()->post_to_all(std::move(next));
                 break;
             case MessageType::Login:

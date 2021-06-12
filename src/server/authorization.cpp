@@ -82,12 +82,6 @@ void Authorization::handleRegister(ValueContent content, std::string user) {
     }
     auto username_key = std::get<std::pair<std::string, CryptoPP::RSA::PublicKey> >(content);
 
-//    if (base->getUser(username_key.first)) {
-//        looper->getDispatcher()->post(Message(MessageType::Retransmit, user));
-//        return;
-//    } else {
-//        base->addUser(User(username_key.first, User::UserType::NORMAL));
-//    }
     authorize(user, username_key.second);
 
     sendResponse(user);

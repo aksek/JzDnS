@@ -11,15 +11,10 @@ bool ServerModule::post(Message &&aMessage) {
         return false;
     }
 
-//    std::string encrypted = Cryptography::asymmetric_encrypt(authorization->getKey(aMessage.getUserID()), aMessage.getContentText(), rng);
-//    Message encryptedMessage(aMessage.getMessageType(), aMessage.getUserID(), encrypted, aMessage.getContentSize());
-
     try {
         if (user_version[aMessage.getUserID()] == IP_Version::IPv4) {
-//            mMessagesIPv4.push(encryptedMessage);
             mMessagesIPv4.push(aMessage);
         } else if (user_version[aMessage.getUserID()] == IP_Version::IPv6) {
-//            mMessagesIPv6.push(encryptedMessage);
             mMessagesIPv6.push(aMessage);
         }
     } catch (...) {
@@ -72,8 +67,6 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
             }
             sM.logger.write("Received message");
 
-//            if (!sM.userQueues->isInMap(username)) sM.userQueues->add_user(username, new BlockingQueue<Message>());
-
                 sM.looper->getDispatcher()->post(Message((std::string(buffer))));
 
                 bzero(buffer, sizeof(buffer));
@@ -109,7 +102,6 @@ void ServerModule::ConnectionHandler::handle_connection_send() {
             continue;
         }
 
-        //przetwarzanie do kogo mamy wyslac
         sM.logger.write("Sending message: " + next.getMessageTypeString());
 
         std::string serialized_message = next.serialize();
@@ -137,24 +129,8 @@ ServerModule::ConnectionHandler::ConnectionHandler(ServerModule& s, IP_Version v
 }
 
 
-void ServerModule::ConnectionHandler::joinThreadToSend()
-{
-    threadToSend.join();
-}
-
-void ServerModule::ConnectionHandler::joinThreadToReceive()
-{
-    threadToReceive.join();
-}
-
 ServerModule::~ServerModule() {
-    /*for(auto &handler : connectionHandlers)
-    {
-        handler.get().joinThreadToSend();
-        handler.get().joinThreadToReceive();
-    }
-*/
-//    connectionHandlers.clear();
+
     abortAndJoin();
 }
 
@@ -165,11 +141,8 @@ void ServerModule::setLooper(Looper *aLooper) {
 bool ServerModule::run() {
     try
     {
-//        mThread = std::thread(&ServerModule::runFunc, this);
-
         handlerForIPv4.run();
         handlerForIPv6.run();
-
     }
     catch(...)
     {
@@ -236,7 +209,6 @@ void ServerModule::ConnectionHandler::run() {
     memset(&servaddr, 0, sizeof(servaddr));
 
     //tworzenie adresu
-    // servaddr.sin_family = (version == IP_Version::IPv4) ? AF_INET : AF_INET6; // IPv4
     servaddr.sin_family = AF_INET; // IPv4
     servaddr.sin_addr.s_addr = inet_addr(ADDRESS);
     servaddr.sin_port = htons(PORT);
@@ -249,7 +221,7 @@ void ServerModule::ConnectionHandler::run() {
               sizeof(servaddr)) < 0 )
     {
         sM.logger.write("bind failed");
-        sM.logger.write("Oh dear, something went wrong with read()! %s\n", strerror(errno));
+        sM.logger.write("Error: %s\n", strerror(errno));
         sM.itsTimeToSayGoodbye.store(true);
     }
 

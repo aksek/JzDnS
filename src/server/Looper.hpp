@@ -11,7 +11,6 @@
 #include <stdexcept>
 #include <mutex>
 #include <map>
-//#include "BlockingQueue.hpp"
 #include "../message.h"
 #include "authorization.hpp"
 #include "RiddleService.h"
@@ -19,7 +18,6 @@
 #include "../QueueMap.hpp"
 #include "RiddleModule.h"
 #include "AdminModule.h"
-//#include "ServerModule.hpp"
 
 class ServerModule;
 class Authorization;

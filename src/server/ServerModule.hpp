@@ -59,22 +59,14 @@ private:
         ConnectionHandler(ServerModule& s, IP_Version v);
         void handle_connection_receive();
         void handle_connection_send();
-        void joinThreadToSend();
-        void joinThreadToReceive();
         void run();
         void stop();
-//        ConnectionHandler(const ConnectionHandler &obj);
     };
 
-//        std::vector<std::thread> mChildThreadsToSend;
-//        std::vector<std::thread> mChildThreadsToReceive;
     ConnectionHandler handlerForIPv4;
     ConnectionHandler handlerForIPv6;
-//    std::thread mThread;
     std::atomic_bool mRunning;
     std::atomic_bool itsTimeToSayGoodbye{};
-//    std::vector<std::reference_wrapper<ConnectionHandler>> connectionHandlers;
-    QueueMap* userQueues;
     BlockingQueue<Message> mMessagesIPv4;
     BlockingQueue<Message> mMessagesIPv6;
     Looper* looper;
@@ -87,8 +79,6 @@ private:
     std::map<std::string, struct sockaddr_in> user_address_IPv4;
     std::map<std::string, struct sockaddr_in> user_address_IPv6;
 
-
-//    void runFunc();
     bool post(Message &&aMessage);
 
 
@@ -103,16 +93,14 @@ public:
         bool post_to_all(Message &&aMessage);
     };
 
-    ServerModule(Authorization *authorization)
+    explicit ServerModule(Authorization *authorization)
     : mDispatcher(std::shared_ptr<Dispatcher>(new Dispatcher(*this)))
     , mRunning(false)
     , itsTimeToSayGoodbye(false)
     , mMessagesIPv4()
     , mMessagesIPv6()
-//    , userQueues(queues)
     , looper(nullptr)
-//    , connectionHandlers()
-    , logger("ServerModule" + to_string(std::time(0)))
+    , logger("ServerModule" + to_string(std::time(nullptr)))
     , handlerForIPv4(*this, IP_Version::IPv4)
     , handlerForIPv6(*this, IP_Version::IPv6)
     , authorization(authorization)
