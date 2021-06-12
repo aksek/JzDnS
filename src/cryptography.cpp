@@ -68,7 +68,7 @@ std::string Cryptography::asymmetric_decrypt(const PrivateKey &key, const std::s
     return recovered;
 }
 
-void Cryptography::generate_symmetric_key(SecByteBlock &key, SecByteBlock &iv) {
+/*void Cryptography::generate_symmetric_key(SecByteBlock &key, SecByteBlock &iv) {
     key = SecByteBlock(32);
     iv = SecByteBlock(8);
 
@@ -97,4 +97,4 @@ std::string Cryptography::symmetric_decrypt(const std::string &message, const Se
     dec.ProcessData((byte*)&recover[0], (const byte*)message.data(), message.size());
 
     return recover;
-}
+}*/
