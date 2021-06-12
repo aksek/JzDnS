@@ -78,7 +78,7 @@ void * Admin::handle_connection(void * arguments)
     }
 }
 
-Admin::Admin(int l, int mbs)
+Admin::Admin(int l, int mbs) logger("AdminUser" + to_string(std::time(nullptr)))
 {
     servers = getServersFromFile();
     Cryptography::load_public_key(admin_public_key, "admin_public_key.pem");
@@ -86,6 +86,15 @@ Admin::Admin(int l, int mbs)
     connected = false;
     maxQuestionLength = l;
     maxBuffSize = mbs;
+}
+
+Admin::~Admin()
+{
+    if(connected)
+        disconnectFromServer();
+
+    if(connetion_thread.joinable()) 
+        connetion_thread.join();
 }
 
 std::vector<ServerStructure> Admin::getServersFromFile()
@@ -182,10 +191,6 @@ void Admin::connectToServer(ServerStructure serv)
 
     queue.lockServer();
     queue.lockAdmin();
-
-//    std::string s = "hello";
-//
-//    queue.push(s);
 
     SerializeContent serializer;
     auto serialized_login_message_content = serializer.serializePublicKey(std::make_pair(id, admin_public_key));
