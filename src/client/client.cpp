@@ -464,7 +464,7 @@ void User::roundOver(Message message){
 	//content = crypt.asymmetric_decrypt(kluczPrywatny, content, randPool);
 	ValueContent valueContent = serializer.deserialize(message.getMessageType(), content, sizeContent);
 	std::pair<std::string, std::string> contentValue = std::get<std::pair<std::string, std::string> >(valueContent);
-	std::cout<<"Oh no! The problem has already been solved by: "<<contentValue.first<<std::endl;
+	std::cout<<"Round over! The problem has already been solved by: "<<contentValue.first<<std::endl;
 	std::cout<<"Answer: "<<contentValue.second<<std::endl;
 }
 
