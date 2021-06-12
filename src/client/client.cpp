@@ -79,14 +79,12 @@ Message User::sendAndRecv(std::string message){
 		bufferRecv[i] = '\0';
 	}
 	strncpy(bufferSend, message.c_str(), BUFFER_SIZE);
-	std::cout<<message<<std::endl;
 	sendto(clientSocket, (char*)bufferSend, BUFFER_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servAddr, sizeof(servAddr));
 	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
         	std::runtime_error("blad gniazda");
 
 	std::string messRecv(bufferRecv);
         Message mess(messRecv);
-	std::cout<<mess.getMessageTypeString()<<std::endl;
 	if(mess.getMessageType()==MessageType::Retransmit)
 		return sendAndRecv(message);
 	else return mess;
@@ -180,6 +178,9 @@ std::string User::getProblem(){
 std::string User::decodeProblemMessage(Message message){
 	SerializeContent deserializer;
 	Cryptography crypt;
+	while(message.getMessageType()==MessageType::Round_over){
+		message = recvMess();
+	}
 	if(message.getMessageType()!=MessageType::Problem){
 		disconnect();
 		throw std::runtime_error("zly komunikat");
@@ -212,7 +213,8 @@ bool User::showProblem(std::string text){
 		roundOver(message);
 		if(wyslana) recvMess();
 		userMutex.unlock();
-		return false;
+		std::cin.ignore();
+		std::cin.clear();
 	}else if(checkAnswerMessage(message)){
 		std::cout<<"Gratulacje! Jako pierwszy rozwiązałeś poprawnie zagadkę!"<<std::endl;
 	}else{
@@ -258,8 +260,16 @@ bool User::checkContinue(){
 		std::cout<<"0 - nie"<<std::endl;
 		char c;
 		std::cin>>c;
-		if(c=='1') return true;
-		if(c=='0') return false;
+		if(c=='1') {
+		std::cin.ignore();
+		std::cin.clear();
+		return true;
+	}
+		if(c=='0') {
+		std::cin.ignore();
+		std::cin.clear();
+		return false;
+	}
 		std::cin.ignore();
 		std::cin.clear();
 		std::cout<<"Nie ma takiej opcji, wpisz '0' lub '1'"<<std::endl;
@@ -272,8 +282,16 @@ bool User::checkNext(){
 	std::cout<<"0 - nie"<<std::endl;
 	char c;
 	std::cin>>c;
-	if(c=='1') return true;
-	if(c=='0') return false;
+	if(c=='1') {
+		std::cin.ignore();
+		std::cin.clear();
+		return true;
+	}
+	if(c=='0') {
+		std::cin.ignore();
+		std::cin.clear();
+		return false;
+	}
 	std::cin.ignore();
 	std::cin.clear();
 	std::cout<<"Nie ma takiej opcji, wpisz '0' lub '1'"<<std::endl;
@@ -287,9 +305,21 @@ int User::choiceLoginOrRegist(){
 	std::cout<<"0 - wróć"<<std::endl;
 	char c;
 	std::cin>>c;
-	if(c=='1') return 1;
-	if(c=='2') return 2;
-	if(c=='0') return 0;
+	if(c=='1') {
+		std::cin.ignore();
+		std::cin.clear();
+		return 1;
+	}
+	if(c=='2') {
+		std::cin.ignore();
+		std::cin.clear();
+		return 2;
+	}
+	if(c=='0') {
+		std::cin.ignore();
+		std::cin.clear();
+		 return 0;
+	}
 	std::cin.ignore();
 	std::cin.clear();
 	std::cout<<"Nie ma takiej opcji, wpisz '0', '1', lub '2'"<<std::endl;
@@ -399,6 +429,7 @@ bool User::chooseServerToConnectTo()
     do
     {
         std::getline(std::cin, number);
+	std::cout<<"liczba: "<<number<<std::endl;
         if(isNumber(number))
         {
             index = stoi(number);
