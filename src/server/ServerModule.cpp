@@ -34,7 +34,7 @@ void ServerModule::ConnectionHandler::handle_connection_receive()
 
     while(!sM.itsTimeToSayGoodbye.load()) {
         struct timeval tv;
-        tv.tv_sec = 60;
+        tv.tv_sec = 10;
         tv.tv_usec = 0;
         fd_set readfds;
         FD_ZERO(&readfds);

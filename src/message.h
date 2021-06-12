@@ -36,7 +36,8 @@ enum class MessageType{
 	Login_OK,
 	Login_error,
 	Get_current_problem,
-	Get_all_problems
+	Get_all_problems,
+	Server_terminated
 };
 
 typedef std::variant<void*, std::string, int, bool, std::pair<std::string, std::string>, std::pair<int, std::string>, std::tuple<int, std::string, std::string>, std::vector< std::tuple<int, std::string, std::string> >, std::pair<std::string, CryptoPP::RSA::PublicKey>/*, std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>*/ > ValueContent;

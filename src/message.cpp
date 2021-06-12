@@ -164,6 +164,8 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::string 
 		return nullptr;
 	case MessageType::Get_all_problems:
 		return nullptr;
+	case MessageType::Server_terminated:
+	    return nullptr;
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -209,6 +211,8 @@ ValueContent SerializeContent::deserialize(MessageType messageType, std::pair<st
 		return nullptr;
 	case MessageType::Get_all_problems:
 		return nullptr;
+    case MessageType::Server_terminated:
+        return nullptr;
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -405,6 +409,8 @@ std::string Message::messageTypeToString(MessageType messageType){
 		return "Get_current_problem";
 	case MessageType::Get_all_problems:
 		return "Get_all_problems";
+	case MessageType::Server_terminated:
+        return "Server_terminated";
 	default:
 		throw std::runtime_error("messageType not exist");
 	}
@@ -449,6 +455,8 @@ MessageType Message::messageTypeFromString(std::string messageType){
 		return MessageType::Get_current_problem;
 	else if(messageType == "Get_all_problems")
 		return MessageType::Get_all_problems;
+    else if (messageType == "Server_terminated")
+        return MessageType::Server_terminated;
 	else throw std::runtime_error("messageType not exist");
 }
 
