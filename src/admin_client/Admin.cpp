@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #include "Admin.h"
 
 
