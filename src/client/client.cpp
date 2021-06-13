@@ -80,13 +80,44 @@ Message User::sendAndRecv(std::string message){
 	}
 	strncpy(bufferSend, message.c_str(), BUFFER_SIZE);
 	sendto(clientSocket, (char*)bufferSend, BUFFER_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servAddr, sizeof(servAddr));
-	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
-        	std::runtime_error("socket error");
 
+	struct timeval tv;
+        tv.tv_sec = 10;
+        tv.tv_usec = 0;
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(clientSocket, &readfds);
+
+	int ret = select(clientSocket + 1, &readfds, NULL, NULL, &tv);
+
+	if(ret == 0){
+		if(counter < COUNTER){
+			++ counter;
+			return sendAndRecv(lastMessage);
+		}else throw std::runtime_error("socket error");
+	}
+
+	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0){
+        	if(counter < COUNTER){
+			++ counter;
+			Message msgRetransmit(MessageType::Retransmit, nick);
+			return sendAndRecv(msgRetransmit.serialize());
+		}else throw std::runtime_error("socket error");
+	}
 	std::string messRecv(bufferRecv);
-        Message mess(messRecv);
+	Message mess;
+	try{
+	        mess = Message(messRecv);
+	} catch(std::runtime_error &e){
+		if(counter < COUNTER){
+			++ counter;
+			Message msgRetransmit(MessageType::Retransmit, nick);
+			return sendAndRecv(msgRetransmit.serialize());
+		}else throw std::runtime_error("socket error");
+	}
+	counter = 0;
 	if(mess.getMessageType()==MessageType::Retransmit)
-		return sendAndRecv(message);
+		return sendAndRecv(lastMessage);
 	else return mess;
 }
 
@@ -105,14 +136,62 @@ Message User::recvMess(){
 	{
 		bufferRecv[i] = '\0';
 	}
-	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0)
-        	std::runtime_error("socket error");
+	struct timeval tv;
+        tv.tv_sec = 10;
+        tv.tv_usec = 0;
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(clientSocket, &readfds);
 
+	bool checkWyslana;
+	userMutex.lock();
+	if(wyslana == false) checkWyslana = wyslana;
+	userMutex.unlock();
+
+	int ret = select(clientSocket + 1, &readfds, NULL, NULL, &tv);
+
+	while(ret == 0 && checkWyslana == false){
+		userMutex.lock();
+		if(wyslana == false) checkWyslana = wyslana;
+		userMutex.unlock();
+		struct timeval tv2;
+	        tv2.tv_sec = 10;
+	        tv2.tv_usec = 0;
+	        fd_set readfds2;
+	        FD_ZERO(&readfds2);
+	        FD_SET(clientSocket, &readfds2);
+		ret = select(clientSocket + 1, &readfds2, NULL, NULL, &tv2);
+	}
+
+	if(ret == 0){
+		if(counter < COUNTER){
+			++ counter;
+			return sendAndRecv(lastMessage);
+		}else throw std::runtime_error("socket error");
+	}
+
+	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0){
+        	if(counter < COUNTER){
+			++ counter;
+			Message msgRetransmit(MessageType::Retransmit, nick);
+			return sendAndRecv(msgRetransmit.serialize());
+		}else throw std::runtime_error("socket error");
+	}
 	std::string messRecv(bufferRecv);
-        Message mess(messRecv);
+	Message mess;
+	try{
+	        mess = Message(messRecv);
+	} catch(std::runtime_error &e){
+		if(counter < COUNTER){
+			++ counter;
+			Message msgRetransmit(MessageType::Retransmit, nick);
+			return sendAndRecv(msgRetransmit.serialize());
+		}else throw std::runtime_error("socket error");
+	}
+	counter = 0;
 	if(mess.getMessageType()==MessageType::Retransmit)
 		return sendAndRecv(lastMessage);
-	return mess;
+	else return mess;
 }
 
 bool User::login(){

@@ -23,12 +23,14 @@
 #include "../cryptography.hpp"
 
 #define BUFFER_SIZE 2000
+#define COUNTER 2
 
 int clientSocket;
 sockaddr_in servAddr;
 socklen_t len;
 char bufferSend[BUFFER_SIZE];
 char bufferRecv[BUFFER_SIZE];
+int counter = 0;
 std::string lastMessage;
 
 std::mutex userMutex;
