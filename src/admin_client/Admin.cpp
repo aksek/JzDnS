@@ -63,18 +63,44 @@ void * Admin::handle_connection(void * arguments)
         {
             buffer[i] = '\0';
         }
-            
-        n = recvfrom(sockfd, (char *)buffer, buffersize, 
+
+        struct timeval tv;
+        tv.tv_sec = 10;
+        tv.tv_usec = 0;
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+
+        int ret = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+
+        if(ret > 0)
+        {
+            n = recvfrom(sockfd, (char *)buffer, buffersize, 
                     MSG_WAITALL, (struct sockaddr *) &servaddr,
                     &len);
 
-        if(n<0)
-            printf("[-]Error in receiving data.\n");
-        else{
-            std::string response(buffer);
+            if(n<0)
+            {
+                printf("[-]Error in receiving data.\n");
+                std::string erro = "0"; 
+                queue->push(response);
+                queue->unlockAdmin();
+            }
+            else
+            {
+                std::string response(buffer);
+                queue->push(response);
+                queue->unlockAdmin();
+            }
+        }  
+        else if(ret == 0)
+        {
+            printf("Timeout.\n");
+            std::string erro = "0"; 
             queue->push(response);
             queue->unlockAdmin();
         }
+        
     }
 }
 
@@ -202,24 +228,66 @@ void Admin::connectToServer(ServerStructure serv)
     Message login(MessageType::Register, id, serialized_login_message_content);
     std::string serialized_message = login.serialize();
 
-    logger.write("Trying to connect to server : " + serv.getName() + " on port: " + to_string(serv.getPort()) + " with address: " + serv.getAddress() );
+    logger.write("Trying to connect to server : " + serv.getName() + " on port: " + std::to_string(serv.getPort()) + " with address: " + serv.getAddress() );
 
-    queue.push(serialized_message);
+    int i = 0;
 
-    queue.unlockServer();
+    for(i; i < 5; i++)
+    {
+        queue.push(serialized_message);
 
-    connetion_thread = std::thread(&Admin::handle_connection, this, &ia);
-    std::string result;
+        queue.unlockServer();
 
-    queue.lockAdmin();
-    queue.waitAndPop(result);
+        connetion_thread = std::thread(&Admin::handle_connection, this, &ia);
+        std::string result;
 
-    Message mess1(result);
+        queue.lockAdmin();
+        queue.waitAndPop(result);
 
-    std::string contentText1 = mess1.getContentText();
-    size_t sizeContent1 = mess1.getContentSize();
+        if(result == "0")
+        {
+            logger.write("Timeout");
+            logger.write("Retransmition");   
+        }
+        else
+        {
+            Message mess1(result);
 
-    logger.write("Connected");
+            if(mess.getMessageType == MessageType::Retransmit)
+            {
+                logger.write("Retransmition");
+            }
+            else if(mess.getMessageType == MessageType::Server_terminated)
+            {
+                logger.write("Server was terminated");
+                disconnectFromServer();
+                std::cout << "Server was terminated" << std::endl;
+                return;
+            }
+            else
+            {
+                std::string contentText = mess.getContentText();
+                size_t sizeContent = mess.getContentSize();
+
+                auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
+
+                if(num == 2)
+                {
+                    logger.write("Connected");
+                    std::cout << "Connected" << std::endl;
+                    break;
+                }
+            }
+        }
+    }
+
+    if(i == 5)
+    {
+        std::cout << "Error while trying to login to server!" << std::endl;;
+        logger.write("Error while trying to login to server!");
+        disconnectFromServer();
+        return;
+    }
 
 //    std::string newContentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText1, rng);
 
@@ -229,35 +297,65 @@ void Admin::connectToServer(ServerStructure serv)
 
     logger.write("Sending request for all problems from server");
 
-    queue.push(toSend);
-    queue.unlockServer();
-
-    queue.lockAdmin();
-    std::string content;
-    queue.waitAndPop(content);
-
-    Message mess(content);
-
-    std::string contentText = mess.getContentText();
-    size_t sizeContent = mess.getContentSize();
-
-//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
-
-    logger.write("Received problems from server");
-
-    auto serverProblems = std::get<std::vector<std::tuple<int, std::string, std::string> >>(serializer.deserialize(MessageType::Problems, contentText, sizeContent));
-    int num;
-    std::string question, answer;
-    for(int i = 0; i < serverProblems.size(); ++i)
+    for(int i = 0; i < 5; i++)
     {
-        num = std::get<0>(serverProblems[i]);
-        question = std::get<1>(serverProblems[i]);
-        answer = std::get<2>(serverProblems[i]);
-        Problem p(num, question, answer);
-        problems.push_back(p);
+        queue.push(toSend);
+        queue.unlockServer();
+
+        queue.lockAdmin();
+        std::string content;
+        queue.waitAndPop(content);
+
+        if(content == "0")
+        {
+            logger.write("Timeout");
+            logger.write("Retransmition");
+        }
+        else
+        {
+            Message mess(content);
+
+            if(mess.getMessageType == MessageType::Retransmit)
+            {
+                logger.write("Retransmition");
+            }
+            else if(mess.getMessageType == MessageType::Server_terminated)
+            {
+                logger.write("Server was terminated");
+                disconnectFromServer();
+                std::cout << "Server was terminated" << std::endl;
+                return;
+            }
+            else
+            {
+                std::string contentText = mess.getContentText();
+                size_t sizeContent = mess.getContentSize();
+
+            //    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+                logger.write("Received problems from server");
+
+                auto serverProblems = std::get<std::vector<std::tuple<int, std::string, std::string> >>(serializer.deserialize(MessageType::Problems, contentText, sizeContent));
+                int num;
+                std::string question, answer;
+                for(int i = 0; i < serverProblems.size(); ++i)
+                {
+                    num = std::get<0>(serverProblems[i]);
+                    question = std::get<1>(serverProblems[i]);
+                    answer = std::get<2>(serverProblems[i]);
+                    Problem p(num, question, answer);
+                    problems.push_back(p);
+                }
+
+                std::cout << "Received problems from server" << std::endl;
+
+                return;
+            }
+        }
     }
 
-
+    logger.write("Sending request for problems failed!");
+    disconnectFromServer();
 }
 
 void Admin::disconnectFromServer()
@@ -279,7 +377,6 @@ void Admin::disconnectFromServer()
     connected = false;
 
     if(connetion_thread.joinable()) connetion_thread.join();
-
 }
 
 void Admin::addNewProblem()
@@ -296,30 +393,62 @@ void Admin::addNewProblem()
 
         logger.write("Sending new problem");
 
-        SerializeContent sc;
-        std::pair<std::string, size_t> serializedContent = sc.serializePairStringString(p);
-        Message m(MessageType::New_problem, id, serializedContent);
-        std::string toSend = m.serialize();
-        queue.push(toSend);
-        queue.unlockServer();
-        queue.lockAdmin();
-        std::string receive;
-        queue.waitAndPop(receive);
+        for(int i = 0; i < 5; ++i)
+        {
+            SerializeContent sc;
+            std::pair<std::string, size_t> serializedContent = sc.serializePairStringString(p);
+            Message m(MessageType::New_problem, id, serializedContent);
+            std::string toSend = m.serialize();
+            queue.push(toSend);
+            queue.unlockServer();
+            queue.lockAdmin();
+            std::string receive;
+            queue.waitAndPop(receive);
 
-        Message mess(receive);
+            if(receive == "0")
+            {
+                logger.write("Timeout");
+                logger.write("Retransmition");
+            }
+            else
+            {
+                Message mess(receive);
 
-        std::string contentText = mess.getContentText();
-        size_t sizeContent = mess.getContentSize();
+                if(mess.getMessageType == MessageType::Retransmit)
+                {
+                    logger.write("Retransmiting");
+                }
+                else if(mess.getMessageType == MessageType::Server_terminated)
+                {
+                    logger.write("Server was terminated");
+                    disconnectFromServer();
+                    std::cout << "Server was terminated" << std::endl;
+                    return;
+                }
+                else
+                {
 
-//        contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+                    std::string contentText = mess.getContentText();
+                    size_t sizeContent = mess.getContentSize();
 
-        auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
+            //        contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
-        Problem pr(num, q, a);
+                    auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
 
-        logger.write("New problem added correctly!");
+                    Problem pr(num, q, a);
 
-        problems.push_back(pr);
+                    logger.write("New problem added correctly!");
+
+                    problems.push_back(pr);
+
+                    return;
+                }
+            }
+        }
+
+        std::cout << "Error in receiving problems! Disconnecting from server" << std::endl;
+        logger.write("Sending request for problems failed!");
+        disconnectFromServer();
     }
     else
         std::cout << "You should connect to a server first!" << std::endl;
@@ -420,22 +549,65 @@ void Admin::selectProblemToDelete()
     std::pair<std::string, size_t> serializedContent = sc.serializeInt(n);
     Message m(MessageType::New_problem, id, serializedContent);
     std::string toSend = m.serialize();
-    queue.push(toSend);
-    queue.unlockServer();
-    queue.lockAdmin();
-    std::string content;
-    queue.waitAndPop(content);
 
-    Message mess(content);
+    for(int i = 0; i < 5; ++i)
+    {
+        queue.push(toSend);
+        queue.unlockServer();
+        queue.lockAdmin();
+        std::string content;
+        queue.waitAndPop(content);
 
-    std::string contentText = mess.getContentText();
-    size_t sizeContent = mess.getContentSize();
+        if(content == "0")
+        {
+            logger.write("Timeout");
+            logger.write("Retransmition");
+        }
+        else
+        {
+            
+            Message mess(content);
 
-//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+            if(mess.getMessageType == MessageType::Retransmit)
+            {
+                logger.write("Retransmiting");
+            }
+            else if(mess.getMessageType == MessageType::Server_terminated)
+            {
+                logger.write("Server was terminated");
+                disconnectFromServer();
+                std::cout << "Server was terminated" << std::endl;
+                return;
+            }
+            else
+            {
+                std::string contentText = mess.getContentText();
+                size_t sizeContent = mess.getContentSize();
 
-    auto messageAfterDeserialisation = sc.deserialize(MessageType::OK, contentText,sizeContent);
+            //    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
-    problems.erase(problems.begin() + n);
+                auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
+
+                if(num == -1)
+                {
+                    logger.write("Error during delete");
+                    logger.write("Retransmiting");
+                }
+                else
+                {
+                    logger.write("Successful delete");
+                    logger.write("Deleted problem nr" + std::to_string(n));
+                    std::cout << "Deleted problem nr" << n << std::endl;
+                    problems.erase(problems.begin() + n);
+                    return;
+                }
+            }
+        }
+    }
+
+    std::cout << "Error in delete! Disconnecting from server" << std::endl;
+    disconnectFromServer();
+    logger.write("Cannot successfully end deleting");
 }
 
 void Admin::selectProblemToEdit()
@@ -503,22 +675,62 @@ void Admin::editQuestion(int index)
     std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
     Message m(MessageType::Update, id, serializedContent);
     std::string toSend = m.serialize();
-    queue.push(toSend);
-    queue.unlockServer();
-    queue.lockAdmin();
-    std::string receive;
-    queue.waitAndPop(receive);
 
-    Message mess(receive);
+    for(int i = 0; i < 5; i++)
+    {
 
-    std::string contentText = mess.getContentText();
-    size_t sizeContent = mess.getContentSize();
+        queue.push(toSend);
+        queue.unlockServer();
+        queue.lockAdmin();
+        std::string receive;
+        queue.waitAndPop(receive);
 
-//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+        if(receive == "0")
+        {
+            logger.write("Timeout");
+            logger.write("Retransmition");
+        }
+        else
+        {
+            Message mess(receive);
 
-    auto messageAfterDeserialisation = sc.deserialize(MessageType::OK, contentText, sizeContent);
+            if(mess.getMessageType == MessageType::Retransmit)
+            {
+                logger.write("Retransmiting");
+            }
+            else if(mess.getMessageType == MessageType::Server_terminated)
+            {
+                logger.write("Server was terminated");
+                disconnectFromServer();
+                std::cout << "Server was terminated" << std::endl;
+                return;
+            }
+            else
+            {
+                std::string contentText = mess.getContentText();
+                size_t sizeContent = mess.getContentSize();
 
-    logger.write("Successful update");
+            //    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+                auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
+
+                if(num == -1)
+                {
+                    logger.write("Error during update");
+                    logger.write("Retransmiting");
+                }
+                else
+                {
+                    logger.write("Successful update");
+                    return;
+                }
+            }
+        }
+    }
+
+    std::cout << "Error in updating! Disconnecting from server" << std::endl;
+    disconnectFromServer();
+    logger.write("Cannot successfully end updating");
 }
 
 void Admin::editAnswer(int index)
@@ -534,23 +746,64 @@ void Admin::editAnswer(int index)
     std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
     Message m(MessageType::Update, id, serializedContent);
     std::string toSend = m.serialize();
-    queue.push(toSend);
-    queue.unlockServer();
-    queue.lockAdmin();
-    std::string receive;
-    queue.waitAndPop(receive);
 
-    Message mess(receive);
+    for(int i = 0; i < 5; ++i)
+    {
 
-    std::string contentText = mess.getContentText();
-    size_t sizeContent = mess.getContentSize();
+        queue.push(toSend);
+        queue.unlockServer();
+        queue.lockAdmin();
+        std::string receive;
+        queue.waitAndPop(receive);
 
-//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+        if(receive == "0")
+        {
+            logger.write("Timeout");
+            logger.write("Retransmition");
+        }
+        else
+        {
+            Message mess(receive);
 
-    SerializeContent serializer;
-    auto messageAfterDeserialisation = serializer.deserialize(MessageType::OK, receive, receive.size());
+            if(mess.getMessageType == MessageType::Retransmit)
+            {
+                logger.write("Retransmiting!");
+            }
+            else if(mess.getMessageType == MessageType::Server_terminated)
+            {
+                logger.write("Server was terminated");
+                disconnectFromServer();
+                std::cout << "Server was terminated" << std::endl;
+                return;
+            }
+            else
+            {
+                std::string contentText = mess.getContentText();
+                size_t sizeContent = mess.getContentSize();
 
-    logger.write("Successful update");
+            //    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+
+                SerializeContent serializer;
+                auto num = std::get<int>(serializer.deserialize(MessageType::OK, receive, receive.size()));
+
+                if(num == -1)
+                {
+                    logger.write("Error during update");
+                    logger.write("Retransmiting");
+                }
+                else
+                {
+                    logger.write("Successful update");
+                    return;
+                }
+            }
+        }
+    }
+
+    std::cout << "Error in updating! Disconnecting from server" << std::endl;
+    logger.write("Cannot successfully end updating");
+    disconnectFromServer();
+
 }
 
 void Admin::editWholeProblem(int index)
@@ -568,24 +821,63 @@ void Admin::editWholeProblem(int index)
     std::pair<std::string, size_t> serializedContent = sc.serializeTuple(t);
     Message m(MessageType::Edit_solution, id, serializedContent);
     std::string toSend = m.serialize();
-    queue.push(toSend);
-    queue.unlockServer();
-    queue.lockAdmin();
-    std::string receive;
-    queue.waitAndPop(receive);
 
-    Message mess(receive);
+    for(int i = 0; i < 5; ++i)
+    {
+        queue.push(toSend);
+        queue.unlockServer();
+        queue.lockAdmin();
+        std::string receive;
+        queue.waitAndPop(receive);
 
-    std::string contentText = mess.getContentText();
-    size_t sizeContent = mess.getContentSize();
+        if(receive == "0")
+        {
+            logger.write("Timeout");
+            logger.write("Retransmition");
+        }
+        else
+        {
+            Message mess(receive);
 
-//    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
+            if(mess.getMessageType == MessageType::Retransmit)
+            {
+                logger.write("Retransmiting!");
+            }
+            else if(mess.getMessageType == MessageType::Server_terminated)
+            {
+                logger.write("Server was terminated");
+                disconnectFromServer();
+                std::cout << "Server was terminated" << std::endl;
+                return;
+            }
+            else
+            {
+                std::string contentText = mess.getContentText();
+                size_t sizeContent = mess.getContentSize();
 
-    SerializeContent serializer;
+            //    contentText = Cryptography::asymmetric_decrypt(admin_private_key, contentText, rng);
 
-    auto messageAfterDeserialisation = serializer.deserialize(MessageType::OK, receive, receive.size());
+                SerializeContent serializer;
 
-    logger.write("Successful update");
+                auto num = std::get<int>(serializer.deserialize(MessageType::OK, receive, receive.size()));
+
+                if(num == -1)
+                {
+                    logger.write("Error during update");
+                    logger.write("Retransmiting");
+                }
+                else
+                {
+                    logger.write("Successful update");
+                    return;
+                }
+            }
+        }
+    }
+
+    std::cout << "Error in updating! Disconnecting from server" << std::cout;
+    logger.write("Cannot successfully end updating");
+    disconnectFromServer();
 
 }
 
