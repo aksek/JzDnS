@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #ifndef ADMIN_H
 #define ADMIN_H
 
