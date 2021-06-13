@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #pragma once
 
 #include<queue>

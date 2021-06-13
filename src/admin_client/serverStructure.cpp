@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #include "serverStructure.h"
 
 ServerStructure::ServerStructure(std::string n, int p, std::string a)

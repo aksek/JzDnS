@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #ifndef SERVERSTRUCTURE_H
 #define SERVERSTRUCTURE_H
 

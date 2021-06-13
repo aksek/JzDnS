@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #include "Admin.h"
 
 
@@ -549,7 +553,7 @@ void Admin::selectProblemToDelete()
 
     SerializeContent sc;
     std::pair<std::string, size_t> serializedContent = sc.serializeInt(problems[n].getIndex());
-    Message m(MessageType::New_problem, id, serializedContent);
+    Message m(MessageType::Delete_problem, id, serializedContent);
     std::string toSend = m.serialize();
 
     for(int i = 0; i < 5; ++i)
@@ -598,8 +602,8 @@ void Admin::selectProblemToDelete()
                 else
                 {
                     logger.write("Successful delete");
-                    logger.write("Deleted problem nr" + std::to_string(n));
-                    std::cout << "Deleted problem nr" << n << std::endl;
+                    logger.write("Deleted problem nr" + std::to_string(problems[n].getIndex()));
+                    std::cout << "Deleted problem nr" << std::to_string(problems[n].getIndex()) << std::endl;
                     problems.erase(problems.begin() + n);
                     return;
                 }
