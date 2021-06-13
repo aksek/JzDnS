@@ -37,7 +37,7 @@ void * Admin::handle_connection(void * arguments)
     int n;
     socklen_t len = sizeof(servaddr); 
 
-    while(1)
+    while(true)
     {
         queue->lockServer();
 
@@ -83,7 +83,7 @@ void * Admin::handle_connection(void * arguments)
             {
                 printf("[-]Error in receiving data.\n");
                 std::string erro = "0"; 
-                queue->push(response);
+                queue->push(erro);
                 queue->unlockAdmin();
             }
             else
@@ -97,7 +97,7 @@ void * Admin::handle_connection(void * arguments)
         {
             printf("Timeout.\n");
             std::string erro = "0"; 
-            queue->push(response);
+            queue->push(erro);
             queue->unlockAdmin();
         }
         
@@ -232,7 +232,7 @@ void Admin::connectToServer(ServerStructure serv)
 
     int i = 0;
 
-    for(i; i < 5; i++)
+    for(; i < 5; i++)
     {
         queue.push(serialized_message);
 
@@ -253,11 +253,11 @@ void Admin::connectToServer(ServerStructure serv)
         {
             Message mess1(result);
 
-            if(mess.getMessageType == MessageType::Retransmit)
+            if(mess1.getMessageType() == MessageType::Retransmit)
             {
                 logger.write("Retransmition");
             }
-            else if(mess.getMessageType == MessageType::Server_terminated)
+            else if(mess1.getMessageType() == MessageType::Server_terminated)
             {
                 logger.write("Server was terminated");
                 disconnectFromServer();
@@ -266,10 +266,10 @@ void Admin::connectToServer(ServerStructure serv)
             }
             else
             {
-                std::string contentText = mess.getContentText();
-                size_t sizeContent = mess.getContentSize();
+                std::string contentText = mess1.getContentText();
+                size_t sizeContent = mess1.getContentSize();
 
-                auto num = std::get<int>(sc.deserialize(MessageType::OK, contentText, sizeContent));
+                auto num = std::get<int>(serializer.deserialize(MessageType::OK, contentText, sizeContent));
 
                 if(num == 2)
                 {
@@ -283,7 +283,7 @@ void Admin::connectToServer(ServerStructure serv)
 
     if(i == 5)
     {
-        std::cout << "Error while trying to login to server!" << std::endl;;
+        std::cout << "Error while trying to login to server!" << std::endl;
         logger.write("Error while trying to login to server!");
         disconnectFromServer();
         return;
@@ -297,7 +297,7 @@ void Admin::connectToServer(ServerStructure serv)
 
     logger.write("Sending request for all problems from server");
 
-    for(int i = 0; i < 5; i++)
+    for(int k = 0; k < 5; k++)
     {
         queue.push(toSend);
         queue.unlockServer();
@@ -315,11 +315,11 @@ void Admin::connectToServer(ServerStructure serv)
         {
             Message mess(content);
 
-            if(mess.getMessageType == MessageType::Retransmit)
+            if(mess.getMessageType() == MessageType::Retransmit)
             {
                 logger.write("Retransmition");
             }
-            else if(mess.getMessageType == MessageType::Server_terminated)
+            else if(mess.getMessageType() == MessageType::Server_terminated)
             {
                 logger.write("Server was terminated");
                 disconnectFromServer();
@@ -338,11 +338,11 @@ void Admin::connectToServer(ServerStructure serv)
                 auto serverProblems = std::get<std::vector<std::tuple<int, std::string, std::string> >>(serializer.deserialize(MessageType::Problems, contentText, sizeContent));
                 int num;
                 std::string question, answer;
-                for(int i = 0; i < serverProblems.size(); ++i)
+                for(int j = 0; j < serverProblems.size(); ++j)
                 {
-                    num = std::get<0>(serverProblems[i]);
-                    question = std::get<1>(serverProblems[i]);
-                    answer = std::get<2>(serverProblems[i]);
+                    num = std::get<0>(serverProblems[j]);
+                    question = std::get<1>(serverProblems[j]);
+                    answer = std::get<2>(serverProblems[j]);
                     Problem p(num, question, answer);
                     problems.push_back(p);
                 }
@@ -414,11 +414,11 @@ void Admin::addNewProblem()
             {
                 Message mess(receive);
 
-                if(mess.getMessageType == MessageType::Retransmit)
+                if(mess.getMessageType() == MessageType::Retransmit)
                 {
                     logger.write("Retransmiting");
                 }
-                else if(mess.getMessageType == MessageType::Server_terminated)
+                else if(mess.getMessageType() == MessageType::Server_terminated)
                 {
                     logger.write("Server was terminated");
                     disconnectFromServer();
@@ -485,7 +485,7 @@ std::string Admin::insertAnswer()
 
 bool Admin::isNumber(const std::string& str)
 {
-    for (char const &c : str) {
+    for(char const &c : str) {
         if (std::isdigit(c) == 0) return false;
     }
     return true;
@@ -533,7 +533,7 @@ void Admin::selectProblemToDelete()
         return;
     }
 
-    if(problems.size() < 1)
+    if(problems.empty())
     {
         std::cout << "Problem list is empty!" << std::endl;
         return;
@@ -568,11 +568,11 @@ void Admin::selectProblemToDelete()
             
             Message mess(content);
 
-            if(mess.getMessageType == MessageType::Retransmit)
+            if(mess.getMessageType() == MessageType::Retransmit)
             {
                 logger.write("Retransmiting");
             }
-            else if(mess.getMessageType == MessageType::Server_terminated)
+            else if(mess.getMessageType() == MessageType::Server_terminated)
             {
                 logger.write("Server was terminated");
                 disconnectFromServer();
@@ -620,7 +620,7 @@ void Admin::selectProblemToEdit()
         return;
     }
 
-    if(problems.size() < 1)
+    if(problems.empty())
     {
         std::cout << "Problem list is empty!" << std::endl;
         return;
@@ -633,7 +633,6 @@ void Admin::selectProblemToEdit()
 
     editProblem(n);
 
-    return;
 }
 
 void Admin::editProblem(int index)
@@ -668,7 +667,7 @@ void Admin::editQuestion(int index)
     std::string newQuestion = insertQuestion();
     problems[index].setQuestion(newQuestion);
 
-    logger.write("Updating question of problem nr" + problems[index].getIndex());
+    logger.write("Updating question of problem nr" + std::to_string(problems[index].getIndex()));
 	
     std::tuple<int, std::string, std::string> t(problems[index].getIndex(), newQuestion, problems[index].getAnswer());
     SerializeContent sc;
@@ -694,11 +693,11 @@ void Admin::editQuestion(int index)
         {
             Message mess(receive);
 
-            if(mess.getMessageType == MessageType::Retransmit)
+            if(mess.getMessageType() == MessageType::Retransmit)
             {
                 logger.write("Retransmiting");
             }
-            else if(mess.getMessageType == MessageType::Server_terminated)
+            else if(mess.getMessageType() == MessageType::Server_terminated)
             {
                 logger.write("Server was terminated");
                 disconnectFromServer();
@@ -739,7 +738,7 @@ void Admin::editAnswer(int index)
     std::string newAnswer = insertAnswer();
     problems[index].setAnswer(newAnswer);
 
-    logger.write("Updating answer of problem nr" + problems[index].getIndex());
+    logger.write("Updating answer of problem nr" + std::to_string(problems[index].getIndex()));
     
     std::tuple<int, std::string, std::string> t(problems[index].getIndex(), problems[index].getQuestion(), newAnswer);
     SerializeContent sc;
@@ -765,11 +764,11 @@ void Admin::editAnswer(int index)
         {
             Message mess(receive);
 
-            if(mess.getMessageType == MessageType::Retransmit)
+            if(mess.getMessageType() == MessageType::Retransmit)
             {
                 logger.write("Retransmiting!");
             }
-            else if(mess.getMessageType == MessageType::Server_terminated)
+            else if(mess.getMessageType() == MessageType::Server_terminated)
             {
                 logger.write("Server was terminated");
                 disconnectFromServer();
@@ -814,7 +813,7 @@ void Admin::editWholeProblem(int index)
     std::string newAnswer = insertAnswer();
     problems[index].setAnswer(newAnswer);
 
-    logger.write("Updating whole problem nr" + problems[index].getIndex());
+    logger.write("Updating whole problem nr" + std::to_string(problems[index].getIndex()));
     
     std::tuple<int, std::string, std::string> t(problems[index].getIndex(), newQuestion, newAnswer);
     SerializeContent sc;
@@ -839,11 +838,11 @@ void Admin::editWholeProblem(int index)
         {
             Message mess(receive);
 
-            if(mess.getMessageType == MessageType::Retransmit)
+            if(mess.getMessageType() == MessageType::Retransmit)
             {
                 logger.write("Retransmiting!");
             }
-            else if(mess.getMessageType == MessageType::Server_terminated)
+            else if(mess.getMessageType() == MessageType::Server_terminated)
             {
                 logger.write("Server was terminated");
                 disconnectFromServer();
@@ -875,7 +874,7 @@ void Admin::editWholeProblem(int index)
         }
     }
 
-    std::cout << "Error in updating! Disconnecting from server" << std::cout;
+    std::cout << "Error in updating! Disconnecting from server" << std::endl;
     logger.write("Cannot successfully end updating");
     disconnectFromServer();
 
@@ -885,7 +884,7 @@ void Admin::showAllProblems()
 {
     std::cout << std::endl << "*********** All problems: ***********" << std::endl << std::endl;
 
-    if( problems.size() < 1)
+    if(problems.empty())
     {
         std::cout << "There are no problems to show!" << std::endl;
         return;
