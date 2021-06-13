@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #include "Problem.h"
 
 Problem::Problem(int i, std::string q, std::string a)
