@@ -144,7 +144,7 @@ bool User::decodeLoginAnswer(Message message){
 	Cryptography crypt;
 	if(message.getMessageType()!=MessageType::OK){
 		disconnect();
-		throw std::runtime_error("zly komunikat");
+		throw std::runtime_error("bad message");
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
@@ -160,7 +160,7 @@ bool User::checkAnswerMessage(Message message){
 	Cryptography crypt;
 	if(message.getMessageType()!=MessageType::Correct){
 		disconnect();
-		throw std::runtime_error("zly komunikat");
+		throw std::runtime_error("bad message");
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
@@ -183,7 +183,7 @@ std::string User::decodeProblemMessage(Message message){
 	}
 	if(message.getMessageType()!=MessageType::Problem){
 		disconnect();
-		throw std::runtime_error("zly komunikat");
+		throw std::runtime_error("bad message");
 	}
 	std::string contentText = message.getContentText();
 	size_t sizeContent = message.getContentSize();
@@ -216,7 +216,7 @@ bool User::showProblem(std::string text){
 		std::cin.ignore();
 		std::cin.clear();
 	}else if(checkAnswerMessage(message)){
-		std::cout<<"Gratulacje! Jako pierwszy rozwiązałeś poprawnie zagadkę!"<<std::endl;
+		std::cout<<"Congratulations! You were first to solve the problem!"<<std::endl;
 	}else{
 		if(checkContinue()){
 			 return showProblem(text);
@@ -277,9 +277,9 @@ bool User::checkContinue(){
 }
 
 bool User::checkNext(){
-	std::cout<<"Chcesz kontynuować?"<<std::endl;
-	std::cout<<"1 - tak"<<std::endl;
-	std::cout<<"0 - nie"<<std::endl;
+	std::cout<<"Would you like to continue?"<<std::endl;
+	std::cout<<"1 - yes"<<std::endl;
+	std::cout<<"0 - no"<<std::endl;
 	char c;
 	std::cin>>c;
 	if(c=='1') {
