@@ -78,6 +78,7 @@ std::pair<std::string, CryptoPP::RSA::PublicKey> deserializePublicKey(std::strin
 class Message{
 	
 public:
+	Message()=default;
 	Message(MessageType messageType, std::string userID);
 	Message(MessageType messageType, std::string userID, std::string contentText, size_t contentSize);
 	Message(MessageType messageType, std::string userID, std::pair<std::string, size_t> content);
