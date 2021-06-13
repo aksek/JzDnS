@@ -1,6 +1,5 @@
 #include "Admin.h"
-#include "../message.h"
-#include "../cryptography.hpp"
+
 
 void * Admin::handle_connection(void * arguments)
 {

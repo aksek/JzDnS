@@ -16,8 +16,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include <cryptopp/rsa.h>
-#include <cryptopp/osrng.h>
+//#include <cryptopp/rsa.h>
+//#include <cryptopp/osrng.h>
+#include "../cryptography.hpp"
+#include "../message.h"
 #include "serverStructure.h"
 #include "Problem.h"
 #include "fstream"
