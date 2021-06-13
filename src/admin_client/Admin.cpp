@@ -599,8 +599,8 @@ void Admin::selectProblemToDelete()
                 else
                 {
                     logger.write("Successful delete");
-                    logger.write("Deleted problem nr" + std::to_string(n));
-                    std::cout << "Deleted problem nr" << n << std::endl;
+                    logger.write("Deleted problem nr" + std::to_string(problems[n].getIndex()));
+                    std::cout << "Deleted problem nr" << std::to_string(problems[n].getIndex()) << std::endl;
                     problems.erase(problems.begin() + n);
                     return;
                 }
