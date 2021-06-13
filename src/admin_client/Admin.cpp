@@ -45,10 +45,6 @@ void * Admin::handle_connection(void * arguments)
         queue->waitAndPop(result);
 
         strcpy(buffer, result.c_str());
-        
-        sendto(sockfd, (char *)buffer, strlen(buffer),
-            MSG_CONFIRM, (const struct sockaddr *) &servaddr, 
-                sizeof(servaddr));
 
         if(strcmp(buffer, ":exit") == 0){
             close(sockfd);
@@ -57,6 +53,11 @@ void * Admin::handle_connection(void * arguments)
             queue->unlockServer();
             break;
         }
+        
+        sendto(sockfd, (char *)buffer, strlen(buffer),
+            MSG_CONFIRM, (const struct sockaddr *) &servaddr, 
+                sizeof(servaddr));
+
 
         for(int i = 0; i < buffersize; ++i)
         {
@@ -506,7 +507,10 @@ int Admin::selectProblem()
             for(int i = 0; i < problems.size(); ++i)
             {
                 if(problems[i].getIndex() == n)
+                {
                     index = i;
+                    break;
+                }
             }
 
             if(index == -1)
@@ -543,9 +547,8 @@ void Admin::selectProblemToDelete()
 
     int n = selectProblem();
 
-
     SerializeContent sc;
-    std::pair<std::string, size_t> serializedContent = sc.serializeInt(n);
+    std::pair<std::string, size_t> serializedContent = sc.serializeInt(problems[n].getIndex());
     Message m(MessageType::New_problem, id, serializedContent);
     std::string toSend = m.serialize();
 
