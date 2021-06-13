@@ -51,7 +51,7 @@ void RiddleModule::handleGetSolution(ValueContent content, std::string user)
     if(riddle.getAnswer() == answer)
     {
         looper->getDispatcher()->post(Message(MessageType::Correct, user, serializer->serializeBool(true)));
-        looper->getDispatcher()->post(Message(MessageType::Round_over, user));
+        looper->getDispatcher()->post(Message(MessageType::Round_over, user, serializer->serializePairStringString(std::make_pair(user, answer))));
         riddleService.getNextRiddle();
     }
     else
