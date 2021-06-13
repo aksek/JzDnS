@@ -94,7 +94,11 @@ Message User::sendAndRecv(std::string message){
 		if(counter < COUNTER){
 			++ counter;
 			return sendAndRecv(lastMessage);
-		}else throw std::runtime_error("socket error");
+		}else {
+			std::cout<<"server error"<<std::endl;
+			disconnect();
+			exit(0);
+		}
 	}
 
 	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0){
@@ -102,7 +106,11 @@ Message User::sendAndRecv(std::string message){
 			++ counter;
 			Message msgRetransmit(MessageType::Retransmit, nick);
 			return sendAndRecv(msgRetransmit.serialize());
-		}else throw std::runtime_error("socket error");
+		}else {
+			std::cout<<"server error"<<std::endl;
+			disconnect();
+			exit(0);
+		}
 	}
 	std::string messRecv(bufferRecv);
 	Message mess;
@@ -113,7 +121,11 @@ Message User::sendAndRecv(std::string message){
 			++ counter;
 			Message msgRetransmit(MessageType::Retransmit, nick);
 			return sendAndRecv(msgRetransmit.serialize());
-		}else throw std::runtime_error("socket error");
+		}else {
+			std::cout<<"server error"<<std::endl;
+			disconnect();
+			exit(0);
+		}
 	}
 	counter = 0;
 	if(mess.getMessageType()==MessageType::Retransmit)
@@ -154,20 +166,23 @@ Message User::recvMess(){
 		userMutex.lock();
 		if(wyslana == false) checkWyslana = wyslana;
 		userMutex.unlock();
-		struct timeval tv2;
-	        tv2.tv_sec = 10;
-	        tv2.tv_usec = 0;
-	        fd_set readfds2;
-	        FD_ZERO(&readfds2);
-	        FD_SET(clientSocket, &readfds2);
-		ret = select(clientSocket + 1, &readfds2, NULL, NULL, &tv2);
+
+	        tv.tv_sec = 10;
+	        tv.tv_usec = 0;
+	        FD_ZERO(&readfds);
+	        FD_SET(clientSocket, &readfds);
+		ret = select(clientSocket + 1, &readfds, NULL, NULL, &tv);
 	}
 
 	if(ret == 0){
 		if(counter < COUNTER){
 			++ counter;
 			return sendAndRecv(lastMessage);
-		}else throw std::runtime_error("socket error");
+		}else {
+			std::cout<<"server error"<<std::endl;
+			disconnect();
+			exit(0);
+		}
 	}
 
 	if(recvfrom(clientSocket, (char*)bufferRecv, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr*) &servAddr, &len) < 0){
@@ -175,7 +190,11 @@ Message User::recvMess(){
 			++ counter;
 			Message msgRetransmit(MessageType::Retransmit, nick);
 			return sendAndRecv(msgRetransmit.serialize());
-		}else throw std::runtime_error("socket error");
+		}else {
+			std::cout<<"server error"<<std::endl;
+			disconnect();
+			exit(0);
+		}
 	}
 	std::string messRecv(bufferRecv);
 	Message mess;
@@ -186,7 +205,11 @@ Message User::recvMess(){
 			++ counter;
 			Message msgRetransmit(MessageType::Retransmit, nick);
 			return sendAndRecv(msgRetransmit.serialize());
-		}else throw std::runtime_error("socket error");
+		}else {
+			std::cout<<"server error"<<std::endl;
+			disconnect();
+			exit(0);
+		}
 	}
 	counter = 0;
 	if(mess.getMessageType()==MessageType::Retransmit)
@@ -508,7 +531,6 @@ bool User::chooseServerToConnectTo()
     do
     {
         std::getline(std::cin, number);
-	std::cout<<"id: "<<number<<std::endl;
         if(isNumber(number))
         {
             index = stoi(number);
