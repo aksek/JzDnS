@@ -116,9 +116,8 @@ Message User::sendAndRecv(std::string message){
 		}else throw std::runtime_error("socket error");
 	}
 	counter = 0;
-	std::cout<<mess.getMessageTypeString()<<std::endl;
 	if(mess.getMessageType()==MessageType::Retransmit)
-		return sendAndRecv(message);
+		return sendAndRecv(lastMessage);
 	else return mess;
 }
 
@@ -144,11 +143,25 @@ Message User::recvMess(){
         FD_ZERO(&readfds);
         FD_SET(clientSocket, &readfds);
 
+	bool checkWyslana;
 	userMutex.lock();
-	if(wyslana == false) counter = 0;
+	if(wyslana == false) checkWyslana = wyslana;
 	userMutex.unlock();
 
 	int ret = select(clientSocket + 1, &readfds, NULL, NULL, &tv);
+
+	while(ret == 0 && checkWyslana == false){
+		userMutex.lock();
+		if(wyslana == false) checkWyslana = wyslana;
+		userMutex.unlock();
+		struct timeval tv2;
+	        tv2.tv_sec = 10;
+	        tv2.tv_usec = 0;
+	        fd_set readfds2;
+	        FD_ZERO(&readfds2);
+	        FD_SET(clientSocket, &readfds2);
+		ret = select(clientSocket + 1, &readfds2, NULL, NULL, &tv2);
+	}
 
 	if(ret == 0){
 		if(counter < COUNTER){
@@ -176,7 +189,6 @@ Message User::recvMess(){
 		}else throw std::runtime_error("socket error");
 	}
 	counter = 0;
-	std::cout<<mess.getMessageTypeString()<<std::endl;
 	if(mess.getMessageType()==MessageType::Retransmit)
 		return sendAndRecv(lastMessage);
 	else return mess;
