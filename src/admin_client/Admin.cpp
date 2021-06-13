@@ -550,7 +550,7 @@ void Admin::selectProblemToDelete()
 
     SerializeContent sc;
     std::pair<std::string, size_t> serializedContent = sc.serializeInt(problems[n].getIndex());
-    Message m(MessageType::New_problem, id, serializedContent);
+    Message m(MessageType::Delete_problem, id, serializedContent);
     std::string toSend = m.serialize();
 
     for(int i = 0; i < 5; ++i)
