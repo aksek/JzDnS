@@ -1,3 +1,7 @@
+//
+// Author: Artur Mazur
+//
+
 #ifndef PROBLEM_H
 #define PROBLEM_H
 
